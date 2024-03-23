@@ -1,0 +1,71 @@
+{% extends "partials/admin_base.html" %}
+{% block body %}
+
+
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Wishlist
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <h3>Coupon list</h3>
+                        <table class="table shopping-summery text-center">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col" colspan="">Coupon code</th>
+                                    <th scope="col">Discount</th>
+                                    <th scope="col">Valid form</th>
+                                    <th scope="col">Valid to</th>
+                                    <th scope="col">active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                {% for coupon in coupons %}          
+                              <tr>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{coupon.code}}</span>
+                                </td>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{coupon.discount}}</span>
+                                </td>
+                                  
+                                    <td class="text-center" >
+                                        <span class="color3 font-weight-bold">{{coupon.valid_from}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="color3 font-weight-bold">{{coupon.valid_to}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="color3 font-weight-bold">{{coupon.active}}</span>
+                                    </td>
+                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+
+{% endblock body %}
+
+
+
+

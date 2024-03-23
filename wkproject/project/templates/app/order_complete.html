@@ -1,0 +1,124 @@
+{% extends "partials/base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        bodyy {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .invoice {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .invoice-header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .invoice-info {
+            margin-bottom: 20px;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .invoice-table th, .invoice-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .invoice-total {
+            text-align: right;
+        }
+    </style>
+</head>
+<bodyy>
+   
+    <div class="container text-center" style="height: 300px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h2 style="margin-bottom: 10px;">Order Complete</h2>
+        <p style="margin-bottom: 10px;">Your order has been successfully completed.</p>
+        <h5 style="margin-bottom: 10px;">Payment Successful</h5>
+        <p style="margin-bottom: 10px;">Thank you for shopping with us!</p>
+        <p style="margin-bottom: 10px;">You will receive an email confirmation shortly.</p>
+        <a href="{% url "app:index" %}" class="button" style="padding: 10px 20px; text-decoration: none; background-color: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease; display: inline-block;">Continue Shopping</a>
+    </div>
+    <div class="invoice">
+        <h1>Invoice</h1>
+        <div class="invoice-info" style="float: right; width: 20%;">
+
+            <p><strong>Billed To:</strong>{{order.username}}</p>
+
+            <p class="card-text">{{order.shipping_address.house}}</p>
+            <p class="card-text">{{order.shipping_address.street}} ,{{order.shipping_address.landmark}}</p>
+            <p class="card-text">{{order.shipping_address.town}}  ,{{order.shipping_address.state}}</p>
+            <p class="card-text">{{order.shipping_address.pincode}}</p>
+            <p>Date: {{order.created_at}}</p>
+        </div>
+        <div class="invoice-info" style="float: left; width: 30%;">
+            <p><strong>Invoice Number:</strong> {{order_number}}</p>
+            <p><strong>Transation ID:</strong> {{transID}}</p>
+            <p><strong>Status:</strong> {{payment.status}}</p>
+            {% comment %} <p><strong>Billed To:</strong> John Doe</p>
+            <p><strong>Email:</strong> john@example.com</p>
+            <p><strong>Address:</strong> 123 Main St, Anytown, USA</p> {% endcomment %}
+        </div>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Size</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                   
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ordered_products %}
+                <tr>
+                    <td class="image product-thumbnail"><img src="{{ item.product.image.url }}" alt="#">                                                     
+                        <h5 class="product-name"><a href="{% url 'app:product_detail' item.product.pid %}">{{ item.product.title }}</a></h5></td> 
+                        <td>   <p class="font-xs">
+                            {% if item.variations.all %}
+                                {% for iteme in item.variations.all %}
+                                    <li>Size:{{ iteme.size|upper }}</li>
+                                {% endfor %}
+                           {% endif %}
+                     </p>
+                    </td>
+                    <td>{{item.quantity}}</td>
+                    <td class="price" data-title="Price"><span><span>₹</span>{{ item.product.price|floatformat:2 }}</span></td>
+                </tr>
+                {% endfor %}
+              
+            </tbody>
+        </table>
+        <div class="invoice-total">
+            <p><strong>Subtotal:</strong>{{subtotal}}</p>
+            <p><strong>shipping charge:</strong>{{order.shipping}}</p>
+            <p><strong>Grand Total:</strong>{{order.order_total}}</p>
+        </div>
+    </div>
+</bodyy>
+</html>
+
+{% endblock content %}
+
+
+
+
+
+

@@ -1,0 +1,77 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+
+{% block body %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Stock List</h2>
+        </div>
+        <div>
+            <a href="#" class="btn btn-light rounded font-md">Export</a>
+            <a href="#" class="btn btn-light rounded font-md">Import</a>
+            <a href="#" class="btn btn-primary btn-sm rounded">Create new</a>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <div class="row align-items-center">
+                <div class="col col-check flex-grow-0">
+                    <div class="form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="">
+                    </div>
+                </div>
+                <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
+                    <label for="product" class="form-label">Select Product</label>
+                    <select class="form-select" id="product" name="selected_product">
+                        <option value="" selected disabled>Select a product</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}">{{ product.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </header> <!-- card-header end// -->
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Size</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in page_variants %}
+                    <tr>
+                        <td>{{ stock.variant.product.title }}</td>
+                        <td>{{ stock.variant.size }}</td>
+                        <td>{{ stock.stock }}</td>
+                        <td>{{ stock.variant.is_active }}</td>
+                       
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div> <!-- card-body end// -->
+    </div> <!-- card end// -->
+    <div class="pagination-area mt-30 mb-50">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-start">
+                {% if page_variants.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_variants.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="?page={{ page_variants.number }}">{{ page_variants.number }}</a></li>
+                {% if page_variants.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_variants.next_page_number }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ page_variants.paginator.num_pages }}">Last</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</section> <!-- content-main end// -->
+{% endblock body %}

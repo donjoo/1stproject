@@ -1,0 +1,67 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="content-header mb-4 text-center">
+                <h2 class="content-title">Add address</h2>
+                {% if error_messages %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for error_message in error_messages %}
+                        <li>{{ error_message }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row justify-content-center"> <!-- Center align row -->
+            <div class="col-lg-8"> <!-- Adjusted column width -->
+                <div class="card-header text-center"> 
+                    <h4>Address Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                                                        <label for="user" class="form-label">User</label>
+                            <input type="text" class="form-control" id="user" name="user" value="{{ form_data.user }}" disabled>
+                        </div> 
+                        <div class="mb-4">
+                            <label for="house" class="form-label">Flat,house no</label>
+                            <input type="text" class="form-control" id="house" name="house" placeholder="house" value="{{ form_data.house }}" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="street" class="form-label">Area,Street,Village</label>
+                            <input type="text" class="form-control" id="street" name="street" placeholder="street" value="{{ form_data.street }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="landmark" class="form-label">Landmark</label>
+                            <input type="text" class="form-control" id="landmark" name="landmark" placeholder="E,g near appolo hospital" value="{{ form_data.landmark }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="pincode" class="form-label">Pincode</label>
+                            <input type="text" class="form-control" id="pincode" name="pincode" placeholder="6 digits" value="{{ form_data.pincode }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="town" class="form-label">Town/City</label>
+                            <input type="text" class="form-control" id="town" name="town" placeholder=" " value="{{ form_data.town }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="state" class="form-label">State</label>
+                            <input type="text" class="form-control" id="state" name="state" placeholder="state" value="{{ form_data.state }}" required>
+                        </div>
+                       
+                        <button type="submit" class="btn btn-primary">Add address</button>
+                    
+                </div>
+            </div>
+        </div>
+        
+    </form>
+    </div>
+</section>
+{% endblock content %}

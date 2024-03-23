@@ -1,0 +1,81 @@
+﻿
+{% comment %} {% extends "partials/baseb.html" %} {% endcomment %}
+{% load static %}
+{% comment %} {% block content %} {% endcomment %}
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+
+<!-- Mirrored from wp.alithemes.com/html/evara/evara-frontend/index-2.html by HTTrack Website Copier/3.x [XR&CO'2014], Sun, 01 Aug 2021 15:26:06 GMT -->
+<head>
+    <meta charset="utf-8">
+    <title>Franky</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:title" content="">
+    <meta property="og:type" content="">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/imgs/theme/favicon.svg' %}">
+    <!-- Template CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
+</head>
+<body>
+    <h2 class="text-white text-center bg-dark p-3">Login</h2>
+    
+        <section class="pt-150 pb-150">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-10 m-auto">
+                        <div class="row">
+                            <div class="col-lg-5">
+                                <div class="login_wrap widget-taber-content p-30 background-white border-radius-10 mb-md-5 mb-lg-0 mb-sm-5">
+                                    <div class="padding_eight_all bg-white">
+                                        <div class="heading_s1">
+                                            
+          {% for message in messages  %}
+          <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+            <strong></strong> {{message}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+
+          {% endfor %}
+
+                                            <h3 class="mb-30">Login</h3>
+                                        </div>
+                                        <form method="post" action="{% url 'userauth:login' %}">{% csrf_token %}
+                                            <div class="form-group">
+                                                <input type="text" required="True" name="email" placeholder="Your Email">
+                                            </div>
+                                            <div class="form-group">
+                                                <input required="" type="password" name="password" placeholder="Password">
+                                            </div>
+                                            <div class="login_footer form-group">
+                                                <div class="chek-form">
+                                                    <div class="custome-checkbox">
+                                                        <input class="form-check-input" type="checkbox" name="checkbox" id="exampleCheckbox1" value="">
+                                                        <label class="form-check-label" for="exampleCheckbox1"><span>Remember me</span></label>
+                                                    </div>
+                                                </div>
+                                                <a class="text-muted" href="{% url 'userauth:login_otp' %}">Forgot password?</a>
+                                            </div>
+                                            <div class="form-group">
+                                                <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login">Log in</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>   
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+{% comment %} {% endblock content %} {% endcomment %}
+</html>

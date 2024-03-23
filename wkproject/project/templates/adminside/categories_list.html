@@ -1,0 +1,114 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+{% block body %}
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">Categories </h2>
+                    <p>Add, edit or delete a Category</p>
+                    {% if messages %}
+                    <div class="messages">
+                 {% for message in messages %}
+                    <div class="{% if message.tags %}alert alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                    </div>
+                    {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <input type="text" placeholder="Search Categories" class="form-control bg-white">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="" />
+                                                </div>
+                                            </th>
+                                            <th>ID</th>
+                                            <th>Name</th>                                        
+                                            <th>Image</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for category in categories %}
+                                        <tr>
+                                            <th class="text-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="" />
+                                                </div>
+                                            </th>
+                                            <th scope="row">{{category.cid}}</th>
+                                            
+                                            <td>{{category.title}}</td>
+                                            
+                                            <td>
+                                              {% if category.image %}
+                                              <img src="{{ category.image.url }}" class="img-sm img-thumbnail" alt="">
+                                              {% else %}
+                                              <p>No image available</p>
+                                              {% endif %}
+                                             
+                                            </td>
+    
+                                            <td class="text-end" >
+                                                <div class="dropdown">
+                                                 
+                                                    <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                    <div class="dropdown-menu">
+                                                        <!-- <a class="dropdown-item" href="#">View detail</a> -->
+                                                        <a class="dropdown-item" href="{% url 'adminside:category_edit' category.cid  %}">edit_info</a>
+        
+        
+                                                        <a class="dropdown-item" href="{% url 'adminside:available_category' category.cid %}">{% if not category.is_blocked %} Available {% else %} Unavailable{% endif %}</a>
+                                                        <a class="dropdown-item text-danger" href="{% url 'adminside:delete_category' category.cid %}">Delete</a>
+                                                    </div>
+                                                </div> <!-- dropdown //end -->
+                                             
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+        
+                                    </tbody>
+                                </table>
+                            </div>
+                      </div> <!-- .col// -->
+
+
+
+
+                      <div class="col-md-3">
+                         <form method="post" action="{% url 'adminside:add_category'  %}"enctype="multipart/form-data"> 
+                          {% csrf_token %}
+                          
+                            <div class="mb-4">
+                                <label for="Category_name" class="form-label">Category Name</label>
+                                <input type="text" placeholder="Type here" class="form-control"  name="category_name"/>
+                            </div>
+                            <div class="card-body">
+                              <div class="input-upload">
+                                  <label for="category_image">Image</label>
+                                  <input class="form-control" type="file" required="True" name="category_image">
+                              </div>
+                          </div>
+                             <div class="d-grid">
+                                <button type="submit"  class="btn btn-primary">Create category</button>
+                            </div>
+                        </form>
+                    </div>
+                    </div> <!-- .row // -->
+                </div> <!-- card body .// -->
+            </div> <!-- card .// -->
+        </section> <!-- content-main end// -->
+{% endblock body %}
+
+{% comment %} id="Category_name" {% endcomment %}

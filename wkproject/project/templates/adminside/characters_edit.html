@@ -1,0 +1,51 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+{% block body %}
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">CHARACTERS</h2>
+                    <p>Add, edit or delete a Character</p>
+                </div>
+                <div>
+                    <input type="text" placeholder="Search Characters" class="form-control bg-white">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="col-md-3">
+                        <form method="post" action="" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                              <label>Current Images:</label>
+                              {% if char_image %}
+                                  <img src="{{ char_image.url}}" alt="AnimeCharacter Image" style="max-width: 200px; max-height: 200px;">
+                              {% else %}
+                                  <p>No image available</p>
+                              {% endif %}
+                            </div>
+                            <div class="mb-4">  
+                              <label for="char_name">Character Name:</label>
+                              <input type="text" name="char_name" value="{{ char_name }}" required>
+                          
+                            </div>
+                            <div class="card-body">
+                              <div class="input-upload">
+                                <label for="char_image">New Image:</label> 
+                                
+                                <input type="file" name="char_image">
+                              </div>
+                          </div>
+                                   
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Applay Changes</button>
+                            </div>
+                        </form>
+                   </div>
+                       
+                    </div> <!-- .row // -->
+                </div> <!-- card body .// -->
+            </div> <!-- card .// -->
+        </section> <!-- content-main end// -->
+{% endblock body %}

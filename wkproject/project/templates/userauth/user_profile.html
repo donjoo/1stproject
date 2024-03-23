@@ -1,0 +1,258 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% block content  %}
+
+<section class="pt-150 pb-150">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-10 m-auto">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="dashboard-menu">
+                            <ul class="nav flex-column" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" href="#dashboard" role="tab" aria-controls="dashboard" aria-selected="false"><i class="fi-rs-settings-sliders mr-10"></i>Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false"><i class="fi-rs-shopping-bag mr-10"></i>Orders</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#track-orders" role="tab" aria-controls="track-orders" aria-selected="false"><i class="fi-rs-shopping-cart-check mr-10"></i>Track Your Order</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="true"><i class="fi-rs-marker mr-10"></i>My Address</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="account-detail-tab" data-bs-toggle="tab" href="#account-detail" role="tab" aria-controls="account-detail" aria-selected="true"><i class="fi-rs-user mr-10"></i>My Account Details</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="account-edit-tab" data-bs-toggle="tab" href="#account-edit" role="tab" aria-controls="account-edit" aria-selected="true"><i class="fi-rs-user mr-10"></i>Account Edit</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="change-password-tab" data-bs-toggle="tab" href="#change-password" role="tab" aria-controls="change-password" aria-selected="true"><i class="fi-rs-user mr-10"></i>Change-Password</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="page-login-register.html"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
+                                </li>
+                               
+                                
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="tab-content dashboard-content">
+                            <div class="tab-pane fade active show" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Hello {{user.user.username}} </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>From your account dashboard. you can easily check &amp; view your <a href="#">recent orders</a>, manage your <a href="#">shipping and billing addresses</a> and <a href="#">edit your password and account details.</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Your Orders</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Order</th>
+                                                        <th>Date</th>
+                                                        <th>Status</th>
+                                                        <th>Total</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                   
+                                                  
+                                                    {% for order in orders  %}
+                                                        <tr>
+                                                            <td>{{order.order_number}}</td>
+                                                            <td>{{order.created_at}}</td>
+                                                            <td><span class="badge rounded-pill alert-warning">{{order.status}}</span></td>
+                                                            <td>{{order.order_total}} for {{order.quantity}} items</td>
+                                                            <td><a href="{% url "userauth:my_order" order.id %}" class="btn-small">View</a></td>
+                                                           
+                                                                </div> <!-- dropdown //end -->
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                       
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="track-orders" role="tabpanel" aria-labelledby="track-orders-tab">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Orders tracking</h5>
+                                    </div>
+                                    <div class="card-body contact-from-area">
+                                        <p>To track your order please enter your OrderID in the box below and press "Track" button. This was given to you on your receipt and in the confirmation email you should have received.</p>
+                                        <div class="row">
+                                            <div class="col-lg-8">
+                                                <form class="contact-form-style mt-30 mb-50" action="#" method="post">
+                                                    <div class="input-style mb-20">
+                                                        <label>Order ID</label>
+                                                        <input name="order-id" placeholder="Found in your order confirmation email" type="text" class="square">
+                                                    </div>
+                                                    <div class="input-style mb-20">
+                                                        <label>Billing email</label>
+                                                        <input name="billing-email" placeholder="Email you used during checkout" type="email" class="square">
+                                                    </div>
+                                                    <button class="submit submit-auto-width" type="submit">Track</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                                <div class="row">
+                                    {% for ad in address  %}
+                                    <div class="col-lg-6">
+                                        <div class="card mb-3 mr-3 mb-lg-0" style="width: 400px;">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Address</h5>
+                                            </div>
+                                            {% comment %} <div class="card-body"> {% endcomment %}
+                                                
+                                                    <div class="col-lg-6">
+                                                        <address>
+                                                            User: <strong>{{ ad.user.username }}</strong><br>
+                                                            House: <strong>{{ ad.house }}</strong><br>
+                                                            Street: <strong>{{ ad.street }}</strong><br>
+                                                            Landmark: <strong>{{ ad.landmark }}</strong><br>
+                                                            Pincode: <strong>{{ ad.pincode }}</strong><br>
+                                                            Town: <strong>{{ ad.town }}</strong><br>
+                                                            State: <strong>{{ ad.state }}</strong>
+                                                        </address>
+                                                    </div>
+                                                    
+                                                    <div class="dropdown">
+                                                 
+                                                    <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                    <div class="dropdown-menu">
+                                                        <!-- <a class="dropdown-item" href="#">View detail</a> -->
+                                                        <a class="dropdown-item" href="{% url 'userauth:address_edit' ad.id  %}">edit_info</a>
+                                                        <a class="dropdown-item text-danger" href="{% url 'userauth:delete_address' ad.id %}">Delete</a>
+                                                    </div>
+                                                </div> <!-- dropdown //end -->
+                                        </div>
+
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">My Account Detail</h5>
+                                    </div>
+                                    <div class="card-body contact-from-area">
+                                        <p></p>
+                                        <div class="row">
+                                            <div class="col-lg-8">
+                                                <div class="row">
+                                                    <div class="col-lg-12">
+                                                        <p>Name: {{ user.full_name }}</p>
+                                                        <p>Email: {{ user.user.email }}</p>
+                                                        <p>Bio: {{ user.bio }}</p>
+                                                        <p>Phone: {{ user.phone }}</p>
+                                                        <p>Last Updated: {{ user.updated }}</p>
+                                                        <p>Account Created on: {{ user.user.date_joined }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="row mt-3">
+                                                    <div class="col-lg-12">
+                                                        {% if user.image %}
+                                                            <img src="{{ user.image.url }}" style="width: 150px; height: 150px; object-fit: cover; border-radius: 50px;" alt="">
+                                                        {% else %}
+                                                            <p>No image available</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                            <div class="tab-pane fade" id="account-edit" role="tabpanel" aria-labelledby="account-edit-tab">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Account Edit</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <p>Already have an account? <a href="page-login-register.html">Log in instead!</a></p>
+                                        <form action="{% url 'userauth:profile_update' %}" method ="POST" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            <div class="mb-3">
+                                            {{form.full_name}}
+                                            </div>
+                                           
+                                            <div class="mb-3">
+                                              {{form.bio}}
+                                              </div>
+                                              <div class="mb-3">
+                                                {{form.phone}}
+                                                </div>
+                                                <div class="mb-3">
+                                                  {{form.image}}
+                                                  </div>
+                                                  <div>
+                                                    <button class="btn btn-success" type="submit">Save Changes</button>
+                                                  </div>
+                                          </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                <div class="tab-pane fade" id="change-password" role="tabpanel" aria-labelledby="change-password-tab">
+                    <div class="card">
+                        <div class="card-header">
+                                <h5>New Password</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Already have an account? <a href="page-login-register.html">Log in instead!</a></p>
+                            <form action="{% url 'userauth:change_password' %}" method ="POST" enctype="multipart/form-data"> {% csrf_token %}
+                            <div class="form-group col-md-12">
+                                <label>Current Password <span class="required">*</span></label>
+                                <input required="" class="form-control square" name="password" type="password">
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label>New Password <span class="required">*</span></label>
+                                <input required="" class="form-control square" name="new_password" type="password">
+                            </div>
+                            <div class="form-group col-md-12">
+                                <label>Confirm Password <span class="required">*</span></label>
+                                <input required="" class="form-control square" name="confirm_password" type="password">
+                            </div>
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-fill-out submit" name="submit" value="Submit">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</main>
+
+
+{% endblock content  %}

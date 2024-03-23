@@ -1,0 +1,365 @@
+{% extends "partials/base.html" %}
+
+{% load static %}
+{% block content%} 
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Checkout
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            {% comment %} <div class="row">
+                <div class="col-lg-6 mb-sm-15">
+                     <div class="toggle_info">
+                        <span><i class="fi-rs-user mr-10"></i><span class="text-muted">Already have an account?</span> <a href="#loginform" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to login</a></span>
+                    </div> 
+                    <div class="panel-collapse collapse login_form" id="loginform">
+                        <div class="panel-body">
+                            <p class="mb-30 font-sm">If you have shopped with us before, please enter your details below. If you are a new customer, please proceed to the Billing &amp; Shipping section.</p>
+                            <form method="post">
+                                <div class="form-group">
+                                    <input type="text" name="email" placeholder="Username Or Email">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" name="password" placeholder="Password">
+                                </div>
+                                <div class="login_footer form-group">
+                                    <div class="chek-form">
+                                        <div class="custome-checkbox">
+                                            <input class="form-check-input" type="checkbox" name="checkbox" id="remember" value="">
+                                            <label class="form-check-label" for="remember"><span>Remember me</span></label>
+                                        </div>
+                                    </div>
+                                    <a href="#">Forgot password?</a>
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn btn-md" name="login">Log in</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="toggle_info">
+                        <span><i class="fi-rs-label mr-10"></i><span class="text-muted">Have a coupon?</span> <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Click here to enter your code</a></span>
+                    </div>
+                    <div class="panel-collapse collapse coupon_form " id="coupon">
+                        <div class="panel-body">
+                            <p class="mb-30 font-sm">If you have a coupon code, please apply it below.</p>
+                            <form method="post">
+                                <div class="form-group">
+                                    <input type="text" placeholder="Enter Coupon Code...">
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn  btn-md" name="login">Apply Coupon</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+            <form method="post" action="{% url 'cart:apply_coupon' %}">
+                {% csrf_token %}
+                <label for="code">Coupon Code:</label>
+                <input type="text" id="coupon_code" name="code">
+                <button type="submit">Apply Coupon</button>
+            </form>
+            <div class="row">
+                <div class="col-12">
+                    <div class="divider mt-50 mb-50"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-25">
+                        <h4>Billing Details</h4>
+                    </div>
+                    <form action="{% url 'orders:place_order'%}" method="POST">
+                        {% csrf_token %}
+                        <select name="billing_address" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example" >
+                            {% comment %} {% for address in address %}
+                            <option value="{{address.id}}"><p>{{address.user.first_name}}</p><p>{{address.user.last_name}}</p>
+                                <p>{{address.street}}</p><br><p>{{address.pincode}}</p><br>
+                            </option>
+                            {% endfor %} {% endcomment %}
+                            <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                                <div class="row">
+                                    {% for ad in address  %}
+                                   <option value="{{ad.id}}"> <div class="col-lg-6">
+                                        <div class="card mb-3 mr-3 mb-lg-0" style="width: 400px;">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Address</h5>
+                                            </div>
+                                            {% comment %} <div class="card-body"> {% endcomment %}
+                                                
+                                                    <div class="col-lg-6">
+                                                        <address>
+                                                            User: <strong>{{ ad.user.username }}</strong><br>
+                                                            House: <strong>{{ ad.house }}</strong><br>
+                                                            Street: <strong>{{ ad.street }}</strong><br>
+                                                            Landmark: <strong>{{ ad.landmark }}</strong><br>
+                                                            Pincode: <strong>{{ ad.pincode }}</strong><br>
+                                                            Town: <strong>{{ ad.town }}</strong><br>
+                                                            State: <strong>{{ ad.state }}</strong>
+                                                        </address>
+                                                    </div>                                                 
+                                        </div>
+
+                                    </div></option>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                          </select>
+
+
+                          <div class="mb-25">
+                            <h4>Shipping address</h4>
+                        </div>
+                          <select  name="shipping_address" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
+                            <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                                <div class="row">
+                                    {% for ad in address  %}
+                                   <option value="{{ad.id}}"> <div class="col-lg-6">
+                                        <div class="card mb-3 mr-3 mb-lg-0" style="width: 400px;">
+                                            <div class="card-header">
+                                                <h5 class="mb-0">Address</h5>
+                                            </div>                                                
+                                                    <div class="col-lg-6">
+                                                        <address>
+                                                            User: <strong>{{ ad.user.username }}</strong><br>
+                                                            House: <strong>{{ ad.house }}</strong><br>
+                                                            Street: <strong>{{ ad.street }}</strong><br>
+                                                            Landmark: <strong>{{ ad.landmark }}</strong><br>
+                                                            Pincode: <strong>{{ ad.pincode }}</strong><br>
+                                                            Town: <strong>{{ ad.town }}</strong><br>
+                                                            State: <strong>{{ ad.state }}</strong>
+                                                        </address>
+                                                    </div>                                                 
+                                        </div>
+
+                                    </div></option>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                          </select>
+                        {% comment %} <div class="form-group">
+                            <input type="text" name="fname" placeholder="First name *" class="form-control" required >
+                        </div>
+                        <div class="form-group">
+                            <input type="text" required="" name="lname" placeholder="Last name *" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="cname" placeholder="Company Name"  class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <div class="custom_select">
+                                <select class="form-control select-active">
+                                    <option value="">Select an option...</option>
+                                    <option value="AX">Aland Islands</option>
+                                    <option value="AF">Afghanistan</option>
+                                    <option value="AL">Albania</option>
+                                    
+                                    <option value="ZW">Zimbabwe</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="billing_address" required="" placeholder="Address *" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="billing_address2" required="" placeholder="Address line2"  class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="city" placeholder="City / Town *" class="form-control" >
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="state" placeholder="State / County *" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="zipcode" placeholder="Postcode / ZIP *" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="phone" placeholder="Phone *"  class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <input required="" type="text" name="email" placeholder="Email address *"  class="form-control">
+                        </div> {% endcomment %}
+                        {% comment %} <div class="form-group">
+                            <div class="checkbox">
+                                <div class="custome-checkbox">
+                                    <input class="form-check-input" type="checkbox" name="checkbox" id="createaccount"  class="form-control">
+                                    <label class="form-check-label label_info" data-bs-toggle="collapse" href="#collapsePassword" data-target="#collapsePassword" aria-controls="collapsePassword" for="createaccount"><span>Create an account?</span></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="collapsePassword" class="form-group create-account collapse in">
+                            <input required="" type="password" placeholder="Password" name="password"  class="form-control">
+                        </div> {% endcomment %}
+                        {% comment %} <div class="ship_detail">
+                            <div class="form-group">
+                                <div class="chek-form">
+                                    <div class="custome-checkbox">
+                                        <input class="form-check-input" type="checkbox" name="checkbox" id="differentaddress"  class="form-control">
+                                        <label class="form-check-label label_info" data-bs-toggle="collapse" data-target="#collapseAddress" href="#collapseAddress" aria-controls="collapseAddress" for="differentaddress"><span>Ship to a different address?</span></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="collapseAddress" class="different_address collapse in">
+                                <div class="form-group">
+                                    <input type="text" required="" name="fname" placeholder="First name *">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" required="" name="lname" placeholder="Last name *">
+                                </div>
+                                <div class="form-group">
+                                    <input required="" type="text" name="cname" placeholder="Company Name">
+                                </div>
+                                <div class="form-group">
+                                    <div class="custom_select">
+                                        <select class="form-control select-active">
+                                            <option value="">Select an option...</option>
+                                            <option value="AX">Aland Islands</option>
+                                            <option value="AF">Afghanistan</option>
+                                            <option value="AL">Albania</option>
+                                            <option value="DZ">Algeria</option>
+                                            <option value="AD">Andorra</option>
+                                            <option value="AO">Angola</option>
+                                            <option value="AI">Anguilla</option>
+                                            <option value="AQ">Antarctica</option>
+                                            <option value="AG">Antigua and Barbuda</option>
+                                           
+                                            <option value="ZW">Zimbabwe</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="billing_address" required="" placeholder="Address *">
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" name="billing_address2" required="" placeholder="Address line2">
+                                </div>
+                                <div class="form-group">
+                                    <input required="" type="text" name="city" placeholder="City / Town *">
+                                </div>
+                                <div class="form-group">
+                                    <input required="" type="text" name="state" placeholder="State / County *">
+                                </div>
+                                <div class="form-group">
+                                    <input required="" type="text" name="zipcode" placeholder="Postcode / ZIP *">
+                                </div>
+                            </div>
+                        </div>{% endcomment %}
+                        <div class="mb-20">
+                            <h5>Additional information</h5>
+                        </div>
+                        <div class="form-group mb-30">
+                            <textarea name="order_note" rows="5" placeholder="Order notes"></textarea>
+                        </div> 
+                        {% comment %} <button type="submit">Place Order</button>
+                    </form> {% endcomment %}
+                   
+                    
+                    
+                </div>
+                <div class="col-md-6">
+                    <div class="order_review">
+                        <div class="mb-20">
+                            <h4>Your Orders</h4>
+                        </div>
+                        <div class="table-responsive order_table text-center">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th colspan="2">Product</th>
+                                        <th>quantity</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                    <tr>
+                                        <td class="image product-thumbnail"><img src="{{ item.product.image.url }}" alt="#"></td>                                        <td>                 
+                                            <h5 class="product-name"><a href="{% url 'app:product_detail' item.product.pid %}">{{ item.product.title }}</a></h5>
+                                            <p class="font-xs">
+                                                {% if item.variations.all %}
+                                                    {% for iteme in item.variations.all %}
+                                                        <li>Size:{{ iteme.size|upper }}</li>
+                                                    {% endfor %}
+                                               {% endif %}
+                                         </p>
+                                        </td>
+                                        <td>{{item.quantity}}</td>
+                                        <td class="price" data-title="Price"><span><span>₹</span>{{ item.product.price|floatformat:2 }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                   
+                                    <tr>
+                                        <th>SubTotal</th>
+                                        <td class="product-subtotal" colspan="2">{{total}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Shipping</th>
+                                        <td colspan="2"><em>+{{shipping}}</em></td>
+                                    </tr>
+                                    {% if coupon_discount %}
+                                    <tr>
+                                        <th>coupon</th>
+                                        <td colspan="2"><em>-{{coupon_discount}}</em></td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th>Total</th>
+                                        <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">{{grand_total}}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                        <div class="payment_method">
+                            <div class="mb-25">
+                                <h5>Payment</h5>
+                            </div>
+                            <div class="payment_option">
+                                <div class="custome-radio">
+                                    <input value="Wallet" class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" checked="">
+                                    <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#wallet" aria-controls="wallet">Wallet</label>
+                                    <div class="form-group collapse in" id="wallet">
+                                        <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
+                                    </div>
+                                </div>
+                                <div class="custome-radio">
+                                    <input value="cash on delivery" class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios4" checked="">
+                                    <label class="form-check-label" for="exampleRadios4" data-bs-toggle="collapse" data-target="#checkPayment" aria-controls="checkPayment">CASH ON DELIVERY</label>
+                                    <div class="form-group collapse in" id="checkPayment">
+                                        <p class="text-muted mt-5">Please send your cheque to Store Name, Store Street, Store Town, Store State / County, Store Postcode. </p>
+                                    </div>
+                                </div>
+                                <div class="custome-radio">
+                                    <input value="Paypal" class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios5" checked="">
+                                    <label class="form-check-label" for="exampleRadios5" data-bs-toggle="collapse" data-target="#paypal" aria-controls="paypal">Paypal</label>
+                                    <div class="form-group collapse in" id="paypal">
+                                        <p class="text-muted mt-5">Pay via PayPal; you can pay with your credit card if you don't have a PayPal account.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit">Place Order</button>
+                        {% comment %} <button type="submit">Place Order</button> {% endcomment %}
+                    </form>
+                    </div>
+                </div>
+            {% comment %} </form> {% endcomment %}
+            </div>
+        </div>
+    </section>
+</main>
+
+{% endblock content %}

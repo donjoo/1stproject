@@ -1,0 +1,60 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+{% block body %}
+<section class="content-main">
+    <div class="row">
+        <div class="col-9">
+            <div class="content-header">
+                <h2 class="content-title">Add New Variant</h2>
+                <div>
+                    <button class="btn btn-light rounded font-sm mr-5 text-body hover-up">Save to draft</button>
+                    <button class="btn btn-md rounded font-sm hover-up">Publish</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Variant Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="product" class="form-label">Product</label>
+                            <select class="form-select" id="product" name="product" required>
+                                {% for product in products %}
+                                    <option value="{{ product.title }}">{{ product.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <label for="stock_count_s" class="form-label">S</label>
+                                <input type="number" placeholder="0" class="form-control" id="stock_count_s" name="stock_count_s">
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="stock_count_m" class="form-label">M</label>
+                                <input type="number" placeholder="0" class="form-control" id="stock_count_m" name="stock_count_m">
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="stock_count_l" class="form-label">L</label>
+                                <input type="number" placeholder="0" class="form-control" id="stock_count_l" name="stock_count_l">
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="stock_count_l" class="form-label">XL</label>
+                                <input type="number" placeholder="0" class="form-control" id="stock_count_xl" name="stock_count_xl">
+                            </div>
+                            <div class="col-lg-4">
+                                <label for="stock_count_l" class="form-label">XXL</label>
+                                <input type="number" placeholder="0" class="form-control" id="stock_count_xxl" name="stock_count_xxl">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Variant</button>
+                    </form>
+                </div>
+            </div> <!-- card end// -->
+        </div>
+    </div>
+</section> <!-- content-main end// -->
+{% endblock body %}

@@ -1,0 +1,128 @@
+{% extends 'partials/admin_base.html' %}
+{% load static %}
+
+{% block title %} Add Product {% endblock %}
+
+{% block body %}
+<section class="content-main">
+    <div class="row">
+        <div class="col-9">
+            <div class="content-header">
+                <h2 class="content-title">Add New Product</h2>
+                {% if error_messages %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for error_message in error_messages %}
+                        <li>{{ error_message }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Product Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">  
+                            <label for="product_name" class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="product_name" name="name" placeholder="Product Name" value="{{ form_data.name }}" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" placeholder="Description" rows="4">{{ form_data.description }}</textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label for="specifications" class="form-label">Specifications</label>
+                            <textarea class="form-control" id="specifications" name="specifications" placeholder="fabric:cotton,round neck,machine,washable..." rows="4">{{ form_data.specifications }}</textarea>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-lg-6">
+                                <label for="old_price" class="form-label">Max Price</label>
+                                <input type="number" class="form-control" id="old_price" name="old_price" placeholder="Max Price" min="0" value="{{ form_data.old_price }}" required>
+                            </div>
+                            <div class="col-lg-6">
+                                <label for="price" class="form-label">Price</label>
+                                <input type="number" class="form-control" id="price" name="price" placeholder="Price" min="0" value="{{ form_data.price }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-lg-6">
+                                <label for="fit" class="form-label">Fit style</label>
+                            <input type="text" class="form-control" id="fit" name="fit" placeholder="style" value="{{ form_data.fit }}" required>
+                            </div>
+                            <div class="col-lg-6">
+                                <label for="fabric" class="form-label">fabric</label>
+                            <input type="text" class="form-control" id="fabric" name="fabric" placeholder="fabric" value="{{ form_data.fabric }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-lg-6">
+                                <label for="care" class="form-label">care</label>
+                            <input type="text" class="form-control" id="care" name="care" placeholder="care" value="{{ form_data.care }}" required>
+                            </div>
+                            <div class="col-lg-6">
+                                <label for="sleeve" class="form-label">sleeve</label>
+                            <input type="text" class="form-control" id="sleeve" name="sleeve" placeholder="sleeve" value="{{ form_data.sleeve }}" required>
+                            </div>
+                            <div class="col-lg-6">
+                                <label for="collar" class="form-label">collar</label>
+                            <input type="text" class="form-control" id="collar" name="collar" placeholder="collar" value="{{ form_data.collar }}" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category" required>
+                                {% for category in categories %}
+                                    <option value="{{ category.title }}">{{ category.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="anime" class="form-label">Anime</label>
+                            <select class="form-select" id="anime" name="anime" required>
+                                {% for anime in animes %}
+                                    <option value="{{ anime.title }}">{{ anime.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="character" class="form-label">Character</label>
+                            <select class="form-select" id="character" name="character" required>
+                                {% for char in characters %}
+                                    <option value="{{ char.name }}">{{ char.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="image" class="form-label">Product Image</label>
+                            <input type="file" class="form-control" id="image" name="image_field" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Additional Images</h4>
+                </div>
+                <div class="card-body">
+                    {% for i in additional_image_count %}
+                    <div class="mb-4">
+                        <label for="product_image{{ i }}" class="form-label">Product Image {{ i }}</label>
+                        <input type="file" class="form-control" id="product_image{{ i }}" name="product_image{{ i }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+{% block body %}
+{% comment %} <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Stock</title>
+    <!-- Add any additional CSS files you need -->
+</head> {% endcomment %}
+<div class="card-body">
+    <form method="POST" action="{% url 'adminside:add_stock' %}" enctype="multipart/form-data" style="padding: 20px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+        {% csrf_token %}
+        <div class='mb-4'>
+            <label for="productSelect" style="font-weight: bold;">Product:</label>
+        </div>
+        <select name="product" id="productSelect" onchange="getVariants();" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5H7z"/></svg>'); background-repeat: no-repeat; background-position: right 10px center; background-size: 24px; cursor: pointer;">
+            <option value="">Select a Product</option>
+            {% for product in products %}
+                <option value="{{ product.id }}">{{ product.title }}</option>
+            {% endfor %}
+        </select>
+
+        <div id="variantsSelect">
+            <!-- Variants will be loaded here based on the selected product -->
+        </div>
+
+        <button type="submit" >Add Stock</button>
+    </form>
+</div>
+
+    <script src="F:\wkproject\project\static\admin\assets\js\new.js"></script>
+   <script>
+        function getVariants() {
+            const productId = document.getElementById('productSelect').value;
+            const variantsDiv = document.getElementById('variantsSelect');
+
+            // Clear previous options
+            variantsDiv.innerHTML = '';
+
+            if (productId) {
+                fetch(`/get_variants/?product_id=${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.variants && data.variants.length > 0) {
+                        data.variants.forEach(variant => {
+                            const label = document.createElement('label');
+                            label.htmlFor = `variant-${variant.id}`;
+                            label.textContent = `${variant.size}: `;
+
+                            const input = document.createElement('input');
+                            input.type = 'number';
+                            input.id = `variant-${variant.id}`;
+                            input.name = `stock-${variant.id}`;
+                            input.min = 0;
+                            input.value = 0;
+
+                            const div = document.createElement('div');
+                            div.appendChild(label);
+                            div.appendChild(input);
+
+                            variantsDiv.appendChild(div);
+                        });
+                    } else {
+                        variantsDiv.innerHTML = '<p>No variants available for this product.</p>';
+                    }
+                })
+                .catch(error => console.error('Error fetching variants:', error));
+            }
+        }
+    </script> 
+
+
+{% endblock body %}
+
+

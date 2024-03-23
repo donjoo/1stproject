@@ -1,0 +1,52 @@
+{% extends "partials/admin_base.html" %}
+{% load static %}
+{% block body %}
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">ANIMES </h2>
+                    <p>Add, edit or delete a anime</p>
+                </div>
+                <div>
+                    <input type="text" placeholder="Search Animes" class="form-control bg-white">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="col-md-3">
+                        <form method="post" action="" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                              <label>Current Images:</label>
+                              {% if anime_image %}
+                                  <img src="{{ anime_image.url}}" alt="CategoryAnime Image" style="max-width: 200px; max-height: 200px;">
+                              {% else %}
+                                  <p>No image available</p>
+                              {% endif %}
+                            </div>
+                            <div class="mb-4">
+                              <label for="anime_name">Anime Name:</label>
+                              <input type="text" name="anime_name" value="{{ anime_title }}" required>
+                          
+                            </div>
+                            <div class="card-body">
+                              <div class="input-upload">
+                                <label for="anime_image">New Image:</label>
+                                
+                                <input type="file" name="anime_image">
+                                
+                              </div>
+                          </div>
+                                
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Applay Changes</button>
+                            </div>
+                        </form>
+                   </div>
+                       
+                    </div> <!-- .row // -->
+                </div> <!-- card body .// -->
+            </div> <!-- card .// -->
+        </section> <!-- content-main end// -->
+{% endblock body %}

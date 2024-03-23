@@ -1,0 +1,61 @@
+{% extends "partials/base.html" %}
+{% block content %}
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Wishlist
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table shopping-summery text-center">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col" colspan="2">Product</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Stock Status</th>
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wishlist_item in wishlist_items %}
+                                {% for product in wishlist_item.products.all %}          
+                              <tr>
+                                   
+                                    <td class="image product-thumbnail"><img src="{{product.image.url}}" alt="#"></td>
+                                    <td class="product-des product-name">
+                                        <h5 class="product-name"><a href="shop-product-right.html">{{product.title}}</a></h5>
+                                        <p class="font-xs">{{product.anime}},{{product.character}}<br> {{product.descriptions}}
+                                        </p>
+                                    </td>
+                                    <td class="price" data-title="Price"><span>{{product.price}}</span></td>
+                                    <td class="text-center" data-title="Stock">
+                                        <span class="color3 font-weight-bold">{{product.in_stock}}</span>
+                                    </td>
+                                    <td class="text-right" data-title="Cart">
+                                        <a href="{% url 'cart:add_cart' product.pid %}"  class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</a>
+                                    </td>
+                                    <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td>
+                                </tr>
+                                {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock content %}
+
