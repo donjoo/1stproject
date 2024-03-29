@@ -64,6 +64,11 @@
                                                 <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
                                                 <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
                                                 <span class="save-price  font-md color3 ml-15">-{{product.get_percentage|floatformat:0}}%off   </span>
+                                                {% for offer in offers %}
+                                                {% if offer.discount %}
+                                                <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
+                                                {% endif %}
+                                                {% endfor %}
                                             </div>
                                         </div>
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>

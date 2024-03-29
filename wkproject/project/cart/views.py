@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from app.models import Product,Variants,Coupon
+from app.models import Product,Variants,Coupon,ProductOffer,CategoryOffer
 from .models import Cart,CartItem
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +9,12 @@ from userauth.models import User
 from django.contrib import messages
 from .forms import CouponForm
 from django.utils import timezone
+import datetime
+from django.db.models import Max
+
+
+
+current_date = datetime.date.today()
 
 
 # Create your views here.
@@ -154,7 +160,61 @@ def add_cart(request,pid):
         
         
         return redirect('cart:cart')
+def get_product_offer(product):
+    today = timezone.now().date()
+    try:
+        product_offer = ProductOffer.objects.filter(
+            product=product,
+            end_date__gte=today,
+        )
+        if product_offer.exists():
+            max_discount = product_offer.aggregate(Max('discount'))['discount__max']
+            return max_discount
+        else:
+            return 0
+    except ProductOffer.DoesNotExist:
+        return 0
+def get_category_offer(category):
+       today = timezone.now().date()
+       try:
+           category_offer = CategoryOffer.objects.filter(
+               category= category,
+               end_date__gte=today,
+           )
+           if category_offer.exists():
+            max_discount = category_offer.aggregate(Max('discount'))['discount__max']
+            return max_discount
+           else:
+             return 0
+       except CategoryOffer.DoesNotExist:
+           return 0
 
+def apply_offer(cart_items, grand_total):
+    applied_offer = None
+    has_offer = False
+    
+    for cart_item in cart_items:
+        product = cart_item.product
+        category = product.category
+        
+        product_offer = get_product_offer(product)
+        category_offer = get_category_offer(category)
+        
+        if product_offer and category_offer:
+            offer = max(product_offer, category_offer)
+        elif product_offer:
+            offer = product_offer
+        elif category_offer:
+            offer = category_offer
+        else:
+            offer = 0
+        
+        if offer > 0:
+            grand_total -= offer
+            applied_offer = offer
+            has_offer = True
+
+    return grand_total, applied_offer
 
 
 def cart(request, total=0,quantity=0,cart_items=None):
@@ -172,6 +232,7 @@ def cart(request, total=0,quantity=0,cart_items=None):
 
         shipping = (3 * total)/100
         grand_total = total + shipping
+        grand_total,offer_price = apply_offer(cart_items, grand_total)
     except ObjectDoesNotExist:
         pass
 
@@ -181,9 +242,9 @@ def cart(request, total=0,quantity=0,cart_items=None):
         'cart_items':cart_items,
         'shipping':shipping,
         'grand_total':grand_total,
+        'offer_price':offer_price,
     }
     return render(request,'app/cart.html',context)
-
 
 
 
@@ -236,7 +297,7 @@ def Checkout(request):
     total = 0
     quantity = 0
     cart_items = None
-    coupon_discount=0
+    coupon_discount=None
     coupon_form = CouponForm(request.POST or None)
     coupon_id = request.session.get('coupon_id')
 
@@ -261,7 +322,7 @@ def Checkout(request):
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
-                   
+           
         try:
             address = Address.objects.filter(user=request.user)
                 
@@ -270,6 +331,8 @@ def Checkout(request):
 
        
         grand_total = subtotal + shipping
+        grand_total,offer_price = apply_offer(cart_items, grand_total)
+
     except ObjectDoesNotExist:
         pass
    
@@ -283,6 +346,7 @@ def Checkout(request):
         'coupon_form': coupon_form,
         'address':address,
         'coupon_discount':coupon_discount,
+        'offer_price':offer_price,
     }
 
     if request.method == 'POST':

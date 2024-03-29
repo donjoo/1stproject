@@ -107,10 +107,18 @@
                                         <td class="cart_total_label">Shipping</td>
                                         <td class="cart_total_amount"> <i class="ti-gift mr-5"></i>₹{{shipping}}</td>
                                     </tr>
+                                    {% if coupon_discount > 0 %}
                                     <tr>
-                                        <td class="cart_total_label">Shipping</td>
+                                        <td class="cart_total_label">Coupon</td>
                                         <td class="cart_total_amount"> <i class="ti-gift mr-5"></i>-₹{{coupon_discount}}</td>
                                     </tr>
+                                    {% endif %}
+                                    {% if offer_price > 0 %}
+                                    <tr>
+                                        <td class="cart_total_label">Offer</td>
+                                        <td class="cart_total_amount"> <i class="ti-gift mr-5"></i>-₹{{offer_price}}</td>
+                                    </tr>
+                                    {% endif %}
                                     <tr>
                                         <td class="cart_total_label">Total</td>
                                         <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">₹{{grand_total|floatformat:2}}</span></strong></td>

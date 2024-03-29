@@ -130,6 +130,20 @@
                         <a href="{% url "adminside:user_management" %}">Users list</a>
                     </div>
                 </li>
+
+{% comment %} offer management {% endcomment %}
+
+                <li class="menu-item has-submenu">
+                    <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
+                        <span class="text">Offer management</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="{% url "adminside:offer_list" %}">Offer list</a>
+                        <a href="{% url "adminside:create_product_offer" %}">New product offer</a>                                              
+                        <a href="{% url "adminside:create_category_offer" %}">New category offer</a>                       
+                    </div>
+                </li>
+
 {% comment %} coupon management {% endcomment %}
                 <li class="menu-item has-submenu">
                     <a class="menu-link" href="page-sellers-cards.html"> <i class="icon material-icons md-store"></i>

@@ -1,0 +1,125 @@
+{% extends "partials/admin_base.html" %}
+{% block body %}
+
+
+
+
+
+
+
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Wishlist
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <h3>Product Offer list</h3>
+                        <table class="table shopping-summery text-center">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col" colspan="">Coupon code</th>
+                                    <th scope="col">Discount</th>
+                                    <th scope="col">Valid form</th>
+                                    <th scope="col">Valid to</th>
+                                    {% comment %} <th scope="col">active</th> {% endcomment %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                {% for offer in product_offers %}         
+                              <tr>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{ offer.product.title }}</span>
+                                </td>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{ offer.discount }}</span>
+                                </td>
+                                  
+                                    <td class="text-center" >
+                                        <span class="color3 font-weight-bold">{{offer.start_date}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="color3 font-weight-bold">{{offer.end_date}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        {% comment %} <span class="color3 font-weight-bold">{{coupon.active}}</span> {% endcomment %}
+                                    </td>
+                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <h3>Category Offer list</h3>
+                        <table class="table shopping-summery text-center">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col" colspan="">Coupon code</th>
+                                    <th scope="col">Discount</th>
+                                    <th scope="col">Valid form</th>
+                                    <th scope="col">Valid to</th>
+                                    {% comment %} <th scope="col">active</th> {% endcomment %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                {% for offer in category_offers %}     
+                              <tr>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{ offer.category.title }}</span>
+                                </td>
+                                <td class="text-center" >
+                                    <span class="color3 font-weight-bold">{{ offer.discount }}% off</span>
+                                </td>
+                                  
+                                    <td class="text-center" >
+                                        <span class="color3 font-weight-bold">{{offer.start_date}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <span class="color3 font-weight-bold">{{offer.end_date}}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        {% comment %} <span class="color3 font-weight-bold">{{coupon.active}}</span> {% endcomment %}
+                                    </td>
+                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+
+
+
+{% endblock body %}
+
+  
+
+              

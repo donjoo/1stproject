@@ -13,7 +13,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from userauth.views import wallet_balence
 import secrets
-
+from cart.views import apply_offer
 # Create your views here.
 
 
@@ -75,7 +75,8 @@ def cod_payment(request,order_id):
 
 
     CartItem.objects.filter(user=request.user).delete()
-    del request.session['coupon_id']
+    if 'coupon_id' in request.session:
+       del request.session['coupon_id']
 
 
     email_subject = 'Thank you for your order'
@@ -247,7 +248,9 @@ def payment(request):
 
 
     CartItem.objects.filter(user=request.user).delete()
-    del request.session['coupon_id']
+    if 'coupon_id' in request.session:
+       del request.session['coupon_id']
+
 
 
     email_subject = 'Thank you for your order'
@@ -308,6 +311,8 @@ def place_order(request,total=0,quantity=0,):
         return redirect('app:index')
     
     grand_total = 0
+    coupon_discount = 0
+    offer_price=0
   
     
     for cart_item in cart_items:
@@ -326,6 +331,8 @@ def place_order(request,total=0,quantity=0,):
   
 
     grand_total = subtotal + shipping
+    grand_total,offer_price = apply_offer(cart_items, grand_total)
+
 
     user = User.objects.all()
     billing = Address.objects.all()
@@ -356,6 +363,7 @@ def place_order(request,total=0,quantity=0,):
             data.order_note = form.cleaned_data['order_note']
             data.order_total = grand_total
             data.shipping = shipping
+            data.offer_price=offer_price
                 
             print(data.billing_address,data.shipping_address,data.order_note,data.order_total)
             # data.shipping = shipping
@@ -405,6 +413,7 @@ def place_order(request,total=0,quantity=0,):
                 'shipping':shipping,
                 'payment':payement,
                 'coupon_discount':coupon_discount,
+                'offer_price':offer_price,
                     
             }
             return render(request,'app/payements.html',context)   

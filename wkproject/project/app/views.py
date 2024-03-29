@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse,redirect,get_object_or_404,HttpResponseRedirect
-from app.models import Product,ProductImage,Category,CategoryAnime,AnimeCharacter,Variants,WishList
+from app.models import Product,ProductImage,Category,CategoryAnime,AnimeCharacter,Variants,WishList,ProductOffer
 from userauth.models import User,Address
 from django.contrib.auth import login,authenticate
 from django.contrib import messages
@@ -10,18 +10,26 @@ from django.db.models import Q
 from cart.models import CartItem
 from cart.views import _cart_id
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+import datetime
 
 
 # Create your views here.
+current_date = datetime.date.today()
+
 
 def index(request):
-    products = Product.objects.all().order_by('-date') 
+    products = Product.objects.all().order_by('-date')
+    categories = Category.objects.all() 
+    offers = ProductOffer.objects.filter(start_date__lte=current_date, end_date__gte=current_date)
+
     paginator = Paginator(products,9)
     page = request.GET.get('page')
     paged_products = paginator.get_page(page)
 
     context = {
-        "products":paged_products
+        "products":paged_products,   
+        "offers":offers,
+        "categories":categories,
     }
     return render(request,'app/index.html',context)
 
@@ -71,6 +79,7 @@ def product_detail(request, pid):
     try:
         product = get_object_or_404(Product,pid=pid)
         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request),product=product).exists()
+        offers = ProductOffer.objects.filter(start_date__lte=current_date, end_date__gte=current_date,product=product)
        
     except Product.DoesNotExist:
         messages.warning(request,f'you are already logged in')
@@ -83,6 +92,7 @@ def product_detail(request, pid):
         "p_image":p_image,
         'in_cart':in_cart,
         'sizes':sizes,
+        "offers":offers
     }
 
     return render(request,'app/product_detail.html',context)
@@ -288,3 +298,8 @@ def remove_from_wishlist(request, pid):
 #         for p_id,item is 
 
 #     return render(request,'app/checkout.html')
+
+
+
+def about(request):
+    return render(request,"app/about.html")

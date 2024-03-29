@@ -1,0 +1,14 @@
+{% extends "partials/admin_base.html" %}
+{% block body %}
+
+<h1>Create Category Offer</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Offer</button>
+</form>
+
+{% endblock body %}
+
+
+

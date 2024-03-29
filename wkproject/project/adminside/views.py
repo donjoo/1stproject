@@ -6,13 +6,13 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse,HttpResponseRedirect
 from django.views.decorators.cache import cache_control
-from app.models import Product,Category,ProductImage,ProductVariants,CategoryAnime,AnimeCharacter,Variants,Stock,Coupon
+from app.models import Product,Category,ProductImage,ProductVariants,CategoryAnime,AnimeCharacter,Variants,Stock,Coupon,ProductOffer,CategoryOffer
 from django.core.paginator import Paginator
-from adminside.forms import CreateProductForm,ProductVariantForm,CouponForm
+from .forms import CreateProductForm,ProductVariantForm,CouponForm,ProductOfferForm,CategoryOfferForm
 from django.http import Http404
 from django.http import JsonResponse
 from orders.models import Order,OrderProduct,Payment
-from datetime import datetime
+from datetime import datetime,date
 
 
 # from orders.models import Order,Payement
@@ -1021,6 +1021,44 @@ def coupon_list(request):
 
     return render(request,'adminside/coupon_list.html',context)
 
+                        # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
+                        # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
+                        # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
+                        # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
+
+def offer_list(request):
+
+    product_offers = ProductOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today())
+    category_offers = CategoryOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today())
+
+    return render(request,"adminside/offer_list.html",{'product_offers':product_offers,
+                                                       'category_offers':category_offers})
+
+def create_product_offer(request):
+    if request.method == 'POST':
+        form = ProductOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('adminside:offer_list')
+    else:
+        form = ProductOfferForm()
+    return render(request,"adminside/create_product_offer.html",{'form':form})
+
+
+def create_category_offer(request):
+    if request.method == 'POST':
+        form = CategoryOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('adminside:offer_list')
+    else:
+        form = CategoryOfferForm()
+    return render(request,"adminside/create_category_offer.html",{'form':form})
+
+                            # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
+                            # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
+                            # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
+                            # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
 
 def sales_report(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:

@@ -1,7 +1,7 @@
 from django.db import models
 from userauth.models import User
 from userauth.models import Address
-from app.models import Product,Variants,Coupon
+from app.models import Product,Variants,Coupon,ProductOffer,CategoryOffer  
 
 # Create your models here.
 
@@ -36,6 +36,7 @@ class Order(models.Model):
     payment = models.ForeignKey(Payment,on_delete=models.SET_NULL,blank=True,null=True)
     billing_address = models.ForeignKey(Address, related_name='billing_orders', on_delete=models.CASCADE, null=True)
     shipping_address = models.ForeignKey(Address, related_name='shipping_orders', on_delete=models.CASCADE, null=True)
+    offer_price = models.FloatField(blank=True,default=0)
     order_number = models.CharField(max_length=20)
     order_note = models.CharField(max_length=100,blank=True)
     order_total = models.FloatField()
