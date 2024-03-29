@@ -1,5 +1,5 @@
 from django import forms 
-from app.models import Product,ProductImage,ProductVariants
+from app.models import Product,ProductImage,ProductVariants,ProductOffer,CategoryOffer
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from app.models import ProductImage,SIZE_CHOICES,Coupon
@@ -47,3 +47,14 @@ class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon 
         fields = ['code','discount','valid_from','valid_to','active']
+
+
+class ProductOfferForm(forms.ModelForm):
+    class Meta:
+        model = ProductOffer
+        fields = ['product','discount','start_date','end_date']
+
+class CategoryOfferForm(forms.ModelForm):
+    class Meta:
+        model = CategoryOffer
+        fields = ['category','discount','start_date','end_date']

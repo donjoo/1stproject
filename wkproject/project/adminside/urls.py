@@ -58,6 +58,11 @@ urlpatterns = [
     path('create_coupon/',views.create_coupon,name='create_coupon'),
     path('coupon_list',views.coupon_list,name='coupon_list'),
 
+    path('offer_list',views.offer_list,name='offer_list'),
+    path('create_product_offer/',views.create_product_offer,name='create_product_offer'),
+    path('create_category_offer',views.create_category_offer,name='create_category_offer'),
+
+
     path('sales_report/',views.sales_report,name='sales_report'),
        
 
