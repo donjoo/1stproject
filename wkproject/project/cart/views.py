@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from app.models import Product,Variants,Coupon,ProductOffer,CategoryOffer
+from app.models import Product,Variants,Coupon,ProductOffer,CategoryOffer,Stock
 from .models import Cart,CartItem
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from userauth.models import Address
@@ -11,6 +11,7 @@ from .forms import CouponForm
 from django.utils import timezone
 import datetime
 from django.db.models import Max
+
 
 
 
@@ -69,7 +70,16 @@ def add_cart(request,pid):
                 item_id = id[index]  
                 item = CartItem.objects.get(product=product,id=item_id)
                 item.quantity += 1
-                item.save()
+                if product_size:  # Check if product_size is not empty
+                    stock = Stock.objects.get(variant=product_size[0])              
+                    if item.quantity <= stock.stock:
+                        item.save()
+                    else:
+                            messages.error(request, "Sorry, the requested quantity is not available in stock.")
+                            return redirect('cart:cart')
+                else:
+                    messages.error(request,"please select a size.")
+                    return redirect('app:product_detail',product.pid)
             else:
                 item = CartItem.objects.create(product=product,quantity=1,user=current_user)
 
@@ -78,7 +88,9 @@ def add_cart(request,pid):
                     print('hekllo')
                     item.variations.add(*product_size)                
                     item.save()
+            
         else:
+            
             cart_item = CartItem.objects.create(
                 product = product,
                 quantity =1,
@@ -208,7 +220,7 @@ def apply_offer(cart_items, grand_total):
             offer = category_offer
         else:
             offer = 0
-        
+        offer = float(offer)
         if offer > 0:
             grand_total -= offer
             applied_offer = offer
@@ -278,17 +290,36 @@ def remove_cart_item(request,pid,item_id):
 def apply_coupon(request):
     if request.method == 'POST':
         form = CouponForm(request.POST)
-        print('nowwwwww\n\n\n\n\n\n\n\n')
-        if form.is_valid():
-            print('jelllllllllllllllllllllll\n\\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        if form.is_valid():          
             code = form.cleaned_data['code']
             try:
-                coupon = Coupon.objects.get(code=code, valid_to__gte=timezone.now(), active=True)
-                request.session['coupon_id'] = coupon.id
+                coupon = Coupon.objects.get(code=code) #valid_to__gte=timezone.now(), active=True)
+                if coupon.valid_to < timezone.now() and coupon.active == True:
+                    messages.error(request,"coupon expired.")
+                    request.session['coupon_id'] = None
+                else:
+                    request.session['coupon_id'] = coupon.id
+
             except Coupon.DoesNotExist:
+                messages.error(request,"no coupon esxistsssss.")
                 request.session['coupon_id'] = None
+        else:
+            messages.error(request,"invalid.")
+     
     return redirect('cart:Checkout')
 
+def remove_coupon(request):
+    if request.method == 'POST':
+        coupon_id = request.POST.get('coupon_id')
+        if coupon_id:
+            # Remove the coupon from session or database
+            del request.session['coupon_id']
+            # Optionally, you may want to update other related data
+            # For example, recalculating the order total without the coupon
+            # And updating the cart or order accordingly
+            # Optionally, you can display a success message
+            messages.success(request, 'Coupon removed successfully.')
+    return redirect('cart:Checkout')
 
 
 def Checkout(request):
@@ -318,7 +349,9 @@ def Checkout(request):
         if coupon_id:
             try:
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
-                subtotal = total - coupon.discount
+                # import pdb
+                # pdb.set_trace()
+                subtotal =  (coupon.discount/ 100) * float(total)
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
@@ -330,7 +363,7 @@ def Checkout(request):
             address='none'
 
        
-        grand_total = subtotal + shipping
+        grand_total = subtotal + float(shipping)
         grand_total,offer_price = apply_offer(cart_items, grand_total)
 
     except ObjectDoesNotExist:
@@ -345,11 +378,13 @@ def Checkout(request):
         'grand_total': grand_total,
         'coupon_form': coupon_form,
         'address':address,
+        'coupon_id':coupon_id,
         'coupon_discount':coupon_discount,
         'offer_price':offer_price,
     }
 
     if request.method == 'POST':
+        print("helllooo\n\n\n\n\n\n\n")
         if coupon_form.is_valid():
             code = coupon_form.cleaned_data['code']
             try:
@@ -359,6 +394,8 @@ def Checkout(request):
             except Coupon.DoesNotExist:
                 request.session['coupon_id'] = None
                 messages.error(request, 'Invalid coupon code. Please try again.')
+          
+      
 
     return render(request, 'app/checkout.html', context)
 

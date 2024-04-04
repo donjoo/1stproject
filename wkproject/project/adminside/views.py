@@ -13,7 +13,8 @@ from django.http import Http404
 from django.http import JsonResponse
 from orders.models import Order,OrderProduct,Payment
 from datetime import datetime,date
-
+import os
+from django.conf import settings
 
 # from orders.models import Order,Payement
 # Create your views here.
@@ -123,6 +124,14 @@ def add_product(request):
 
         validation_errors = []
 
+        if not product_name.strip():
+            validation_errors = ["Title is required."]
+
+        image_file = request.FILES.get('image_field')
+        if image_file:
+            if not is_valid_image(image_file):
+                validation_errors.append("Invalid image file format. Only image files are allowed.")
+        
         try:
             max_price = float(max_price)
             if max_price < 0:
@@ -152,7 +161,7 @@ def add_product(request):
             content ={
                 'categories':categories,
                 'animes':animes,
-                'characters':character,
+                'characters':characters,
                 'additional_image-count':range(1,4),
                 'error_messages':validation_errors,
                 'form_data':form_data,
@@ -224,6 +233,19 @@ def add_product(request):
 
 
 
+# def get_characters(request):
+#     if request.headers.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' and request.method == 'GET':
+#         print('heyyhyhvy')
+#         anime_id = request.GET.get('aid')
+#         characters = AnimeCharacter.objects.filter(animename_id=anime_id).values('id', 'name')
+#         print("Received anime ID:", anime_id)
+#         print("Characters:", characters)
+#         return JsonResponse(list(characters), safe=False)
+#     else:
+#         # Handle invalid requests
+#         return JsonResponse({'error': 'Invalid request'})
+
+
 
 def delete_product(request,pid):
     if not request.user.is_superadmin:
@@ -234,7 +256,12 @@ def delete_product(request,pid):
         return redirect('adminside:product_list')
     except Product.DoesNotExist:
         return HttpResponse("product not Found",status=404)
-    
+
+
+def is_valid_image(file):
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+    ext = os.path.splitext(file.name)[1]
+    return ext.lower() in valid_extensions
    
 @login_required(login_url='adminside:admin_login')
 def product_list(request):
@@ -267,101 +294,57 @@ def block_unblock_products(request, pid):
 
 
 
-def product_edit(request,pid):
+
+def product_edit(request, pid):
     if not request.user.is_superadmin:
-       
-            return redirect('adminside:admin_login')
+        return redirect('adminside:admin_login')
 
-
-
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    characters = AnimeCharacter.objects.all()
-    productt = get_object_or_404(Product,pid=pid)
-
+    product = get_object_or_404(Product, pid=pid)
+    p_image = product.p_images.all()
     if request.method == 'POST':
-        product_name = request.POST.get('name')
-        description = request.POST.get('describtion')
-        max_price = request.POST.get('old_price')
-        sale_price = request.POST.get('price')
-        category_name = request.POST.get('category')
-        anime_name = request.POST.get('anime')
-        character_name = request.POST.get('character')
-        fit = request.POST.get('fit')
-        fabric = request.POST.get('fabric')
-        care = request.POST.get('care')
-        sleeve = request.POST.get('sleeve')
-        collar = request.POST.get('collar')
-        specifications=request.POST.get('specifications')
+        product.title = request.POST.get('name')
+        product.descriptions = request.POST.get('describtion')
+        product.old_price = float(request.POST.get('old_price'))
+        product.price = float(request.POST.get('price'))
+        product.category = get_object_or_404(Category, title=request.POST.get('category'))
+        product.anime = get_object_or_404(CategoryAnime, title=request.POST.get('anime'))
+        product.character = get_object_or_404(AnimeCharacter, name=request.POST.get('character'))
+        product.fit = request.POST.get('fit')
+        product.fabric = request.POST.get('fabric')
+        product.care = request.POST.get('care')
+        product.sleeve = request.POST.get('sleeve')
+        product.collar = request.POST.get('collar')
+        product.specifications = request.POST.get('specifications')
+
+        # # Handle image upload
+        # new_image_file = request.FILES.get('image_field')
+        # if new_image_file:
+        #     product.image = new_image_file
+
+        # Handle image deletion
+        delete_image = request.POST.get('delete_image')
+        if delete_image == 'on':
+            product.image.delete()
+            product.image = None
         
+        for image in product.p_images.all():
+            delete_checkbox_name = f'delete_image_{image.id}'
+            replace_file_name = f'replace_image_{image.id}'
 
-
-       
-        validation_errors = []
-
-        try:
-            max_price = float(max_price)
-            if max_price < 0:
-                validation_errors.append("Max price must be a positive number")
-
-            sale_price=float(sale_price)
-            if sale_price < 0:
-                validation_errors.append("Sale price must be a positive number")
-        except ValueError as e:
-            validation_errors.append(str(e))
-        if validation_errors:
-            form_data = {
-                'name':product_name,
-                'description':description,
-                'old_price':max_price,
-                'price':sale_price,
-                'category':category_name,
-                'anime':anime_name,
-                'character':character_name,
-                'fit': fit,
-                'fabric': fabric,
-                'care': care,
-                'sleeve': sleeve,
-                'collar': collar,
-                'specifications':specifications
-            }
-            content ={
-                'categories':categories,
-                'animes':animes,
-                'characters':characters,
-                'additional_image-count':range(1,4),
-                'error_messages':validation_errors,
-                'form_data':form_data,
-
-            } 
-            return render(request,'adminside/product_edit.html',content)
-        
-
-        
-        category = get_object_or_404(Category, title=category_name)
-        print(category)
-        anime = get_object_or_404(CategoryAnime, title=anime_name)
-        print(anime)
-        character = get_object_or_404(AnimeCharacter, name=character_name)
-        print(character)
-    
-        product = Product(
-            title=product_name,
-            category=category,
-            anime=anime,
-            character=character,
-            descriptions=description,
-            specifications=specifications,
-            old_price=max_price,
-            price=sale_price,
-            fit=fit,
-            fabric=fabric,
-            care=care,
-            sleeve=sleeve,
-            collar=collar,
-            image=request.FILES.get('image_field')
-        )
+            if request.POST.get(delete_checkbox_name)=='on':
+                image.Images.delete()
+            else:
+                replace_image_file = request.FILES.get(replace_file_name)
+                if replace_image_file:
+                    image.Images = replace_image_file
+                    image.save()
         product.save()
+        new_image_file = request.FILES.get('image_field')
+        if new_image_file:
+            product.image = new_image_file
+            product.save()
+
+
         additional_image_count = 5
         for i in range(1,additional_image_count+1):
             image_field = f'product_image{i}'
@@ -372,34 +355,172 @@ def product_edit(request,pid):
 
         return redirect('adminside:product_list')
 
-   
-    try:
-        product = get_object_or_404(Product,pid=pid)
-    except product.DoesNotExist:
-        product = None
-    try:
-       anime = get_object_or_404(CategoryAnime,title=productt.anime)
-    except CategoryAnime.DoesNotExist:
-        anime = None
-    try:
-       category = get_object_or_404(Category,title=productt.category)
-    except Category.DoesNotExist:
-        category = None
-    try:
-       character = get_object_or_404(AnimeCharacter,name=productt.character)
-    except AnimeCharacter.DoesNotExist:
-        character = None
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    characters = AnimeCharacter.objects.all()
 
-    
+
     context = {
         'productt': product,
-        'animes':animes,
-        'category':category,
-        'characters':characters,
-        
+        'categories': categories,
+        'animes': animes,
+        'characters': characters,
+        'additional_image_count':range(1,3),  
+        'existing_data': {
+            'name': product.title,
+            'describtion': product.descriptions,
+            'old_price': product.old_price,
+            'price': product.price,
+            'category': product.category.title if product.category else '',
+            'anime': product.anime.title if product.anime else '',
+            'character': product.character.name if product.character else '',
+            'fit': product.fit,
+            'fabric': product.fabric,
+            'care': product.care,
+            'sleeve': product.sleeve,
+            'collar': product.collar,
+            'specifications': product.specifications,
+            'p_image':p_image,
+            
+        }
     }
 
     return render(request, 'adminside/product_edit.html', context)
+
+# def product_edit(request,pid):
+#     if not request.user.is_superadmin:
+       
+#             return redirect('adminside:admin_login')
+
+
+
+#     categories = Category.objects.all()
+#     animes = CategoryAnime.objects.all()
+#     characters = AnimeCharacter.objects.all()
+#     productt = get_object_or_404(Product,pid=pid)
+
+#     if request.method == 'POST':
+#         product_name = request.POST.get('name')
+#         description = request.POST.get('describtion')
+#         max_price = request.POST.get('old_price')
+#         sale_price = request.POST.get('price')
+#         category_name = request.POST.get('category')
+#         anime_name = request.POST.get('anime')
+#         character_name = request.POST.get('character')
+#         fit = request.POST.get('fit')
+#         fabric = request.POST.get('fabric')
+#         care = request.POST.get('care')
+#         sleeve = request.POST.get('sleeve')
+#         collar = request.POST.get('collar')
+#         specifications=request.POST.get('specifications')
+        
+
+
+       
+#         validation_errors = []
+
+#         try:
+#             max_price = float(max_price)
+#             if max_price < 0:
+#                 validation_errors.append("Max price must be a positive number")
+
+#             sale_price=float(sale_price)
+#             if sale_price < 0:
+#                 validation_errors.append("Sale price must be a positive number")
+#         except ValueError as e:
+#             validation_errors.append(str(e))
+#         if validation_errors:
+#             form_data = {
+#                 'name':product_name,
+#                 'description':description,
+#                 'old_price':max_price,
+#                 'price':sale_price,
+#                 'category':category_name,
+#                 'anime':anime_name,
+#                 'character':character_name,
+#                 'fit': fit,
+#                 'fabric': fabric,
+#                 'care': care,
+#                 'sleeve': sleeve,
+#                 'collar': collar,
+#                 'specifications':specifications
+#             }
+#             content ={
+#                 'categories':categories,
+#                 'animes':animes,
+#                 'characters':characters,
+#                 'additional_image-count':range(1,4),
+#                 'error_messages':validation_errors,
+#                 'form_data':form_data,
+
+#             } 
+#             return render(request,'adminside/product_edit.html',content)
+        
+
+        
+#         category = get_object_or_404(Category, title=category_name)
+#         print(category)
+#         anime = get_object_or_404(CategoryAnime, title=anime_name)
+#         print(anime)
+#         character = get_object_or_404(AnimeCharacter, name=character_name)
+#         print(character)
+    
+#         product = Product(
+#             title=product_name,
+#             category=category,
+#             anime=anime,
+#             character=character,
+#             descriptions=description,
+#             specifications=specifications,
+#             old_price=max_price,
+#             price=sale_price,
+#             fit=fit,
+#             fabric=fabric,
+#             care=care,
+#             sleeve=sleeve,
+#             collar=collar,
+#             image=request.FILES.get('image_field')
+#         )
+#         product.save()
+#         additional_image_count = 5
+#         for i in range(1,additional_image_count+1):
+#             image_field = f'product_image{i}'
+#             image= request.FILES.get(image_field)
+#             if image:
+#                 ProductImage.objects.create(product=product,Images=image)
+
+
+#         return redirect('adminside:product_list')
+
+   
+#     try:
+#         product = get_object_or_404(Product,pid=pid)
+#     except product.DoesNotExist:
+#         product = None
+#     try:
+#        anime = get_object_or_404(CategoryAnime,title=productt.anime)
+#     except CategoryAnime.DoesNotExist:
+#         anime = None
+#     try:
+#        category = get_object_or_404(Category,title=productt.category)
+#     except Category.DoesNotExist:
+#         category = None
+#     try:
+#        character = get_object_or_404(AnimeCharacter,name=productt.character)
+#     except AnimeCharacter.DoesNotExist:
+#         character = None
+
+    
+#     context = {
+#         'productt': product,
+#         'animes':animes,
+#         'category':category,
+#         'characters':characters,
+       
+        
+#     }
+
+#     return render(request, 'adminside/product_edit.html', context)
 
 @login_required(login_url='adminside:admin_login')
 def products_details(request, pid):
@@ -796,11 +917,13 @@ def add_newvariant(request):
     products = Product.objects.all()
     
     if request.method == 'POST':
-        product_title = request.POST.get('product')  # Assuming this is a title
+        print('httttt')
+        product_id = request.POST.get('product')  
         size = request.POST.get('size')
+        print(product_id,'hyyyyyy')
 
         # Retrieve product by title
-        product = get_object_or_404(Product, title=product_title)
+        product = get_object_or_404(Product, pid = product_id)
 
         if Variants.objects.filter(product=product, size=size).exists():
             messages.error(request, 'Size already exists.')
@@ -875,6 +998,8 @@ def block_size(request,id):
 
  
 def add_stock(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         product_id = request.POST.get('product')
         product = get_object_or_404(Product, id=product_id)
@@ -896,6 +1021,8 @@ def add_stock(request):
 
 
 def get_variants(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     product_id = request.GET.get('product_id')
     variants = Variants.objects.filter(product_id=product_id).values('id', 'size')
     return JsonResponse({'variants': list(variants)})
@@ -940,6 +1067,8 @@ def stock_list(request):
 
 
 def order_list(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     orders = Order.objects.all()
 
     context={
@@ -955,6 +1084,8 @@ def order_list(request):
 
 
 def order_detail(request, order_id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
     # coupon = Coupon.objects.filter(id=order.coupon_id)
@@ -981,6 +1112,8 @@ def order_detail(request, order_id):
 
 
 def update_order_status(request, order_id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
         new_status = request.POST.get('status')
@@ -1001,6 +1134,8 @@ def update_order_status(request, order_id):
 
 
 def create_coupon(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method=='POST':
         form = CouponForm(request.POST)
         if form.is_valid():
@@ -1012,6 +1147,8 @@ def create_coupon(request):
 
 
 def coupon_list(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
 
     coupons = Coupon.objects.all()
 
@@ -1027,6 +1164,8 @@ def coupon_list(request):
                         # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
 
 def offer_list(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
 
     product_offers = ProductOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today())
     category_offers = CategoryOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today())
@@ -1035,6 +1174,8 @@ def offer_list(request):
                                                        'category_offers':category_offers})
 
 def create_product_offer(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         form = ProductOfferForm(request.POST)
         if form.is_valid():
@@ -1046,6 +1187,8 @@ def create_product_offer(request):
 
 
 def create_category_offer(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         form = CategoryOfferForm(request.POST)
         if form.is_valid():
@@ -1066,9 +1209,10 @@ def sales_report(request):
 
     start_date_value = ""
     end_date_value = ""
+    grand_totall = 0
     try:
 
-        orders=Order.objects.filter(is_ordered = True).order_by('-created_at')
+        orders=Order.objects.filter(is_ordered = True).exclude(status = 'Cancelled').order_by('-created_at')
     
     except:
         pass
@@ -1084,15 +1228,28 @@ def sales_report(request):
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
            
-            orders = orders.filter(created_at__range=(start_date, end_date))
-   
+            orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled')
+
+    grand_totall = grand_total(orders)
+    print(grand_totall)
     context={
         'orders':orders,
         'start_date_value':start_date_value,
-        'end_date_value':end_date_value
+        'end_date_value':end_date_value,
+        'grand_total':grand_totall,
     }
 
     return render(request,'adminside/sales_report.html',context)
+
+
+
+def grand_total(orders):
+    grand_total = 0
+
+    for order in orders:
+        grand_total += order.order_total
+
+    return grand_total
 
 
 

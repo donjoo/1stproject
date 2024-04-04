@@ -25,7 +25,7 @@
                         <div class="product-action-1">
                             <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal"><i class="fi-rs-eye"></i></a>
                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
-                            <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                            {% comment %} <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> {% endcomment %}
                         </div>
                         <div class="product-badges product-badges-position product-badges-mrg">
                             <span class="hot">Hot</span>
@@ -51,7 +51,13 @@
                             <input type="hidden" value="{{ p.image.url }}" class="product-image-{{ p.id }}">
                             <input type="hidden" value="{{ p.id }}" class="product-id-{{ p.id }}">
                             <input type="hidden" value="{{ p.title }}" class="product-title-{{ p.id }}">
-                            <a href="{% url 'cart:add_cart' p.pid %}" class="add add-to-cart-btn hover-up" ><i class="fi-rs-shopping-bag-add" id="add-to-cart-btn"></i></a>
+                            {% if p in out_of_stock_products %}
+                            <p style="color:red;">Out of stock</p>
+                        {% else %}
+                            <a href="{% url 'cart:add_cart' p.pid %}" class="add add-to-cart-btn hover-up">
+                                <i class="fi-rs-shopping-bag-add" id="add-to-cart-btn"></i>
+                            </a>
+                        {% endif %}
                         </div>
                         <div>
                             {% for offer in offers %}

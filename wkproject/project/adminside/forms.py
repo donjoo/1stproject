@@ -47,14 +47,30 @@ class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon 
         fields = ['code','discount','valid_from','valid_to','active']
-
-
+        widgets = {
+            'valid_from': forms.DateInput(attrs={'type': 'date','style': 'width: 150px;'}),
+            'valid_to': forms.DateInput(attrs={'type': 'date','style':'width:150px;'})
+        }
+    def clean_discount(self):
+        discount = self.cleaned_data.get('discount')
+        if discount > 100:
+            raise forms.ValidationError("Discount must be less that or equal to 100")
+        return discount
+    active = forms.BooleanField(widget=forms.CheckboxInput(attrs={'style': 'width: 20px; height: 20px;'}))
 class ProductOfferForm(forms.ModelForm):
     class Meta:
         model = ProductOffer
         fields = ['product','discount','start_date','end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs={'type':'date','style':'width:150px;'}),
+            'end_date': forms.DateInput(attrs={'type':'date','style':'width:150px;'}),
+        }
 
 class CategoryOfferForm(forms.ModelForm):
     class Meta:
         model = CategoryOffer
         fields = ['category','discount','start_date','end_date']
+        widgets = {
+            'start_date': forms.DateInput(attrs ={'type':'date','style':'width:150px;'}),
+            'end_date':forms.DateInput(attrs={'type':'date','style':'width:150px;'}),
+        }

@@ -7,7 +7,7 @@ from decimal import Decimal
 from django.utils.html import mark_safe
 from userauth.models import User
 from django.utils import timezone
-
+from django.core.validators import MaxValueValidator
 
 # Create your models here.
 STATUS_CHOICE = (
@@ -39,7 +39,7 @@ RATING= (
 SIZE_CHOICES = (
         ('S', 'S'),
         ('M', 'M'),
-        ('L', 'L'),
+        ('L', 'L'), 
         ('XL','XL'),
         ('XXL','XXL'),
     )
@@ -255,7 +255,7 @@ class WishList(models.Model):
 
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
-    discount = models.DecimalField(max_digits=5,decimal_places=2)
+    discount = models.PositiveIntegerField(validators=[MaxValueValidator(100)])
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     active = models.BooleanField(default=True)

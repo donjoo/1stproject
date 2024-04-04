@@ -1,6 +1,7 @@
 ﻿{% extends "partials/base.html" %}
 
 {% load static %}
+{% load custom_filters %}
 {% block content%} 
 <section class="mt-50 mb-50">
     <div class="container">
@@ -17,9 +18,11 @@
                                                 <img src="{{product.image.url}}" alt="product image">
                                             </figure>
                                             {% for p in p_image %}
+                                            {% if p.Images %}
                                             <figure class="border-radius-10">
                                                 <img src="{{ p.Images.url }}" alt="product image">
                                             </figure>
+                                            {% endif %}
                                             {% endfor %}
                                             
                                         </div>
@@ -29,7 +32,9 @@
                                         <div class="slider-nav-thumbnails pl-15 pr-15">
                                             <div><img src="{{ product.image.url }}" alt="product image"></div>
                                             {% for p in p_image %}
-                                            <div><img src="{{ p.Images.url }}" alt="product image"></div>
+                                            {% if p.Images %}
+                                              <div><img src="{{ p.Images.url }}" alt="product image"></div>
+                                            {% endif %}
                                             {% endfor %}
                                             <!-- THUMBNAILS -->
                                             {% comment %} <div class="slider-nav-thumbnails pl-15 pr-15">
@@ -103,17 +108,24 @@
                                                 <li><a value='largeee' href="#">XL</a></li>
                                                 <li><a href="#">XXL</a></li>
                                             </ul> {% endcomment %}
+                                            {% if not all_sizes_out_of_stock %}
                                             <div class="row">
                                             <div class="item-option-select">
                                                     <h6>Select Size </h6>
                                                     <select name="size" class="form-control" style="width: 150px; font-size: 14px; padding: 5px 25px 5px 5px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,%3Csvg fill=%22none%22 xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 stroke=%22currentColor%22 width=%2212%22 height=%2212%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22%3E%3C/path%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 5px top 50%;">
-                                                        {% for sizee in sizes %}
-                                                        <option value="{{sizee.size}}">{{sizee.size}}</option>
-                                                        {% endfor %}
-                                                        
+                                                        {% for size, status in sizes_out_of_stock.items %}
+                                                        {% if status %}
+                                                            <option value="{{ size }}" disabled>{{ size }} (Out of stock)</option>
+                                                        {% else %}
+                                                            <option value="{{ size }}">{{ size }}</option>
+                                                        {% endif %}
+                                                    {% endfor %}
                                                     </select>
+                                                 
                                             </div>
+                                            
                                         </div>
+                                        {% endif %}
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
                                             {% comment %} <div class="detail-qty border radius">
@@ -122,9 +134,9 @@
                                                 <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
                                             </div> {% endcomment %}
 
-                                            <input type="number" value="1" name="" id="product-quantity" class="w-25 mb-10 product-quantity-{{ product.id }}">
+                                            {% comment %} <input type="number" value="1" name="" id="product-quantity" class="w-25 mb-10 product-quantity-{{ product.id }}">
                                             <div class="product-extra-link2">
-                                               
+                                                {% endcomment %}
                                                 {% comment %} <input type="hidden" value="{{ product.id}}" class="product-id" name="" id="">
                                                 <input type="hidden" value="{{ product.title}}" class="product-title" name="" id=""> {% endcomment %}
 
@@ -134,9 +146,11 @@
                                                 <input type="hidden" value="{{ product.id }}" class="product-id-{{ product.id }}">
                                                 <input type="hidden" value="{{ product.title }}" class="product-title-{{ product.id }}">
                                               
-                                       
+                                                {% if all_sizes_out_of_stock %}
+                                                <button type="submit" class="btn btn-primary" disabled><span class="button-text">Out of stock</span></button>
+                                                {% else %}
                                                  <button type="submit" class="btn btn-primary"><span class="button-text">Add to cart</span></button>
-                                                                                               
+                                                {% endif %}                                              
                                        
                                                 <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" product.pid %}"><i class="fi-rs-heart"></i></a>
                                                 <a aria-label="Compare" class="action-btn add-to-cart-btn hover-up" data-index="{{ product.id }}" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>

@@ -1,0 +1,67 @@
+{% extends "partials/base.html" %}
+{% block content %}
+
+
+
+<div class="container">
+    <h1>Order List</h1>
+    
+    <!-- Display order data -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Your Orders</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                       
+                      
+                        {% for order in orders  %}
+                            <tr>
+                                <td>{{order.order_number}}</td>
+                                <td>{{order.created_at}}</td>
+                                <td><span class="badge rounded-pill alert-warning">{{order.status}}</span></td>
+                                <td>{{order.order_total}} for {{order.quantity}} items</td>
+                                <td><a href="{% url "userauth:my_order" order.id %}" class="btn-small">View</a></td>
+                               
+                                    </div> <!-- dropdown //end -->
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+    
+    <!-- Pagination -->
+    <div class="pagination">
+        <span class="step-links">
+            {% if orders.has_previous %}
+                <a href="?page=1">&laquo; First</a>
+                <a href="?page={{ orders.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ orders.number }} of {{ orders.paginator.num_pages }}.
+            </span>
+
+            {% if orders.has_next %}
+                <a href="?page={{ orders.next_page_number }}">Next</a>
+                <a href="?page={{ orders.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+
+{% endblock content %}

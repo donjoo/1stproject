@@ -1,4 +1,5 @@
 {% extends "partials/base.html" %}
+{% load custom_filters %}
 
 {% load static %}
 {% block content%} 
@@ -66,6 +67,7 @@
                     </div>
                 </div>
             </div> {% endcomment %}
+           
             <form method="post" action="{% url 'cart:apply_coupon' %}">
                 {% csrf_token %}
                 <label for="code">Coupon Code:</label>
@@ -79,7 +81,8 @@
             </div>
   
             {% endfor %}
-  
+            
+        
             <div class="row">
                 <div class="col-12">
                     <div class="divider mt-50 mb-50"></div>
@@ -323,6 +326,7 @@
                                         <th>coupon</th>
                                         <td colspan="2"><em>-{{coupon_discount}}</em></td>
                                     </tr>
+                                    
                                     {% endif %}
                                     {% if offer_price %}
                                     <tr>
@@ -366,9 +370,22 @@
                                 </div>
                             </div>
                         </div>
+                    <div class="row">
+                        <div class="col">
                         <button type="submit">Place Order</button>
+                    </div>
                         {% comment %} <button type="submit">Place Order</button> {% endcomment %}
                     </form>
+                    {% if coupon_discount %}
+                    <div class="col">
+                        <form method="post" action="{% url 'cart:remove_coupon' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="coupon_id" value="{{ coupon_id }}">
+                            <button type="submit" class="remove-button">Remove Coupon</button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
                     </div>
                 </div>
             {% comment %} </form> {% endcomment %}

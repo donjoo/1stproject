@@ -23,6 +23,7 @@ urlpatterns = [
 
 
     path('wallet/',views.user_wallet,name='user_wallet'),
+    path('orders_lists/',views.order_list,name='orders_lists'),
     # path('add_funds/',views.ad   d_funds,name='add_funds'),
 
 

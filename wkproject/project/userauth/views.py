@@ -23,6 +23,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from orders.models import Order
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
 
@@ -260,9 +261,9 @@ def user_profile(request):
     userdetail = UserDetails.objects.get(user=request.user)
 
     try:
-        orders = Order.objects.filter(user=request.user)
-    except:
-        orders = None
+       orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    except Order.DoesNotExist:
+       orders = None
 
     try:
         order_products = OrderProduct.objects.filter(order=orders)
@@ -280,6 +281,24 @@ def user_profile(request):
     }
     return render(request,"userauth/user_profile.html",context)
 
+def order_list(request):
+    # Retrieve all orders
+    all_orders = Order.objects.all().order_by('-created_at')
+
+    # Paginate orders
+    paginator = Paginator(all_orders, 10)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        orders = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range, deliver last page of results.
+        orders = paginator.page(paginator.num_pages)
+
+    return render(request,'userauth/orders_lists.html',{'orders': orders})
 
 def address_edit(request,id):
     if not request.user.is_authenticated:
@@ -452,21 +471,21 @@ def cancel_order(request, order_id,):
         data.status = "Cancelled"
         data.save()
         messages.success(request, 'Order has been cancelled successfully.')
+        if data.payment:
+            if (
+                data.payment.payment_method == "Paypal"
+                or data.payment.payment_method == "wallet payment"
+            ):
+                
+                amount = data.order_total
+                user = request.user
 
-        if (
-            data.payment.payment_method == "Paypal"
-            or data.payment.payment_method == "wallet payment"
-        ):
-            
-            amount = data.order_total
-            user = request.user
-
-            Transaction.objects.create(
-                user=user,
-                description="Cancelled Order " + str(order_id),
-                amount=amount,
-                transaction_type="Credit",
-            )
+                Transaction.objects.create(
+                    user=user,
+                    description="Cancelled Order " + str(order_id),
+                    amount=amount,
+                    transaction_type="Credit",
+                )
 
         return redirect("userauth:my_order",order_id)
 

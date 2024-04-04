@@ -84,7 +84,7 @@
                         </div>
                         <div class="mb-4">
                             <label for="anime" class="form-label">Anime</label>
-                            <select class="form-select" id="anime" name="anime" required>
+                            <select class="form-select" id="id_anime" name="anime" required>
                                 {% for anime in animes %}
                                     <option value="{{ anime.title }}">{{ anime.title }}</option>
                                 {% endfor %}
@@ -92,9 +92,9 @@
                         </div>
                         <div class="mb-4">
                             <label for="character" class="form-label">Character</label>
-                            <select class="form-select" id="character" name="character" required>
+                            <select class="form-select" id="id_character" name="character" required>
                                 {% for char in characters %}
-                                    <option value="{{ char.name }}">{{ char.name }}</option>
+                                <option value="{{ char.name }}">{{ char.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -125,4 +125,30 @@
     </form>
     </div>
 </section>
+{% comment %} <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#id_anime').change(function() {
+        var animeId = $(this).val();
+        $.ajax({
+            url: '{% url "adminside:get_characters" %}',
+            type: 'GET', // Specify the request type
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }, // Include the X-Requested-With header
+            data: {
+                'aid': animeId
+            },
+            dataType: 'json',
+            success: function(data) {
+                $('#id_character').empty();
+                $.each(data, function(key, value) {
+                    $('#id_character').append($('<option>', {
+                        value: value.id,
+                        text: value.name
+                    }));
+                });
+            }
+        });
+    });
+});
+</script> {% endcomment %}
 {% endblock %}

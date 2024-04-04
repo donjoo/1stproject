@@ -1,5 +1,5 @@
 from django.shortcuts import render,HttpResponse,redirect,get_object_or_404,HttpResponseRedirect
-from app.models import Product,ProductImage,Category,CategoryAnime,AnimeCharacter,Variants,WishList,ProductOffer
+from app.models import Product,ProductImage,Category,CategoryAnime,AnimeCharacter,Variants,WishList,ProductOffer,Stock
 from userauth.models import User,Address
 from django.contrib.auth import login,authenticate
 from django.contrib import messages
@@ -11,10 +11,35 @@ from cart.models import CartItem
 from cart.views import _cart_id
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 import datetime
+from django.utils import timezone
 
 
 # Create your views here.
 current_date = datetime.date.today()
+
+
+
+def out_of_stock_products():
+    products_out_of_stock = []
+    products = Product.objects.all()
+
+    for product in products:
+        variants = Variants.objects.filter(product=product)
+        out_of_stock = True
+
+        for variant in variants:
+            stocks = Stock.objects.filter(variant=variant)
+            
+            for stock in stocks:
+                if stock.stock > 0:
+                    out_of_stock = False
+                    break
+
+        if out_of_stock:
+            products_out_of_stock.append(product)
+    print(products_out_of_stock)
+    return products_out_of_stock
+
 
 
 def index(request):
@@ -25,13 +50,16 @@ def index(request):
     paginator = Paginator(products,9)
     page = request.GET.get('page')
     paged_products = paginator.get_page(page)
-
+    out_of_stock_product = out_of_stock_products()
+    print(out_of_stock_product)
     context = {
         "products":paged_products,   
         "offers":offers,
         "categories":categories,
+        "out_of_stock_products":out_of_stock_product
     }
     return render(request,'app/index.html',context)
+
 
 def category_list_view(request):
     categories = Category.objects.all()
@@ -74,29 +102,44 @@ def Character_product_list(request,lid):
     }
     return render(request,"app/category_product_list.html",context)
 
-
 def product_detail(request, pid):
     try:
-        product = get_object_or_404(Product,pid=pid)
-        in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request),product=product).exists()
-        offers = ProductOffer.objects.filter(start_date__lte=current_date, end_date__gte=current_date,product=product)
-       
+        product = get_object_or_404(Product, pid=pid)
+        in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=product).exists()
+        offers = ProductOffer.objects.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now(), product=product)
     except Product.DoesNotExist:
-        messages.warning(request,f'you are already logged in')
+        messages.warning(request, 'Product does not exist')
         return redirect("app:index")
-   
+    
     p_image = product.p_images.all()
     sizes = Variants.objects.filter(product=product)
-    context={
-        "product":product,
-        "p_image":p_image,
-        'in_cart':in_cart,
-        'sizes':sizes,
-        "offers":offers
+
+    # Passing pid to is_size_out_of_stock function
+    sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
+    all_sizes_out_of_stock = all(sizes_out_of_stock.values())
+     
+    for size in sizes:
+       print(sizes_out_of_stock[size.size])
+    context = {
+        "product": product,
+        "p_image": p_image,
+        'in_cart': in_cart,
+        'sizes': sizes,
+        "offers": offers,
+        "sizes_out_of_stock": sizes_out_of_stock,
+        "all_sizes_out_of_stock":all_sizes_out_of_stock
     }
 
-    return render(request,'app/product_detail.html',context)
+    return render(request, 'app/product_detail.html', context)
 
+def is_size_out_of_stock(pid, size):
+    try:
+        product = Product.objects.get(pid=pid)
+        variant = Variants.objects.get(product=product, size=size)
+        stock = Stock.objects.get(variant=variant)
+        return stock.stock <= 0
+    except (Product.DoesNotExist, Variants.DoesNotExist, Stock.DoesNotExist):
+        return True
 
 @login_required(login_url='userauth:handel_login')
 def add_address(request):

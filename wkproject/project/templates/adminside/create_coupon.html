@@ -1,12 +1,10 @@
 {% extends "partials/admin_base.html" %}
 {% block body %}
 
-<form method="post">
+<form method="POST">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Create Coupon</button>
+    <!-- Add a submit button -->
+    <button type="submit" class="btn btn-primary">Create Coupon</button>
 </form>
-
-
-
 {% endblock body %}

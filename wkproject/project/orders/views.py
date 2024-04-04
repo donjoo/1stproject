@@ -323,7 +323,7 @@ def place_order(request,total=0,quantity=0,):
     if coupon_id:
             try:
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
-                subtotal=total - coupon.discount
+                subtotal =  (coupon.discount/ 100) * total
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
@@ -363,7 +363,8 @@ def place_order(request,total=0,quantity=0,):
             data.order_note = form.cleaned_data['order_note']
             data.order_total = grand_total
             data.shipping = shipping
-            data.offer_price=offer_price
+            if offer_price:
+              data.offer_price=offer_price
                 
             print(data.billing_address,data.shipping_address,data.order_note,data.order_total)
             # data.shipping = shipping
@@ -390,6 +391,7 @@ def place_order(request,total=0,quantity=0,):
             current_date = d.strftime("%Y%m%d")
             order_number = current_date + str(data.id)
             data.order_number = order_number
+          
             payement = request.POST.get('payment_option')
             if coupon_id:
                 try:

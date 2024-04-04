@@ -100,7 +100,12 @@
                         
                         <div class="mb-4">
                             <label for="image" class="form-label">Product Image</label>
-                            <input type="file" class="form-control" id="image" name="image_field" value="{{productt.image}}" required>
+                            {% if productt.image %}
+                            <img src="{{ productt.image.url }}" alt="Product Image"><br>
+                            <label><input type="checkbox" name="delete_image"> Delete Existing Image</label><br>
+                            {% endif %}
+
+                            <input type="file" class="form-control" id="image" name="image_field" value="{{productt.image}}">
                         </div>
                         <button type="submit" class="btn btn-primary">Add Product</button>
                     
@@ -113,13 +118,30 @@
                     <h4>Additional Images</h4>
                 </div>
                 <div class="card-body">
-                    {% for i in additional_image_count %}
-                    <div class="mb-4">
-                        <label for="product_image{{ i }}" class="form-label">Product Image {{ i }}</label>
-                        <input type="file" class="form-control" id="product_image{{ i }}" name="product_image{{ i }}">
+                {% for image in existing_data.p_image %}
+                {% if image.Images %}
+                    <img src="{{ image.Images.url }}" alt="Product Image">
+                    <div>
+                        <input type="checkbox" name="delete_image_{{ image.id }}" id="delete_image_{{ image.id}}" >
+                        <label for="delete_image_{{ image.id }}">Delete</label>
                     </div>
-                    {% endfor %}
+                    <div>
+                        <input type="file" name="replace_image_{{ image.id}}" id="replace-image_{{ image.id }}">
+                    </div>   
+                {% endif %}        
+                {% endfor %}
+               </div>
+               <div class="card-header">
+                <h4> New Additional Images</h4>
+                 </div>
+               <div class="card-body">
+                {% for i in additional_image_count %}
+                <div class="mb-4">
+                    <label for="product_image{{ i }}" class="form-label">Product Image {{ i }}</label>
+                    <input type="file" class="form-control" id="product_image{{ i }}" name="product_image{{ i }}">
                 </div>
+            {% endfor %}
+
             </div>
         </div>
     </form>

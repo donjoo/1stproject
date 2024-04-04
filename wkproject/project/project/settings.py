@@ -67,6 +67,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'cart.context_processor.counter',
+                'cart.context_processor.wishlist_counter',
                 'app.context_processor.default',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -162,7 +163,10 @@ EMAIL_PORT=587
 
 EMAIL_DEBUG = True
 
-MESSAGES_TAGS={
-    messages.ERROR:'danger'
+MESSAGE_TAGS = {
+    messages.DEBUG: 'info',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
 }
-  
