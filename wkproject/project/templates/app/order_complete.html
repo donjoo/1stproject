@@ -56,6 +56,9 @@
         <p style="margin-bottom: 10px;">You will receive an email confirmation shortly.</p>
         <a href="{% url "app:index" %}" class="button" style="padding: 10px 20px; text-decoration: none; background-color: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease; display: inline-block;">Continue Shopping</a>
     </div>
+    {% comment %} <div>
+    <a href="{% url 'orders:download_invoice_pdf' %}">Download Invoice PDF</a>
+    </div> {% endcomment %}
     <div class="invoice">
         <h1>Invoice</h1>
         <div class="invoice-info" style="float: right; width: 20%;">

@@ -11,7 +11,7 @@ from .forms import CouponForm
 from django.utils import timezone
 import datetime
 from django.db.models import Max
-
+from decimal import Decimal
 
 
 
@@ -220,8 +220,9 @@ def apply_offer(cart_items, grand_total):
             offer = category_offer
         else:
             offer = 0
-        offer = float(offer)
-        if offer > 0:
+        offer = Decimal(offer)
+        if offer > Decimal(0):
+            grand_total = Decimal(grand_total)
             grand_total -= offer
             applied_offer = offer
             has_offer = True
@@ -351,7 +352,10 @@ def Checkout(request):
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
                 # import pdb
                 # pdb.set_trace()
-                subtotal =  (coupon.discount/ 100) * float(total)
+                discount_percentage = Decimal(str(coupon.discount))
+                total_decimal = Decimal(str(total))
+                discount_amount =  (discount_percentage/ 100) * total_decimal
+                subtotal = total_decimal- discount_amount
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
@@ -363,11 +367,14 @@ def Checkout(request):
             address='none'
 
        
-        grand_total = subtotal + float(shipping)
+        grand_total = float(subtotal) + float(shipping)
         grand_total,offer_price = apply_offer(cart_items, grand_total)
+        grand_total = float(grand_total)
 
     except ObjectDoesNotExist:
         pass
+
+    coupons = Coupon.objects.filter(active=True,valid_from__lte=timezone.now(),valid_to__gte=timezone.now())
    
     context = {
         'total': total,
@@ -378,6 +385,7 @@ def Checkout(request):
         'grand_total': grand_total,
         'coupon_form': coupon_form,
         'address':address,
+        'coupons':coupons,
         'coupon_id':coupon_id,
         'coupon_discount':coupon_discount,
         'offer_price':offer_price,

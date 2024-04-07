@@ -84,6 +84,9 @@ def otp_verification(request):
                 nameuser.is_active = True
                 nameuser.save()
 
+                newuser = UserDetails(user=nameuser)
+                newuser.save()
+
                 login(request,nameuser,backend='django.contrib.auth.backends.ModelBackend')
                 messages.success(request,'Account activation succesful.You are nw logged in.')
                 return redirect('app:index')

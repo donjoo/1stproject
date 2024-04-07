@@ -14,6 +14,8 @@ from django.utils import timezone
 from userauth.views import wallet_balence
 import secrets
 from cart.views import apply_offer
+# from xhtml2pdf import pisa
+
 # Create your views here.
 
 
@@ -312,7 +314,7 @@ def place_order(request,total=0,quantity=0,):
     
     grand_total = 0
     coupon_discount = 0
-    offer_price=0
+    offer_price=0     
   
     
     for cart_item in cart_items:
@@ -323,14 +325,14 @@ def place_order(request,total=0,quantity=0,):
     if coupon_id:
             try:
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
-                subtotal =  (coupon.discount/ 100) * total
+                subtotal =  (coupon.discount/ 100) * float(total)
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
 
   
-
-    grand_total = subtotal + shipping
+    subtotal = float(subtotal)
+    grand_total = subtotal + float(shipping)
     grand_total,offer_price = apply_offer(cart_items, grand_total)
 
 
@@ -341,90 +343,122 @@ def place_order(request,total=0,quantity=0,):
     
     if request.method == "POST":
         form = OrderForm(request.POST)
+
         if form.is_valid():
-            data = Order()
-            payment = request.POST.get('payment_option')
-
-            wallet_amount = wallet_balence(request, id)
-            print(payment)
-            print(wallet_amount)
-            if payment == "Wallet":
-             print(grand_total, wallet_amount)
-             if grand_total > wallet_amount:
-                print(wallet_amount)
-                print(grand_total)
-                messages.warning(request, "Insufficient Balance!")
-                return redirect('cart:Checkout')  # Stop the order creation process
-             
-            data.user = request.user     
-            data.billing_address = form.cleaned_data['billing_address']
-            data.shipping_address = form.cleaned_data['shipping_address']
-        
-            data.order_note = form.cleaned_data['order_note']
-            data.order_total = grand_total
-            data.shipping = shipping
-            if offer_price:
-              data.offer_price=offer_price
+                data = Order()
+                payment = request.POST.get('payment_option')
                 
-            print(data.billing_address,data.shipping_address,data.order_note,data.order_total)
-            # data.shipping = shipping
-            data.ip = request.META.get('REMOTE_ADDR')
-            data.save()
-            current_date = datetime.date.today()
-
-            # Extract year, day, and month from the current date
-            yr = int(current_date.strftime('%Y'))
-            dt = int(current_date.strftime('%d'))
-            mt = int(current_date.strftime('%m'))
+                wallet_amount = wallet_balence(request, id)
+                if payment == "Wallet":
+                    print('wallelttttttttt\n\n\n\n\n')
+                    print(grand_total, wallet_amount)
+                    if grand_total > wallet_amount:
+                        print(wallet_amount)
+                        print(grand_total)
+                        messages.warning(request, "Insufficient Balance!")
+                        return redirect('cart:Checkout')  # Stop the order creation process
                 
+                if payment == "cash on delivery":
+                    print('cash on delivery\n\n\n\n\n')
+                    if grand_total > 1000:
+                        messages.warning(request,"COD is not available for orders above 1000")
+                        return redirect('cart:Checkout')
 
-            if mt < 1 or mt > 12:
-                # Handle the invalid month value here, such as setting it to 1 or displaying an error message
-                mt = 1 
                 
-            try:
-                d = datetime.date(yr, mt, dt)  # Corrected order of parameters
-            except ValueError as e:
-                return HttpResponse(f"Error: {e}")
-
-            # d = datetime.date(yr, mt,dt)
-            current_date = d.strftime("%Y%m%d")
-            order_number = current_date + str(data.id)
-            data.order_number = order_number
-          
-            payement = request.POST.get('payment_option')
-            if coupon_id:
-                try:
-                    coupon = Coupon.objects.get(id=coupon_id)
-                    data.coupon = coupon  # Assign Coupon instance to the order
-                except Coupon.DoesNotExist:
-                    pass 
+                data.user = request.user     
+                data.billing_address = form.cleaned_data['billing_address']
+                data.shipping_address = form.cleaned_data['shipping_address']
             
-              
-            data.save()
-            
-                
-
-
-            order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)
-            context={
-                'order':order,
-                'cart_items':cart_items,
-                'total':total,
-                'grand_total':grand_total,
-                'shipping':shipping,
-                'payment':payement,
-                'coupon_discount':coupon_discount,
-                'offer_price':offer_price,
+                data.order_note = form.cleaned_data['order_note']
+                data.order_total = grand_total
+                data.shipping = shipping
+                if offer_price:
+                  data.offer_price=offer_price
                     
-            }
-            return render(request,'app/payements.html',context)   
+                print(data.billing_address,data.shipping_address,data.order_note,data.order_total)
+                # data.shipping = shipping
+                data.ip = request.META.get('REMOTE_ADDR')
+                data.save()
+                current_date = datetime.date.today()
+
+                # Extract year, day, and month from the current date
+                yr = int(current_date.strftime('%Y'))
+                dt = int(current_date.strftime('%d'))
+                mt = int(current_date.strftime('%m'))
+                    
+
+                if mt < 1 or mt > 12:
+                    # Handle the invalid month value here, such as setting it to 1 or displaying an error message
+                    mt = 1 
+                    
+                try:
+                    d = datetime.date(yr, mt, dt)  # Corrected order of parameters
+                except ValueError as e:
+                    return HttpResponse(f"Error: {e}")
+
+                # d = datetime.date(yr, mt,dt)
+                current_date = d.strftime("%Y%m%d")
+                order_number = current_date + str(data.id)
+                data.order_number = order_number
+            
+                payement = request.POST.get('payment_option')
+                if coupon_id:
+                    try:
+                        coupon = Coupon.objects.get(id=coupon_id)
+                        data.coupon = coupon  # Assign Coupon instance to the order
+                    except Coupon.DoesNotExist:
+                        pass 
+                
+                
+                data.save()
+                
+                    
+
+
+                order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)
+                context={
+                    'order':order,
+                    'cart_items':cart_items,
+                    'total':total,
+                    'grand_total':grand_total,
+                    'shipping':shipping,
+                    'payment':payement,
+                    'coupon_discount':coupon_discount,
+                    'offer_price':offer_price,
+                        
+                }
+                return render(request,'app/payements.html',context)
+        else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                         messages.error(request, f"Error in {field}: {error}")
+        return redirect('cart:Checkout')
+          
+        # except ValidationError as e:
+        #     messages.error(request,e.message)
+        #     return redirect('cart:Checkout')
+    
+    
+    
             
 
-    return redirect('app:index')
+    
+               
+    else:        
+        print("yeaaaa a its herereerere")
+        return redirect('app:index')
 
 
 
+def return_order(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    if order.status != 'Returned':
+        order.status = 'Returned'
+        order.save()
+        messages.success(request, 'Order has been returned successfully.')
+    else:
+        messages.warning(request, 'Order is already returned.')
+    return redirect('order_detail', order_id=order_id)
 
 
 
@@ -462,20 +496,19 @@ def order_complete(request):
 
 
 
-def return_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    if order.status != 'Returned':
-        order.status = 'Returned'
-        order.save()
-        messages.success(request, 'Order has been returned successfully.')
-    else:
-        messages.warning(request, 'Order is already returned.')
-    return redirect('order_detail', order_id=order_id)
+# def download_invoice_pdf(request):
+#     html_string = render_to_string('order_complete.html',{
+#         'order':order,
+#         'ordered_products':order_products,
+#         'subtotal':subtotal,
+#     })
 
+#     pisa_status = pisa.CreatePDF(html, dest=response)
 
-
-
-
+#     # Return PDF response
+#     if pisa_status.err:
+#         return HttpResponse('We had some errors <pre>' + html + '</pre>')
+#     return response 
         
 
     
