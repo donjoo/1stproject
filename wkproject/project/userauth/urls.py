@@ -20,7 +20,8 @@ urlpatterns = [
     path('cancel_order/<int:order_id>/',views.cancel_order,name='cancel_order'),
     path('return_order/<int:order_id>/',views.return_order,name='return_order'),
 
-
+    path('forgot_password/',views.forgot_password,name='forgot_password'),
+    path('new_password/',views.new_password,name='new_password'),
 
     path('wallet/',views.user_wallet,name='user_wallet'),
     path('orders_lists/',views.order_list,name='orders_lists'),

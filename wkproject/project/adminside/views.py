@@ -6,16 +6,20 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse,HttpResponseRedirect
 from django.views.decorators.cache import cache_control
-from app.models import Product,Category,ProductImage,ProductVariants,CategoryAnime,AnimeCharacter,Variants,Stock,Coupon,ProductOffer,CategoryOffer
+from app.models import Product,Category,ProductImage,ProductVariants,CategoryAnime,AnimeCharacter,Variants,Stock,Coupon,ProductOffer,CategoryOffer,Transaction
 from django.core.paginator import Paginator
 from .forms import CreateProductForm,ProductVariantForm,CouponForm,ProductOfferForm,CategoryOfferForm
 from django.http import Http404
 from django.http import JsonResponse
 from orders.models import Order,OrderProduct,Payment
-from datetime import datetime,date
+from datetime import datetime,date,timedelta
+from django.utils import timezone
+# from dateutil.relativedelta import relativedelta
 import os
 from django.conf import settings
-
+from django.db.models import Sum
+from django.utils.timezone import now
+from django.db.models import Count
 # from orders.models import Order,Payement
 # Create your views here.
 
@@ -28,7 +32,22 @@ def new(request):
 def admin_index(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
-    return render(request,'adminside/admin_index.html')
+
+    best_selling_products = OrderProduct.objects.filter(ordered=True).exclude(order__status='Cancelled').values('product__title').annotate(total_quantity=Count('product')).order_by('-total_quantity')[:10]
+
+    best_selling_categories = OrderProduct.objects.filter(ordered=True).exclude(order__status='Cancelled').values('product__category__title').annotate(total_quantity=Count('product')).order_by('-total_quantity')[:10]
+    
+    best_selling_characters = OrderProduct.objects.filter(ordered=True).exclude(order__status='Cancelled').values('product__character__name').annotate(total_quantity=Count('product')).order_by('-total_quantity')[:10]
+
+    print(best_selling_products)
+    print(best_selling_categories)
+    context = {
+        'best_selling_products':best_selling_products,
+        'best_selling_categories':best_selling_categories,
+        'best_selling_characters':best_selling_characters,
+
+    }
+    return render(request,'adminside/admin_index.html',context)
 
 
 def admin_login(request):
@@ -1116,12 +1135,45 @@ def update_order_status(request, order_id):
         return redirect('adminside:admin_login')
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
-        new_status = request.POST.get('status')
-        order.status = new_status
-        order.save()
-        return redirect('adminside:order_detail', order_id=order_id)
-    return render(request, 'update_order_status.html', {'order': order})
+        if not order.status == "Cancelled":
+            new_status = request.POST.get('status')
+            order.status = new_status
+            order.save()
+            if new_status == "Cancelled":
+                admin_cancel_order(request,order_id)
+            return redirect('adminside:order_detail', order_id=order_id)
+        else:
+            messages.error(request,"Order is already cancelled")
+    return render(request, 'adminside/order_detail.html', {'order': order})
 
+from django.core.exceptions import ObjectDoesNotExist
+
+def admin_cancel_order(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        messages.success(request, 'Order has been cancelled successfully.')
+
+        if order.payment:
+            if (
+                order.payment.payment_method == "Paypal"
+                or order.payment.payment_method == "wallet payment"
+            ):
+                if not order.payment.status == "Payment pending":
+                    amount = order.order_total
+                    user = order.user
+
+                    Transaction.objects.create(
+                        user=user,
+                        description="Cancelled Order " + str(order_id),
+                        amount=amount,
+                        transaction_type="Credit",
+                    )
+                else:
+                    messages.error(request,"payment was not done")
+    except ObjectDoesNotExist:
+        messages.error(request, 'Order not found or has already been cancelled.')
+    except Exception as e:
+        messages.error(request, 'An error occurred while cancelling the order: {}'.format(str(e)))
 
 
 
@@ -1157,6 +1209,38 @@ def coupon_list(request):
     }
 
     return render(request,'adminside/coupon_list.html',context)
+
+
+
+@login_required(login_url='adminside:admin_login')
+@cache_control(no_cache=True,must_revalidaate=True,no_store=True)
+def delete_coupon(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+        
+    try:
+        coupon = Coupon.objects.get(id=id)
+    except ValueError:
+        return redirect('adminside:coupon_list')
+    coupon.delete()
+
+    return redirect('adminside:coupon_list')
+        
+
+def available_coupon(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
+    coupon=get_object_or_404(Coupon,id=id)
+
+    if coupon.active:
+        coupon.active=False
+
+    else:
+        coupon.active=True
+    coupon.save()
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
                         # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
                         # OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT# OFFER_MANAGEMENT
@@ -1204,43 +1288,47 @@ def create_category_offer(request):
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
 
 def sales_report(request):
-    if not request.user.is_authenticated or not request.user.is_superadmin:
-        return redirect("adminside:admin_login")
-
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
     start_date_value = ""
     end_date_value = ""
     grand_totall = 0
-    try:
+    orders = Order.objects.filter(is_ordered=True).order_by('-created_at').exclude(status='Cancelled')
 
-        orders=Order.objects.filter(is_ordered = True).exclude(status = 'Cancelled').order_by('-created_at')
-    
-    except:
-        pass
     if request.method == 'POST':
-       
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        start_date_value = start_date
-        end_date_value = end_date
-        if start_date and end_date:
-          
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
-           
-            orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled')
-
-    grand_totall = grand_total(orders)
-    print(grand_totall)
-    context={
-        'orders':orders,
-        'start_date_value':start_date_value,
-        'end_date_value':end_date_value,
-        'grand_total':grand_totall,
+        date_filter = request.POST.get('date_filter')
+        if date_filter == 'daily':
+            today = now().date()
+            orders = Order.objects.filter(is_ordered=True, created_at__date=today).order_by('-created_at')
+        elif date_filter == 'weekly':
+            today = now().date()
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6)
+            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_week, end_of_week]).order_by('-created_at')
+        elif date_filter == 'yearly':
+            today = now().date()
+            start_of_year = today.replace(month=1, day=1)
+            end_of_year = today.replace(month=12, day=31)
+            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_year, end_of_year]).order_by('-created_at')
+        else:
+            start_date = request.POST.get('start_date')
+            end_date = request.POST.get('end_date')
+            start_date_value = start_date
+            end_date_value = end_date
+            if start_date and end_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled')
+    grand_totall = round(grand_total(orders),2)
+    context = {
+        'orders': orders,
+        'start_date_value': start_date_value,
+        'end_date_value': end_date_value,
+        'grand_total':grand_totall
     }
 
-    return render(request,'adminside/sales_report.html',context)
-
+    return render(request, 'adminside/sales_report.html', context)
 
 
 def grand_total(orders):
@@ -1250,10 +1338,6 @@ def grand_total(orders):
         grand_total += order.order_total
 
     return grand_total
-
-
-
-
 
 
 

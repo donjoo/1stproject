@@ -35,6 +35,11 @@
                         <div class="product-category">
                             <a href="shop-grid-right.html">{{p.category}}</a>
                         </div>
+                        {% if p.character %}
+                        <div class="product-category">
+                            <a href="shop-grid-right.html">Character: {{p.character}}</a>
+                        </div>
+                        {% endif %}
                         <h2><a href="shop-product-right.html">{{p.title}}</a></h2>
                         <div class="rating-result" title="90%">
                             <span>

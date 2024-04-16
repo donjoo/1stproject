@@ -184,7 +184,7 @@ class Variants(models.Model):
 
     def __str__(self):
         return self.size
-    
+      
 class Stock(models.Model):
     variant = models.ForeignKey(Variants, on_delete=models.CASCADE)
     stock =models.IntegerField(default=0)

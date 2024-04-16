@@ -118,6 +118,45 @@
 </bodyy>
 </html>
 
+
+<script>
+    function printInvoice() {
+        // Hide buttons
+        var buttonsToHide = document.querySelectorAll('button');
+        buttonsToHide.forEach(function(button) {
+            button.style.display = 'none';
+        });
+    
+        // Hide other elements on the page
+        var elementsToHide = document.querySelectorAll('body > *:not(.invoice)');
+        elementsToHide.forEach(function(element) {
+            element.style.display = 'none';
+        });
+    
+        // Print only the invoice
+        var contentToPrint = document.querySelector('.invoice').innerHTML;
+        var originalContent = document.body.innerHTML;
+        document.body.innerHTML = contentToPrint;
+    
+        // Print the page 
+        window.print();
+    
+        // Restore the original content after printing
+        document.body.innerHTML = originalContent;
+    
+        // Show hidden elements again
+        elementsToHide.forEach(function(element) {
+            element.style.display = 'block';
+        });
+    
+        // Show buttons again
+        buttonsToHide.forEach(function(button) {
+            button.style.display = 'block';
+        });
+    }
+</script>
+
+
 {% endblock content %}
 
 

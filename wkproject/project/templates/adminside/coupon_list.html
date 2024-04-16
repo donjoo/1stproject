@@ -28,6 +28,8 @@
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
                                     <th scope="col">active</th>
+                                    <th scope="col">Action</th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,6 +52,18 @@
                                     <td class="text-right">
                                         <span class="color3 font-weight-bold">{{coupon.active}}</span>
                                     </td>
+                                    <td class="text-right">
+                                       
+                                                <div class="dropdown">
+                                                 
+                                                    <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                    <div class="dropdown-menu">
+                                       
+                                        <a class="dropdown-item" href="{% url 'adminside:available_coupon' coupon.id %}">{% if not coupon.active %} Active {% else %} Unactive{% endif %}</a>
+                                        <a class="dropdown-item text-danger" href="{% url 'adminside:delete_coupon' coupon.id %}">Delete</a>
+                                    </div>
+                                </div>
+                                </td>
                                     {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
                                 </tr>
                                 {% endfor %}

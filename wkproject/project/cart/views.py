@@ -74,12 +74,37 @@ def add_cart(request,pid):
                     stock = Stock.objects.get(variant=product_size[0])              
                     if item.quantity <= stock.stock:
                         item.save()
-                    else:
-                            messages.error(request, "Sorry, the requested quantity is not available in stock.")
-                            return redirect('cart:cart')
+                    else: 
+                        response_data = {
+                                        'status': 'error',
+                                        'message': f"Insufficient stock. Only available."
+                                    }
+                        return JsonResponse(response_data)  
+                        # error_message = "Sorry, the requested quantity is not available in stock."
+                        # messages.error(request, error_message)
+                        # django_messages = [str(message) for message in messages.get_messages(request)]  # Convert Message objects to strings
+                        # return JsonResponse({"success": False, "message": error_message, "django_messages": django_messages})
+                #             return redirect('cart:cart')
                 else:
                     messages.error(request,"please select a size.")
                     return redirect('app:product_detail',product.pid)
+                    # else:
+                            # django_messages = request.POST.getlist('django_messages[]')
+                            # for msg in django_messages:
+                            #                 tag, message = msg.split(':')
+                            #                 if tag == 'success':
+                            #                     messages.success(request, message)
+                            #                 elif tag == 'info':
+                            #                     messages.info(request, message)
+                            #                 elif tag == 'warning':
+                            #                     messages.warning(request, message)
+                            #                 elif tag == 'error':
+                            #                     messages.error(request, message)
+                            # error_message = "An error occurred while removing item from cart."
+                            # return JsonResponse({"success": False, "message": error_message})
+                            # messages.error(request, "An error occurred while removing item from cart.")
+                            # return JsonResponse({"success": False, "message": "Anoccurred while removing item from cart."})                
+                    # return JsonResponse({"success": False, "message": "Please select a size."})
             else:
                 item = CartItem.objects.create(product=product,quantity=1,user=current_user)
 
@@ -102,76 +127,80 @@ def add_cart(request,pid):
             cart_item.save()
         
         
-        return redirect('cart:cart')
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
 
-
-    else:
-        product_size =[]
-        if request.method == "POST":
-            for item in request.POST:
-                key = item
-                value = request.POST[key]
-        
-
-            try:
-                
-                sizess = Variants.objects.get(product=product,size__iexact=value)
-                product_size.append(sizess)
-                print(product_size,"hiiiierhtei")
-                print('here')
-            except:       
-                pass
-
-        
-        try:
-            cart =Cart.objects.get(cart_id = _cart_id(request))
-            print('now')
-            print('just')
-        except Cart.DoesNotExist:
-            cart = Cart.objects.create(
-                cart_id = _cart_id(request)
-            )
-        cart.save()
-    
-        is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart).exists()
-        if is_cart_item_exists:
-            cart_item = CartItem.objects.filter(product=product,cart=cart)
-            
-            ex_var_list = []
-            id = []
-            for item in cart_item:
-                existing_variations = item.variations.all()
-                ex_var_list.append(list(existing_variations))
-                id.append(item.id)
-            print(ex_var_list) 
-
-            if  product_size in ex_var_list:
-                index = ex_var_list.index(product_size)
-                item_id = id[index]
-                item = CartItem.objects.get(product=product,id=item_id)
-                item.quantity += 1
-                item.save()
-            else:
-                item = CartItem.objects.create(product=product,quantity=1,cart=cart)
-
-                if len(product_size)> 0:
-                    item.variations.clear()
-                    print('hekllo')
-                    item.variations.add(*product_size)                
-                    item.save()
+            return JsonResponse({"success": True})
         else:
-            cart_item = CartItem.objects.create(
-                product = product,
-                quantity =1,
-                cart = cart,
-            )
-            if len(product_size)> 0:
-                cart_item.variations.clear()
-                cart_item.variations.add(*product_size)
-            cart_item.save()
+            return redirect('cart:cart')
+
+
+    # else:
+    #     product_size =[]
+    #     if request.method == "POST":
+    #         for item in request.POST:
+    #             key = item
+    #             value = request.POST[key]
+        
+
+    #         try:
+                
+    #             sizess = Variants.objects.get(product=product,size__iexact=value)
+    #             product_size.append(sizess)
+    #             print(product_size,"hiiiierhtei")
+    #             print('here')
+    #         except:       
+    #             pass
+
+        
+    #     try:
+    #         cart =Cart.objects.get(cart_id = _cart_id(request))
+    #         print('now')
+    #         print('just')
+    #     except Cart.DoesNotExist:
+    #         cart = Cart.objects.create(
+    #             cart_id = _cart_id(request)
+    #         )
+    #     cart.save()
+    
+    #     is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart).exists()
+    #     if is_cart_item_exists:
+    #         cart_item = CartItem.objects.filter(product=product,cart=cart)
+            
+    #         ex_var_list = []
+    #         id = []
+    #         for item in cart_item:
+    #             existing_variations = item.variations.all()
+    #             ex_var_list.append(list(existing_variations))
+    #             id.append(item.id)
+    #         print(ex_var_list) 
+
+    #         if  product_size in ex_var_list:
+    #             index = ex_var_list.index(product_size)
+    #             item_id = id[index]
+    #             item = CartItem.objects.get(product=product,id=item_id)
+    #             item.quantity += 1
+    #             item.save()
+    #         else:
+    #             item = CartItem.objects.create(product=product,quantity=1,cart=cart)
+
+    #             if len(product_size)> 0:
+    #                 item.variations.clear()
+    #                 print('hekllo')
+    #                 item.variations.add(*product_size)                
+    #                 item.save()
+    #     else:
+    #         cart_item = CartItem.objects.create(
+    #             product = product,
+    #             quantity =1,
+    #             cart = cart,
+    #         )
+    #         if len(product_size)> 0:
+    #             cart_item.variations.clear()
+    #             cart_item.variations.add(*product_size)
+    #         cart_item.save()
         
         
-        return redirect('cart:cart')
+    #     return redirect('cart:cart')
 def get_product_offer(product):
     today = timezone.now().date()
     try:
@@ -272,11 +301,19 @@ def remove_cart(request,pid,item_id):
         if cart_item.quantity > 1:
             cart_item.quantity -= 1
             cart_item.save()
-        else: 
+        else:            
             cart_item.delete()
+            response_data = {
+                        'status': 'error',
+                        'message': "product deleted"
+                    }
+            return JsonResponse(response_data) 
     except:
         pass
-    return redirect('cart:cart')
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({"success": True})
+    else:
+        return redirect('cart:cart')
 
 def remove_cart_item(request,pid,item_id):
     product = get_object_or_404(Product,pid=pid)

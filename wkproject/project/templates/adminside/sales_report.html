@@ -12,25 +12,46 @@
           class="fas fa-file-excel"></i> Download as Excel</button>
     </div>
     <div class="sidebar__filter" style = 'width: max-content;'>
-      
-          
-          <div class="section-title">
+            <div class="section-title">
               <h4>Filter by date</h4>
           </div>
           <div class="filter-range-wrap d-flex gap-3 mb-4">
-            <form method="post" action="{% url 'adminside:sales_report' %}" id="filter-form">
-                {% csrf_token %}
-                <div class="d-flex gap-3">
-                
-                    <label for="start_date">Starting Date:</label>
-                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date_value }}" required>
+              <form method="post" action="{% url 'adminside:sales_report' %}" id="filter-form">
+                  {% csrf_token %}
+                  <div class="d-flex gap-3">
+                      <label for="date_filter">Select Filter:</label>
+                      <select name="date_filter" id="date_filter" class="form-select" required>
+                          <option value="custom">Custom</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="yearly">Yearly</option>
+                      </select>
+          
+                      <label for="start_date">Starting Date:</label>
+                      <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date_value }}" {% if date_filter != 'custom' %} disabled {% endif %}>
+          
+                      <label for="end_date">Ending Date:</label>
+                      <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date_value }}" {% if date_filter != 'custom' %} disabled {% endif %}>
+          
+                      <button type="submit" class="btn btn-dark h-auto">Filter</button>
+                  </div>
+              </form>  
+          </div>
+          
 
-                    <label for="end_date">Ending Date:</label>
-                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date_value }}" required>
 
-                    <button type="submit" class="btn btn-dark h-auto">Filter</button>
-                </div>
-            </form>  
+
+
+
+
+
+
+
+
+
+
+
+
             <div class="col-lg-3">
               <div class="card card-body mb-4">
                   <article class="icontext">

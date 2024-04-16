@@ -22,14 +22,15 @@
         </div>
         {% else %}
        <div class="container">
-                                          
+        <div id="error-message" style="padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f8d7da; color: #721c24; display: none;"></div>        
         {% for message in messages  %}
-        <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
-          <strong></strong> {{message}}
+        <div class="alert alert-{{message.tags}} alert-dismissible fade show"role="alert">
+          <strong></strong> {{message}} 
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         {% endfor %}
+   
             <div class="row">
                 <div class="col-12">
                     <div class="table-responsive">
@@ -103,9 +104,9 @@
 <td>
   
     <div class="input-group">
-        <a href="{% url 'cart:remove_cart' item.product.pid item.id %}" class="btn btn-outline-secondary" type="button" id="button-minus"><i class="fa fa-minus"></i></a>
+        <a href="{% url 'cart:remove_cart' item.product.pid item.id %}" class=" remove-btn btn btn-outline-secondary" type="button" id="button-minus"><i class="fa fa-minus"></i></a>
         <input type="text" class="form-control" value="{{ item.quantity }}" aria-label="Item quantity">
-       <form action="{% url 'cart:add_cart' item.product.pid %}" method="POST">
+       <form  class="add-to-cart-form" action="{% url 'cart:add_cart' item.product.pid %}" method="POST">
         {% csrf_token %}
         {% for item in item.variations.all  %}
         <input type='hidden' name="size" value="{{item.size}}">
@@ -207,4 +208,81 @@
         {% endif %}
     </section>
 </main>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // AJAX for removing item from cart
+        $(".remove-btn").click(function(e) {
+            e.preventDefault(); // Prevent the default behavior of the anchor element
+            var removeUrl = $(this).attr('href');
+            var quantityDisplay = $(this).closest('.input-group').find('.form-control'); // Assuming the input is in the same input-group div
+            var rowToRemove = $(this).closest('tr');
+            $.ajax({
+                type: "POST",
+                url: removeUrl,
+                data: {'csrfmiddlewaretoken': '{{ csrf_token }}'},
+                success: function(data) {
+                    if (data.success) {
+                        // Update UI after successful removal
+                        // Example: Decrease the quantity displayed in the UI
+                        quantityDisplay.val(parseInt(quantityDisplay.val()) - 1);
+                        
+                    } else {
+                        var currentQuantity = parseInt(rowToRemove.find('.form-control').val());
+                        rowToRemove.find('.form-control').val(currentQuantity - 1);
+                        if (currentQuantity <= 1) {
+                        // If the quantity becomes zero or less, remove the row from the table
+                              rowToRemove.remove();
+                        }
+                        // Handle failure: display error message
+                        $("#error-message").text(data.message).show();
+                    }
+                   
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    // Handle error here
+                    console.error(xhr.statusText);
+                }
+            });
+        });
+    
+        // AJAX for adding item to cart
+        $(".add-to-cart-form").submit(function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            var quantityDisplay = $(this).closest('.input-group').find('.form-control'); // Assuming the input is in the same input-group div
+            $.ajax({
+                type: "POST",
+                url: $(this).attr("action"),
+                data: formData,
+                success: function(data) {
+                    if (data.success) {
+                        // Update quantity value in UI
+                        quantityDisplay.val(parseInt(quantityDisplay.val()) + 1);
+                        // Example: Update cart count in UI
+                        $("#cart-count").text(data.cart_count);
+                    } else {
+                        $("#error-message").text(data.message).show();
+                    }
+                },
+                error: function(error) {
+                    console.error('Error during AJAX request:', error);
+                    console.log("AJAX Request Error");
+                    $(".messages").show();
+                    $(".messages").text('Error during AJAX request. Please try again.');
+                }
+                //error: function(xhr, textStatus, errorThrown) {
+                    // Handle error here
+                 //   console.error(xhr.statusText);
+             //   }
+            });
+        });
+       
+    });
+    
+    </script>  
 {% endblock content %}

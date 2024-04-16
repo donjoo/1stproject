@@ -7,6 +7,13 @@
             <h2 class="content-title card-title">Order detail</h2>
             <p>Details for Order ID:{{order.order_number}}</p>
         </div>
+        {% for message in messages  %}
+          <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+            <strong></strong> {{message}}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+
+          {% endfor %}
     </div>
     <div class="card">
         <header class="card-header">
@@ -15,8 +22,17 @@
                     <span>
                         <i class="material-icons md-calendar_today"></i> <b>{{order.created_at}}</b>
                     </span> <br>
-                    <small class="text-muted">Order ID: {{order.order_number}}</small><br>  
-                    <small class="text-muted">Status: {{order.status}}</small>
+                    <small class="text-muted">Order ID: {{order.order_number}}</small><br>
+                    {% if order.status == "Cancelled" %}
+                    <strong>Status:<span style="color: red">{{ order.status }}</span></strong><br>
+                    {% else %}
+                    <small class="text-muted">Status: {{order.status }}</small><br>
+                    {% endif %}
+                    {% if not order.status == "Cancelled" %}
+                    <small class="text-muted">payment status: {{order.payment.status}}</small>
+                    {% endif %}
+                    
+
                 </div>
                 <div class="col-lg-6 col-md-6 ms-auto text-md-end">
                     <form action="{% url 'adminside:update_order_status' order.id %}" method="POST">

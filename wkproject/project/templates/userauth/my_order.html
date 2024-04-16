@@ -168,6 +168,15 @@
                     </div>
                 {% endif %}
 
+                {% if order.payment.status == 'Payment pending' %}
+                    <div class="col-6">
+                        <form method="post" action="{% url 'orders:payment_pending' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Complete payment</button>
+                        </form>
+                    </div>
+                {% endif %}
+
                 {% if order.status != 'Returned' and order.status == 'Delivered' %}
                     <div class="col-6">
                         <form method="post" action="{% url 'userauth:return_order' order.id %}">
@@ -196,9 +205,47 @@
             </div>
         </div> <!-- card-body end// -->
     </div> <!-- card end// -->
+    <button onclick="printInvoice()" class="btn btn-primary">Print Invoice</button>
 </section> <!-- content-main end// -->
 
 
+<script>
+    function printInvoice() {
+        // Hide buttons
+        var buttonsToHide = document.querySelectorAll('button');
+        buttonsToHide.forEach(function(button) {
+            button.style.display = 'none';
+        });
+    
+        // Hide other elements on the page
+        var elementsToHide = document.querySelectorAll('.container-1, .invoice-footer');
+        elementsToHide.forEach(function(element) {
+            element.style.display = 'none';
+        });
+    
+        // Print only the content inside the content-main section
+        var contentToPrint = document.querySelector('.content-main').innerHTML;
+        var originalContent = document.body.innerHTML;
+        document.body.innerHTML = contentToPrint;
+    
+        // Print the page 
+        window.print();
+    
+        // Restore the original content after printing
+        document.body.innerHTML = originalContent;
+    
+        // Show hidden elements again
+        elementsToHide.forEach(function(element) {
+            element.style.display = 'block';
+        });
+    
+        // Show buttons again
+        buttonsToHide.forEach(function(button) {
+            button.style.display = 'block';
+        });
+    }
+    
+</script>
 
 
 {% endblock content %}

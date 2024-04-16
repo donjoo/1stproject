@@ -70,37 +70,57 @@ def category_list_view(request):
 
 def category_product_list(request,cid):
     category = Category.objects.get(cid=cid)
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    character = AnimeCharacter.objects.all()
+
 
     products = Product.objects.filter(status='True', category=category)
      
     context = {
         "category":category,
-        "products":products
+        "products":products,
+        'categories':categories,
+        'animes':animes,
+        'characters':character,
     }
-    return render(request,"app/category_product_list.html",context)
+    return render(request,"app/shop-filter.html",context)
 
 def Anime_product_list(request,aid):
-    animes = CategoryAnime.objects.get(aid=aid)
-    
-    products = Product.objects.filter(status='True', anime=animes)
+    anime = CategoryAnime.objects.get(aid=aid)
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    character = AnimeCharacter.objects.all()
+
+ 
+    products = Product.objects.filter(status='True', anime=anime)
      
     context = {
-        "category":animes,
-        "products":products
+        "products":products,
+        'categories':categories,
+        'animes':animes,
+        'characters':character, 
     }
-    return render(request,"app/category_product_list.html",context)
+    return render(request,"app/shop-filter.html",context)
 
 
 def Character_product_list(request,lid):
     character = AnimeCharacter.objects.get(lid=lid)
-    
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    characters = AnimeCharacter.objects.all()
+
+ 
     products = Product.objects.filter(status='True', character=character)
      
     context = {
-        "category":character,
-        "products":products
+       
+        "products":products,
+        'categories':categories,
+        'animes':animes,
+        'characters':characters,
     }
-    return render(request,"app/category_product_list.html",context)
+    return render(request,"app/shop-filter.html",context)
 
 def product_detail(request, pid):
     try:
@@ -212,18 +232,35 @@ def search_view(request):
 
 
 
+def filter_view(request):
+    print('heklpppppppppppppppppppppppppppppppppp')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    size = request.GET.get('size')
+    # print('size')
 
-def filter(request):
+    # Filter products based on price range
+    if min_price and max_price:
+        products = Product.objects.filter(price__gte=min_price, price__lte=max_price)
+    else:
+        products = Product.objects.all()
+
+    # Filter products based on size
+    if size:
+         products = products.filter(variants__size__iexact=size)
+
     categories = Category.objects.all()
     animes = CategoryAnime.objects.all()
     character = AnimeCharacter.objects.all()
 
     context ={
+        'products': products,
         'categories':categories,
         'animes':animes,
-        'characters':character,
+        'characters':character, 
+        
     }
-    return render(request,'app/filter.html',context)
+    return render(request,'app/shop-filter.html',context)
 
 
 def whishlist(request):
@@ -251,96 +288,54 @@ def remove_from_wishlist(request, pid):
     wishlist.products.remove(product)
     return redirect('app:wishlist')
 
-# def add_to_cart(request):
-#     cart_product = {}
-#     cart_product[str(request.GET['id'])] = {
-#         'title': request.GET['title'],
-#         'qty': request.GET['qty'],
-#         'price': request.GET['price'],
-#         'image': request.GET['image'],
-#         'pid': request.GET['pid'],
-#     }
+def shop(request):
+    products = Product.objects.all()
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    character = AnimeCharacter.objects.all()
 
-#     if 'cart_data_obj' in request.session:
-#         if str(request.GET['id']) in request.session['cart_data_obj']:
-#             cart_data = request.session['cart_data_obj']
-#             cart_data[str(request.GET['id'])]['qty'] = int(cart_product[str(request.GET['id'])]['qty'])
-#             cart_data.update(cart_data)
-#             request.session['cart_data_obj'] = cart_data
-#         else:
-#             cart_data = request.session['cart_data_obj']
-#             cart_data.update(cart_product)
-#             request.session['cart_data_obj'] = cart_data
+    context = {
+        'categories':categories,
+        'animes':animes,
+        'characters':character, 
+        'products':products
+    }
+    return render(request,"app/shop-filter.html",context)
 
-#     else:
-#         request.session['cart_data_obj'] = cart_product
-#     return JsonResponse({"data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj'])})
+from django.http import HttpResponse
+from django.shortcuts import render
+from .models import Product, Category, CategoryAnime, AnimeCharacter
 
- 
-# def cart_view(request):
-#     cart_total_amount = 0
-#     if 'cart_data_obj' in request.session:
-#         print('this is arat cart view ', request.session['cart_data_obj'])
-#         for p_id, item in request.session['cart_data_obj'].items():
-#             cart_total_amount += int(item['qty']) * float(item['price'])
-#             return render(request,'app/cart.html',{"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']),'cart_total_amount':cart_total_amount})
-        
-#     else:
-#         messages.warning(request,'cart is empty')
-#         return render(request,'app/index.html')
+def sort_by(request):
+    sort_by = request.GET.get('sort_by')
+    product_ids_string = request.GET.get('products')
+    print(product_ids_string)  # Get the comma-separated string of product IDs
+    product_ids = product_ids_string.split(',') if product_ids_string else []  # Split the string into a list of IDs
+    print(product_ids)
+    # Convert the list of IDs to integers
+    product_ids = [int(id) for id in product_ids if id.isdigit()]
+    print(product_ids,'huvuwebvuyw')
+    # Filter products based on the received IDs
+    products = Product.objects.filter(id__in=product_ids)
+    
+    if sort_by == 'price_low_high':
+        products = products.order_by('price')
+    elif sort_by == 'price_high_low':
+        products = products.order_by('-price')
+    elif sort_by == 'release_date':
+        products = products.order_by('release_date')
+    
+    categories = Category.objects.all()
+    animes = CategoryAnime.objects.all()
+    characters = AnimeCharacter.objects.all()
 
-
-
-        
-# <_____________________________----------------------------__________________________>
-
-# def delete_item_from_cart(request):
-#     product_id = str(request.GET('id'))
-#     if 'cart_data_obj' in request.session:
-#         if product_id in request.session['cart_data_obj']:
-#            cart_data = request.session['cart_data_obj']
-#            del request.session['cart_data_obj'][product_id]
-#            request.session['cart_data_obj'] = cart_data
-
-#     cart_total_amount = 0
-#     if 'cart_data_obj' in request.session:
-#         for p_id, item in request.session['cart_data_obj'].items():
-#             cart_total_amount += int(item['qty'])* float(item['price'])
-
-#         request.session['cart_data_obj']=cart_data
-#     context = render_to_string("app/async/cart-list.html",{"cart_data":request.session['cart_data_obj'],'totalcartitems':len(request.session['cart_data_obj']),'cart_total_amount':cart_total_amount})
-#     return JsonResponse({"data":context,'totalcartitems':len(request.session['cart_data_obj'])})
-
-
-# <_______________________________________________________________________________________________>
-
-
-
-
-# def delete_item_from_cart(request):
-#     product_id = str(request.GET['id'])
-#     print(product_id, 'adfad\n\n\n', request.session['cart_data_obj'][product_id])
-#     if 'cart_data_obj' in request.session:
-#         if product_id in request.session['cart_data_obj']:
-#             del request.session['cart_data_obj'][product_id]
-#             print(request.session['cart_data_obj'])
-
-#     cart_total_amount = 0
-#     if 'cart_data_obj' in request.session:
-#         cart_data = request.session['cart_data_obj']
-#         for p_id, item in cart_data.items():
-#             cart_total_amount += int(item['qty']) * float(item['price'])
-#     print(cart_data, '\n\n there\n', request.session['cart_data_obj'])
-
-#     context = {"cart_data": cart_data, 'totalcartitems': len(cart_data), 'cart_total_amount': cart_total_amount, 'totalcartitems': len(cart_data)}
-#     return JsonResponse(context,)
-
-# def checkout(request):
-#     cart_total_amount=0
-#     if 'cart_data_obj' is request.session:
-#         for p_id,item is 
-
-#     return render(request,'app/checkout.html')
+    context = {
+        'products': products,
+        'categories': categories,
+        'animes': animes,
+        'characters': characters,
+    }
+    return render(request, 'app/shop-filter.html', context)
 
 
 

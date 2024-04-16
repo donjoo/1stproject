@@ -218,15 +218,8 @@
                     <div class="logo logo-width-1">
                         <a href="index.html"><img src="{% static 'assets/imgs/theme/logo.svg' %}" alt="logo"></a>
                     </div>
-                    <div class="header-right">
-                        <div class="search-style-2">
-                           {% comment %} SEARCH {% endcomment %}
-                           <script>
-                            function redirectToCategory(url) {
-                                window.location.href = url;
-                            }
-                        </script>
-                        
+                   
+                          
                         
                         <div class="search-style-2">
                             <form action="{% url 'app:search' %}" method="GET">
@@ -297,7 +290,7 @@
                         <a href="index.html"><img src="{% static 'assets/imgs/theme/logo.svg' %}" alt="logo"></a>
                     </div>
                     <div class="header-nav d-none d-lg-flex">
-                        <div class="main-categori-wrap d-none d-lg-block">
+                        {% comment %} <div class="main-categori-wrap d-none d-lg-block">
                             <a class="categori-button-active open" href="#">
                                 <span class="fi-rs-apps"></span> Browse Categories
                             </a>
@@ -336,7 +329,7 @@
                                 </ul>
                                 <div class="more_categories">Show more...</div>
                             </div>
-                        </div>
+                        </div> {% endcomment %}
                         <div class="main-menu main-menu-padding-1 main-menu-lh-2 d-none d-lg-block">
                             <nav>
                                 <ul>
@@ -345,13 +338,14 @@
                                     <li>
                                         <a href="{% url "app:about" %}">About</a>
                                     </li>
-                                    <li><a href="shop-grid-right.html">Shop <i class="fi-rs-angle-down"></i></a>
-                                        <ul class="sub-menu">
-                                            <li><a href="shop-grid-right.html">Shop Grid – Right Sidebar</a></li>
-                                           
-                                        </ul>
+                                    <li><a href="{% url "app:shop" %}">Shop</i></a>
+                                        
                                     </li>
-                                    <li class="position-static"><a href="{% url "app:filter" %}">Filter<i></i></a>
+                                    
+                                   
+                                    
+
+                                
                                         {% comment %} <ul class="mega-menu"> {% endcomment %}
                                             {% comment %} <li class="sub-mega-menu sub-mega-menu-width-22">
                                                 <a class="menu-title" href="#">Women's Fashion</a>
@@ -619,26 +613,18 @@
             </div>
         </div>
     </footer>
-    <!-- Preloader Start -->
-    <div id="preloader-active">
-        <div class="preloader d-flex align-items-center justify-content-center">
-            <div class="preloader-inner position-relative">
-                <div class="text-center">
-                    <h5 class="mb-5">Now Loading</h5>
-                    <div class="loader">
-                        <div class="bar bar1"></div>
-                        <div class="bar bar2"></div>
-                        <div class="bar bar3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
     <!-- Vendor JS-->
-    <script src="{% static 'assets/js/vendor/modernizr-3.6.0.min.js' %}"></script>
-    <script src="{% static 'assets/js/vendor/jquery-3.6.0.min.js' %}"></script>
-    <script src="{% static 'assets/js/vendor/jquery-migrate-3.3.0.min.js' %}"></script>
-    <script src="{% static 'assets/js/vendor/bootstrap.bundle.min.js' %}"></script>
+
+
+    
+    <script>
+        function redirectToCategory(url) {
+            window.location.href = url;
+        }
+    </script>
+    
+  
     <script src="{% static 'assets/js/plugins/slick.js' %}"></script>
     <script src="{% static 'assets/js/plugins/jquery.syotimer.min.js' %}"></script>
     <script src="{% static 'assets/js/plugins/wow.js' %}"></script>

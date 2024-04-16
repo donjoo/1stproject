@@ -95,6 +95,7 @@ def otp_verification(request):
     return render(request,'userauth/otp.html')
 
 
+
 @never_cache
 def handel_login(request):
     if request.user.is_authenticated:
@@ -207,6 +208,44 @@ def login_otp(request):
 
     return render(request, "userauth/login_otp.html")
 
+def forgot_password(request):
+    if request.user.is_authenticated:
+        messages.warning(request, "Hey, you are already logged in.")
+        return redirect("app:index")
+    if request.method == "POST":
+        email = request.POST.get("email")
+        request.session["email"] = email
+        request.session["method"] = "forgot_password"
+        print(email)
+
+        if not User.objects.filter(email=email).exists():
+            messages.error(request, "Invalid email address.")
+            return redirect("userauth:forgot_password")
+        
+        if not User.objects.filter(email=email, is_active=True).exists():
+            messages.error(request, "Account is blocked.")
+            return redirect("userauth:forgot_password")
+        
+        try: 
+            user = User.objects.get(email=email)
+            if user is not None:
+                send_otp_login(request)
+                return render(request, "userauth/otp_login.html", {"email": email})
+        except User.DoesNotExist:
+            messages.warning(request, f"User with email {email} does not exist.")
+            return redirect("userauth:forgot_password")
+
+    return render(request, "userauth/login_otp.html")
+
+  
+    
+
+
+
+
+
+
+
 
 @never_cache
 @cache_control(no_cache=True,must_revalidate=True,no_store=True)
@@ -223,9 +262,13 @@ def send_otp_login(request):
 def otp_verification_login(request):
     if request.method == 'POST':
         otp_ = request.POST.get("otp")
+
         try:
             if otp_ == request.session["otp"]:
-                request.session.pop('otp',None)            
+                request.session.pop('otp',None)
+                if request.session["method"] == 'forgot_password':
+                    return redirect('userauth:new_password')
+            
 
                 user = User.objects.get(email=request.session.get("email"))
 
@@ -244,6 +287,31 @@ def otp_verification_login(request):
             messages.error(request,"session expired.please try logging in again")
 
 
+def new_password(request):
+    if request.method == 'POST':
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+        
+        try:
+            if new_password1 != new_password2:
+                messages.error(request, 'The new passwords do not match.')
+                return redirect('userauth:new_password')
+        
+            user = User.objects.get(email=request.session.get("email"))
+            user.set_password(new_password1)
+            user.save()
+            login(request,user,backend='django.contrib.auth.backends.ModelBackend')
+
+
+            messages.success(request, 'Your password was successfully updated!')
+            redirect_url=reverse('app:index')
+            return HttpResponseRedirect(redirect_url)
+        
+        except KeyError:
+            messages.error(request,"session expired.please try logging in again")
+    
+    return render(request,'userauth/new_password.html')
+
    
 @never_cache
 def logoutUser(request):
@@ -251,6 +319,31 @@ def logoutUser(request):
     request.session.flush()
     messages.success(request,'you logged out')
     return redirect('app:index')
+
+
+
+                    # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
+                    # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
+                    # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
+                    # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def user_profile(request):
@@ -286,7 +379,7 @@ def user_profile(request):
 
 def order_list(request):
     # Retrieve all orders
-    all_orders = Order.objects.all().order_by('-created_at')
+    all_orders = Order.objects.filter(user=request.user).order_by('-created_at')
 
     # Paginate orders
     paginator = Paginator(all_orders, 10)  # Show 10 orders per page
@@ -419,9 +512,8 @@ def profile_update(request):
 
     return render(request, 'userauth/user_profile.html', context)  
 
-def change_password(request):
-   from django.contrib.auth.decorators import login_required
 
+    
 @login_required
 def change_password(request):
     if request.method == 'POST':
@@ -442,12 +534,12 @@ def change_password(request):
         request.user.save()
         
         messages.success(request, 'Your password was successfully updated!')
-        return redirect('userauth:change_password')
+        return redirect('userauth:user_profile')
     
-    return render(request, 'userauth:change_password')
+    return redirect('userauth:user_profile')
 
 
-
+ 
 def my_order(request,order_id):
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)

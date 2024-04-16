@@ -29,53 +29,18 @@ def generate_transaction_id():
 def cod_payment(request,order_id):
     order = Order.objects.get(id=order_id)
     user = User.objects.get(id=request.user.id)
+    
+    order.payment.payment_id =  generate_transaction_id()
+    order.payment.amount_paid = order.order_total
+    order.payment.status ='on Delivery'
+    order.payment.save() 
 
-    payment = Payment(
-        user = request.user,
-        payment_id = generate_transaction_id(),
-        payment_method ='Cash on Delivery',
-        amount_paid = order.order_total,
-        status ='on Delivery',
-
-    )
-    payment.save()
-
-    order.payment=payment
     order.is_ordered =True
     order.save()
     
 
     cart_items = CartItem.objects.filter(user=request.user)
-    print('product')
-    for item in cart_items:
-        orderproduct = OrderProduct()
-        orderproduct.order_id = order.id
-        orderproduct.payment = payment
-        orderproduct.user_id = item.user_id
-        orderproduct.product_id = item.product_id
-        orderproduct.quantity = item.quantity
-        orderproduct.product_price = item.product.price
-        orderproduct.ordered=True
-        orderproduct.save()
-      
-
-
-        cart_item =CartItem.objects.get(id=item.id)
-        product_variation = cart_item.variations.all()      
-        orderproduct=OrderProduct.objects.get(id = orderproduct.id)        
-        orderproduct.variations.set(product_variation)
-        orderproduct.save()
-
-
-       
-        product_variations = item.variations.all()
-        for variation in product_variations:
-            stock = get_object_or_404(Stock, variant=variation)
-            stock.stock -= item.quantity
-            stock.save()
-        
-
-
+         
     CartItem.objects.filter(user=request.user).delete()
     if 'coupon_id' in request.session:
        del request.session['coupon_id']
@@ -116,55 +81,21 @@ def wallet_payment(request, order_id):
         amount=order.order_total,
         transaction_type="Debit",
     )
-    payment = Payment(
-        user = request.user,
-        payment_id = generate_transaction_id(),
-        payment_method ='Wallet',
-        amount_paid = order.order_total,
-        status ='Completed',
 
-    )
-    payment.save()
 
-    order.payment=payment
+
+    order.payment.payment_id =  generate_transaction_id()
+    order.payment.amount_paid = order.order_total
+    order.payment.status ='Completed'
+    order.payment.save()
+
+
     order.is_ordered =True
     order.save()
-
-    print('product')
-    for item in cart_items:
-        orderproduct = OrderProduct()
-        orderproduct.order_id = order.id
-        orderproduct.payment = payment
-        orderproduct.user_id = item.user_id
-        orderproduct.product_id = item.product_id
-        orderproduct.quantity = item.quantity
-        orderproduct.product_price = item.product.price
-        orderproduct.ordered=True
-        orderproduct.save()
-      
-
-
-        cart_item =CartItem.objects.get(id=item.id)
-        product_variation = cart_item.variations.all()      
-        orderproduct=OrderProduct.objects.get(id = orderproduct.id)        
-        orderproduct.variations.set(product_variation)
-        orderproduct.save()
-
-
-       
-        product_variations = item.variations.all()
-        for variation in product_variations:
-            stock = get_object_or_404(Stock, variant=variation)
-            stock.stock -= item.quantity
-            stock.save()
-        
-
 
     CartItem.objects.filter(user=request.user).delete()
     del request.session['coupon_id']
     
-
-
 
     email_subject = 'Thank you for your order'
     message = render_to_string('app/order_recieved_email.html',{
@@ -193,61 +124,28 @@ def payment(request):
     user = request.user
     body = json.loads(request.body)
     print(body['orderID'], 'thi is the header of paye')
-    order = Order.objects.get(user=request.user,is_ordered=False,order_number=body['orderID'])
-    payment = Payment(
-        user = request.user,
-        payment_id = body['transID'],
-        payment_method =body['payment_method'],
-        amount_paid = order.order_total,
-        status = body['status'],
+    print(body['orderID'])
+    order_id = body['orderID']
+    order = Order.objects.get(user=request.user,is_ordered=False,order_number=order_id)
+    
+    # order.payment(
+    #     user = request.user,
+    print(body['transID'])
+    order.payment.payment_id = body['transID']
+    order.payment.amount_paid = order.order_total
+    order.payment.status = body['status']
+    order.payment.save()
+    print(order.payment.payment_id)
+    
+    # payment.save()
 
-    )
-    payment.save()
-
-    order.payment=payment
+    # order.payment=payment
     order.is_ordered =True
     order.save()
 
 
 
     cart_items = CartItem.objects.filter(user=request.user)
-
-
-    print('product')
-    for item in cart_items:
-        orderproduct = OrderProduct()
-        orderproduct.order_id = order.id
-        orderproduct.payment = payment
-        orderproduct.user_id = item.user_id
-        orderproduct.product_id = item.product_id
-        orderproduct.quantity = item.quantity
-        orderproduct.product_price = item.product.price
-        orderproduct.ordered=True
-        orderproduct.save()
-        print('order producttttt')
-
-
-        cart_item =CartItem.objects.get(id=item.id)
-        product_variation = cart_item.variations.all()
-        print('hiii1')
-        print('hiii1')
-        orderproduct=OrderProduct.objects.get(id = orderproduct.id)
-        print('hiii2')
-        orderproduct.variations.set(product_variation)
-        orderproduct.save()
-
-
-        # variants = Variants.objects.get(id=item.variations)
-        # stock = Stock.objects.get(variant_id=variants.id)
-        # stock.stock -= item.quantity
-        # stock.save()
-        product_variations = item.variations.all()
-        for variation in product_variations:
-            stock = get_object_or_404(Stock, variant=variation)
-            stock.stock -= item.quantity
-            stock.save()
-        
-
 
     CartItem.objects.filter(user=request.user).delete()
     if 'coupon_id' in request.session:
@@ -270,7 +168,7 @@ def payment(request):
 
 
     try:
-        print(payment.payment_id,'hey yuuuu')
+        print(order.payment.payment_id,'hey yuuuu')
     except:
         print('payment.payment_id')
 
@@ -278,7 +176,7 @@ def payment(request):
   
     data = {
         'order_number': order.order_number,
-        'transID': payment.payment_id,
+        'transID': order.payment.payment_id,
         # Add any other relevant data here
     }
 
@@ -322,17 +220,31 @@ def place_order(request,total=0,quantity=0,):
         quantity += cart_item.quantity
     subtotal=total 
     shipping = (3 * total) / 100
+    print(subtotal,'subtotalyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
+    print(total,'totalhhhhhhhhhhhhhyyyyyyyyyyyyyyy')
+    print(float(total),'totalhhhhhhhhhhhhh')
+
     if coupon_id:
             try:
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
-                subtotal =  (coupon.discount/ 100) * float(total)
+                percentage =  (coupon.discount/ 100) * float(total)
+                subtotal = float(total) - percentage
+                print(coupon.discount/ 100,'couponnnnnnnnnnnnnnnnn')
+                print(float(total),'totalhhhhhhhhhhhhhyyyyyyyyyyyyyyy')
+
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
 
-  
+    print(subtotal,'subtotallllllllllllllllllllllllllllllllllll')
+
     subtotal = float(subtotal)
+    print(subtotal,'subtotalbegaywidvybgolllllllllllllllllllllllllllllllllllllllllll')
+
+    print(grand_total,'begaywidvybgo')
     grand_total = subtotal + float(shipping)
+    grand_total = round(grand_total,2)
+    print(grand_total,'begaywidvybgoqwvyubgvbuyvbhubvhu')
     grand_total,offer_price = apply_offer(cart_items, grand_total)
 
 
@@ -370,7 +282,7 @@ def place_order(request,total=0,quantity=0,):
                 data.shipping_address = form.cleaned_data['shipping_address']
             
                 data.order_note = form.cleaned_data['order_note']
-                data.order_total = grand_total
+                data.order_total = round(grand_total,2)
                 data.shipping = shipping
                 if offer_price:
                   data.offer_price=offer_price
@@ -408,14 +320,27 @@ def place_order(request,total=0,quantity=0,):
                         data.coupon = coupon  # Assign Coupon instance to the order
                     except Coupon.DoesNotExist:
                         pass 
+
+                payment_data = Payment(
+                    user = request.user,
+                    payment_method = payement,
+                    status = "Payment pending"
+
+                )
+                payment_data.save()
+              
                 
+                data.payment = payment_data
                 
                 data.save()
+
+            
                 
                     
 
 
                 order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)
+                order_products(request,order,payment_data)
                 context={
                     'order':order,
                     'cart_items':cart_items,
@@ -436,19 +361,96 @@ def place_order(request,total=0,quantity=0,):
           
         # except ValidationError as e:
         #     messages.error(request,e.message)
-        #     return redirect('cart:Checkout')
-    
-    
-    
-            
-
-    
-               
+        #     return redirect('cart:Checkout')          
     else:        
         print("yeaaaa a its herereerere")
         return redirect('app:index')
 
+#                     'order':order,
+#                     'cart_items':cart_items,
+#                     'total':total,
+#                     'grand_total':grand_total,
+#                     'shipping':shipping,
+#                     'payment':payement,
+#                     'coupon_discount':coupon_discount,
+#                     'offer_price':offer_price,
 
+
+def payment_pending(request,order_id):
+    order = Order.objects.get(id = order_id)
+    order_products = OrderProduct.objects.filter(order=order)
+    total = 0
+    grand_total = 0
+    coupon_discount = 0
+    for item in order_products:
+    #  cart_items = item.product
+     total += (item.product.price * item.quantity)
+    cart_items = order_products
+    grand_total = order.order_total
+    shipping = order.shipping
+    payment = order.payment.payment_method
+    try:
+       coupon_discount = order.coupon.discount 
+    except:
+        pass
+    offer_price = order.offer_price          
+    context = {
+        'order':order,
+        'cart_items':cart_items,
+        'total':total,
+        'grand_total':grand_total,
+        'shipping':shipping,
+        'payment':payment,
+        'coupon_discount':coupon_discount,
+        'offer_price':offer_price,
+
+
+
+   }
+   
+   
+    return render(request,'app/payements.html',context)
+
+def order_products(request,order,payment_data):
+
+
+    cart_items = CartItem.objects.filter(user=request.user)
+
+    # payment = order.payment
+    print('product')
+    for item in cart_items:
+        orderproduct = OrderProduct()
+        orderproduct.order_id = order.id
+        orderproduct.payment = payment_data
+        orderproduct.user_id = item.user_id
+        orderproduct.product_id = item.product_id
+        orderproduct.quantity = item.quantity
+        orderproduct.product_price = item.product.price
+        orderproduct.ordered=True
+        orderproduct.save()
+        print('order producttttt')
+
+
+        cart_item =CartItem.objects.get(id=item.id)
+        product_variation = cart_item.variations.all()
+        print('hiii1')
+        print('hiii1')
+        orderproduct=OrderProduct.objects.get(id = orderproduct.id)
+        print('hiii2')
+        orderproduct.variations.set(product_variation)
+        orderproduct.save()
+
+
+       
+        product_variations = item.variations.all()
+        for variation in product_variations:
+            stock = get_object_or_404(Stock, variant=variation)
+            stock.stock -= item.quantity
+            stock.save()
+
+    # CartItem.objects.filter(user=request.user).delete()
+    # if 'coupon_id' in request.session:
+    #    del request.session['coupon_id']
 
 def return_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)

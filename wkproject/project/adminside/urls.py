@@ -57,7 +57,10 @@ urlpatterns = [
 
 
     path('create_coupon/',views.create_coupon,name='create_coupon'),
-    path('coupon_list',views.coupon_list,name='coupon_list'),
+    path('coupon_list/',views.coupon_list,name='coupon_list'),
+    path('available_coupon/<id>',views.available_coupon,name='available_coupon'),
+    path('delete_coupon/<id>',views.delete_coupon,name='delete_coupon'),
+
 
     path('offer_list',views.offer_list,name='offer_list'),
     path('create_product_offer/',views.create_product_offer,name='create_product_offer'),
@@ -65,6 +68,9 @@ urlpatterns = [
 
 
     path('sales_report/',views.sales_report,name='sales_report'),
+    # path('daily_sales_report/',views.daily_sales_report,name='daily_sales_report'),
+    # path('weekly_sales_report',views.weekly_sales_report,name='weekly_sales_report'),
+    # path('yearly_sales_report/',views.yearly_sales_report,name='yearly_sales_report'),
        
 
 

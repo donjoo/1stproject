@@ -1,0 +1,213 @@
+﻿{% extends "partials/base.html" %}
+{% load static %}
+{% block content %}
+
+    <main class="main">
+        <div class="page-header breadcrumb-wrap">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="index.html" rel="nofollow">Home</a>
+                    <span></span> Shop
+                    <span></span> Filters
+                </div>
+            </div>
+        </div>
+        <section class="mt-50 mb-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <a class="shop-filter-toogle" href="#">
+                            <span class="fi-rs-filter mr-5"></span>
+                            Filters
+                            <i class="fi-rs-angle-small-down angle-down"></i>
+                            <i class="fi-rs-angle-small-up angle-up"></i>
+                        </a>
+                        <div class="shop-product-fillter-header">
+                            <div class="row">
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-20">Categories</h5>
+                                    <ul class="categor-list">
+                                        {% for cat in categories %}
+                                        <li class="cat-item text-muted">
+                                            <a href="{% url 'app:category_product_list' cat.cid %}">
+                                                {{ cat.title }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-20">Anime</h5>
+                                    <ul class="categor-list">
+                                        {% for anime in animes %}
+                                        <li class="cat-item text-muted">
+                                            <a href="{% url 'app:Anime_product_list' anime.aid %}">
+                                                {{ anime.title }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-20">Character</h5>
+                                    <ul class="categor-list">
+                                        {% for char in characters %}
+                                        <li class="cat-item text-muted">
+                                            <a href="{% url 'app:Character_product_list' char.lid %}">
+                                                {{ char.name }}
+                                            </a>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-20">Price range</h5>
+                                    <ul class="categor-list">
+                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=100&max_price=200">₹100 - ₹200</a></li>
+                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=200&max_price=500">₹200.00 - ₹500.00</a></li>
+                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=500&max_price=1000">₹500.00 - ₹1000.00</a></li>
+                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=1000&max_price=1500">₹1000.00 - ₹1500.00</a></li>
+                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=1500&max_price=2000">₹1500.00 - ₹2000.00</a></li>
+
+                                    </ul>
+                                </div>
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-15 mt-20">By Size</h5>
+                                    <ul class="size-filter font-small">
+                                        <li><a href="{% url 'app:filter_view' %}?size=S">S</a></li>
+                                        <li><a href="{% url 'app:filter_view' %}?size=M">M</a></li>
+                                        <li><a href="{% url 'app:filter_view' %}?size=L">L</a></li>
+                                        <li><a href="{% url 'app:filter_view' %}?size=XL">XL</a></li>
+                                        <li><a href="{% url 'app:filter_view' %}?size=XXL">XXL</a></li>
+                                    </ul>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div class="shop-product-fillter">
+                            <div class="totall-product">
+                                <p> We found <strong class="text-brand">{{products.count}}</strong> items for you!</p>
+                            </div>
+                            <div class="sort-by-product-area">
+                                <div class="sort-by-cover">
+                                    <div class="sort-by-product-wrap">
+                                        <div class="sort-by">
+                                            <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
+                                        </div>
+                                        <div class="sort-by-dropdown-wrap">
+                                            <form method="get" action="{% url 'app:sort_by' %}">
+                                                <input type="hidden" name="products" value="{% for product in products %}{{ product.id }},{% endfor %}">
+                                                <select name="sort_by" onchange="this.form.submit()">
+                                                    <option value="" {% if not request.GET.sort_by %}selected{% endif %}>Featured</option>
+                                                    <option value="price_low_high" {% if request.GET.sort_by == 'price_low_high' %}selected{% endif %}>Price: Low to High</option>
+                                                    <option value="price_high_low" {% if request.GET.sort_by == 'price_high_low' %}selected{% endif %}>Price: High to Low</option>
+                                                </select>
+                                            </form>
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row product-grid-3">
+                           
+
+                            {% for p in products %}
+                            <div class="col-lg-3 col-md-4">
+                                <div class="product-cart-wrap mb-30">
+                                    <div class="product-img-action-wrap">
+                                        <div class="product-img product-img-zoom" style="width: 200px; height: 200px; overflow: hidden;">
+                                            <a href="{% url 'app:product_detail' p.pid %}">
+                                                {% if p.image %}
+                                                    <img class="default-img" src="{{ p.image.url }}" alt="" style="width: 100%; height: auto;">
+                                                {% else %}
+                                                    <!-- Placeholder image or alternative content -->
+                                                    <span style="display: block; width: 100%; height: 100%; background-color: #f0f0f0; text-align: center; line-height: 200px;">No Image Available</span>
+                                                {% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="product-action-1">
+                                            <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal"><i class="fi-rs-eye"></i></a>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
+                                            {% comment %} <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> {% endcomment %}
+                                        </div>
+                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                            <span class="hot">Hot</span>
+                                        </div>
+                                    </div>
+                                    <div class="product-content-wrap" style="min-height: 150px;">
+                                        <div class="product-category">
+                                            <a href="shop-grid-right.html">{{p.category}}</a>
+                                        </div>
+                                        {% if p.character %}
+                                        <div class="product-category">
+                                            <a href="shop-grid-right.html">Character: {{p.character}}</a>
+                                        </div>
+                                        {% endif %}
+                                        <h2><a href="shop-product-right.html">{{p.title}}</a></h2>
+                                        <div class="rating-result" title="90%">
+                                            <span>
+                                                <span>90%</span>
+                                            </span> 
+                                        </div>
+                                        <div class="product-price">
+                                            <span>₹</span><span class="current-price current-product-price-{{ p.id }} text-brand">{{p.price}}</span>
+                                            <span class="old-price">₹{{p.old_price}}</span>
+                                        </div>
+                                        <div class="product-action-1 show">
+                                            <input type="hidden" value="1" id="product-quantity-{{ p.id }}" class="product-quantity-{{ p.id }}">
+                                            <input type="hidden" value="{{ p.pid }}" id="product-pid-{{ p.id }}" class="product-pid-{{ p.id }}">
+                                            <input type="hidden" value="{{ p.image.url }}" class="product-image-{{ p.id }}">
+                                            <input type="hidden" value="{{ p.id }}" class="product-id-{{ p.id }}">
+                                            <input type="hidden" value="{{ p.title }}" class="product-title-{{ p.id }}">
+                                            {% if p in out_of_stock_products %}
+                                            <p style="color:red;">Out of stock</p>
+                                        {% else %}
+                                            <a href="{% url 'cart:add_cart' p.pid %}" class="add add-to-cart-btn hover-up">
+                                                <i class="fi-rs-shopping-bag-add" id="add-to-cart-btn"></i>
+                                            </a>
+                                        {% endif %}
+                                        </div>
+                                        <div>
+                                            {% for offer in offers %}
+                                            {% if offer.product == p %}
+                                            <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
+                                            {% endif %}
+                                            {% endfor %}
+                                            <p></p> 
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                        </div>
+                        <!--pagination-->
+                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-start">
+                                    <li class="page-item active"><a class="page-link" href="#">01</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">02</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">03</a></li>
+                                    <li class="page-item"><a class="page-link dot" href="#">...</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">16</a></li>
+                                    <li class="page-item"><a class="page-link" href="#"><i class="fi-rs-angle-double-small-right"></i></a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $(".sort-by-dropdown-wrap").on("click", function(){
+                $(".sort-by-dropdown").toggle();
+            });
+        });
+    </script>
+{% endblock content %}
