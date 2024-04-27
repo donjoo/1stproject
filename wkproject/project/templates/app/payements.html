@@ -129,9 +129,9 @@
                         {% if payment == "Paypal" %}
                         <div id="paypal-button-container"></div>
                         {% elif payment == "Wallet" %}
-                        <a href="{% url "orders:wallet_payment" order.id %}" class="btn btn-outline-secondary" type="button">Order</a>
+                        <a href="{% url "orders:wallet_auth" order.id %}" class="btn btn-outline-secondary" type="button">payment</a>
                         {% else %}
-                        <a href="{% url "orders:cod_payment" order.id %}" class="btn btn-outline-secondary" type="button">Oorder</a>
+                        <a href="{% url "orders:cod_payment" order.id %}" class="btn btn-outline-secondary" type="button">Confirm order</a>
                         {% endif %}
                                            
                     </div>
@@ -159,8 +159,8 @@
      }
      return cookieValue;
  }
- 
- var amount = "{{grand_total}}";
+ var total = "{{grand_total}}";
+ var amount = Math.round(parseFloat(total));
  var url = "{% url "orders:payment" %}";
  var csrftoken = getCookie('csrftoken');
  var orderID = "{{order.order_number}}";

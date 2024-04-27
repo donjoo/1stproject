@@ -57,7 +57,18 @@
               </table>
 </div>
 
+{% if data.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{data.previous_page_number}}">Previous</a>
 
+
+{%  endif %}
+Page {{data.number}} of {{data.paginator.num_pages}}
+{% if data.has_next %}
+<a href="?page={{data.next_page_number}}">Next</a>
+<a href="?page={{data.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
 
 
 {% endblock body %}

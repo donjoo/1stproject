@@ -26,7 +26,7 @@
                         <table class="table shopping-summery text-center">
                             <thead>
                                 <tr class="main-heading">
-                                    <th scope="col" colspan="">Coupon code</th>
+                                    <th scope="col" colspan="">Product</th>
                                     <th scope="col">Discount</th>
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
@@ -62,6 +62,16 @@
                 </div>
             </div>
         </div>
+
+{% if product_offers.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{product_offers.previous_page_number}}">Previous</a>
+{%  endif %}
+Page {{product_offers.number}} of {{product_offer.paginator.num_pages}}
+{% if product_offers.has_next %}
+<a href="?page={{product_offers.next_page_number}}">Next</a>
+<a href="?page={{product_offers.paginator.num_pages}}">Last  &raquo</a>
+{% endif %}
     </section>
 
 
@@ -76,7 +86,7 @@
                         <table class="table shopping-summery text-center">
                             <thead>
                                 <tr class="main-heading">
-                                    <th scope="col" colspan="">Coupon code</th>
+                                    <th scope="col" colspan="">Category</th>
                                     <th scope="col">Discount</th>
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
@@ -91,7 +101,7 @@
                                     <span class="color3 font-weight-bold">{{ offer.category.title }}</span>
                                 </td>
                                 <td class="text-center" >
-                                    <span class="color3 font-weight-bold">{{ offer.discount }}% off</span>
+                                    <span class="color3 font-weight-bold">{{ offer.discount }}</span>
                                 </td>
                                   
                                     <td class="text-center" >
@@ -112,6 +122,16 @@
                 </div>
             </div>
         </div>
+
+{% if category_offers.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{category_offers.previous_page_number}}">Previous</a>
+{%  endif %}
+Page {{category_offers.number}} of {{category_offers.paginator.num_pages}}
+{% if category_offers.has_next %}
+<a href="?page={{category_offers.next_page_number}}">Next</a>
+<a href="?page={{category_offers.paginator.num_pages}}">Last  &raquo</a>
+{% endif %}
     </section>
 </main>
 

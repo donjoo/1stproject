@@ -134,73 +134,81 @@ def add_cart(request,pid):
             return redirect('cart:cart')
 
 
-    # else:
-    #     product_size =[]
-    #     if request.method == "POST":
-    #         for item in request.POST:
-    #             key = item
-    #             value = request.POST[key]
+    else:
+        product_size =[]
+        if request.method == "POST":
+            for item in request.POST:
+                key = item
+                value = request.POST[key]
         
 
-    #         try:
+            try:
                 
-    #             sizess = Variants.objects.get(product=product,size__iexact=value)
-    #             product_size.append(sizess)
-    #             print(product_size,"hiiiierhtei")
-    #             print('here')
-    #         except:       
-    #             pass
+                sizess = Variants.objects.get(product=product,size__iexact=value)
+                product_size.append(sizess)
+            except:       
+                pass
 
         
-    #     try:
-    #         cart =Cart.objects.get(cart_id = _cart_id(request))
-    #         print('now')
-    #         print('just')
-    #     except Cart.DoesNotExist:
-    #         cart = Cart.objects.create(
-    #             cart_id = _cart_id(request)
-    #         )
-    #     cart.save()
+        try:
+            cart =Cart.objects.get(cart_id = _cart_id(request))
+            print('now')
+            print('just')
+        except Cart.DoesNotExist:
+            cart = Cart.objects.create(
+                cart_id = _cart_id(request)
+            )
+        cart.save()
     
-    #     is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart).exists()
-    #     if is_cart_item_exists:
-    #         cart_item = CartItem.objects.filter(product=product,cart=cart)
+        is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart).exists()
+        if is_cart_item_exists:
+            cart_item = CartItem.objects.filter(product=product,cart=cart)
             
-    #         ex_var_list = []
-    #         id = []
-    #         for item in cart_item:
-    #             existing_variations = item.variations.all()
-    #             ex_var_list.append(list(existing_variations))
-    #             id.append(item.id)
-    #         print(ex_var_list) 
+            ex_var_list = []
+            id = []
+            for item in cart_item:
+                existing_variations = item.variations.all()
+                ex_var_list.append(list(existing_variations))
+                id.append(item.id)
 
-    #         if  product_size in ex_var_list:
-    #             index = ex_var_list.index(product_size)
-    #             item_id = id[index]
-    #             item = CartItem.objects.get(product=product,id=item_id)
-    #             item.quantity += 1
-    #             item.save()
-    #         else:
-    #             item = CartItem.objects.create(product=product,quantity=1,cart=cart)
+            if  product_size in ex_var_list:
+                index = ex_var_list.index(product_size)
+                item_id = id[index]
+                item = CartItem.objects.get(product=product,id=item_id)
+                item.quantity += 1
+                if product_size:  # Check if product_size is not empty
+                    stock = Stock.objects.get(variant=product_size[0])              
+                    if item.quantity <= stock.stock:
+                        item.save()
+                    else: 
+                        response_data = {
+                                        'status': 'error',
+                                        'message': f"Insufficient stock. Only available."
+                                    }
+                        return JsonResponse(response_data) 
+                item.save()
+            else:
+                item = CartItem.objects.create(product=product,quantity=1,cart=cart)
 
-    #             if len(product_size)> 0:
-    #                 item.variations.clear()
-    #                 print('hekllo')
-    #                 item.variations.add(*product_size)                
-    #                 item.save()
-    #     else:
-    #         cart_item = CartItem.objects.create(
-    #             product = product,
-    #             quantity =1,
-    #             cart = cart,
-    #         )
-    #         if len(product_size)> 0:
-    #             cart_item.variations.clear()
-    #             cart_item.variations.add(*product_size)
-    #         cart_item.save()
-        
-        
-    #     return redirect('cart:cart')
+                if len(product_size)> 0:
+                    item.variations.clear()
+                    item.variations.add(*product_size)                
+                    item.save()
+        else:
+            cart_item = CartItem.objects.create(
+                product = product,
+                quantity =1,
+                cart = cart,
+            )
+            if len(product_size)> 0:
+                cart_item.variations.clear()
+                cart_item.variations.add(*product_size)
+            cart_item.save()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({"success": True})
+        else:
+            return redirect('cart:cart')
 def get_product_offer(product):
     today = timezone.now().date()
     try:
@@ -238,24 +246,33 @@ def apply_offer(cart_items, grand_total):
         product = cart_item.product
         category = product.category
         
+        quantity = (cart_item.quantity-1)
+        print(quantity,'quantity')
         product_offer = get_product_offer(product)
         category_offer = get_category_offer(category)
         
         if product_offer and category_offer:
             offer = max(product_offer, category_offer)
+            print(offer,'kkjjjj')
         elif product_offer:
             offer = product_offer
-        elif category_offer:
+            print(offer,'kkjjjj')
+        elif category_offer:    
             offer = category_offer
+            print(offer,'kkjjjj')
         else:
             offer = 0
+        print(offer,'kkccjjjj')
+        offer += offer*quantity
+        print(offer,'kkjjjjaaa')
         offer = Decimal(offer)
         if offer > Decimal(0):
             grand_total = Decimal(grand_total)
             grand_total -= offer
             applied_offer = offer
             has_offer = True
-
+    print(grand_total,'jjj')
+    print(applied_offer,'jjjj')
     return grand_total, applied_offer
 
 
@@ -376,6 +393,11 @@ def Checkout(request):
         else:          
             cart = Cart.objects.get(cart_id=_cart_id(request))
             cart_items = CartItem.objects.filter(cart=cart, is_active=True)
+            response_data = {
+            'status': 'error',
+            'message': 'Please log in to Ckeckout'
+            }
+            return JsonResponse(response_data)
 
         for cart_item in cart_items:
             total += (cart_item.product.price * cart_item.quantity)

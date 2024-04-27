@@ -16,9 +16,7 @@
                     </div>
                     {% endif %}
                 </div>
-                <div>
-                    <input type="text" placeholder="Search Categories" class="form-control bg-white">
-                </div>
+                
             </div>
             <div class="card">
                 <div class="card-body">
@@ -28,11 +26,7 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="" />
-                                                </div>
-                                            </th>
+                                           
                                             <th>ID</th>
                                             <th>Name</th>                                        
                                             <th>Image</th>
@@ -42,11 +36,7 @@
                                     <tbody>
                                         {% for category in categories %}
                                         <tr>
-                                            <th class="text-center">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="" />
-                                                </div>
-                                            </th>
+                                            
                                             <th scope="row">{{category.cid}}</th>
                                             
                                             <td>{{category.title}}</td>
@@ -109,6 +99,20 @@
                 </div> <!-- card body .// -->
             </div> <!-- card .// -->
         </section> <!-- content-main end// -->
+
+
+{% if categories.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{categories.previous_page_number}}">Previous</a>
+
+
+{% endif %}
+Page {{categories.number}} of {{categories.paginator.num_pages}}
+{% if categories.has_next %}
+<a href="?page={{categories.next_page_number}}">Next</a>
+<a href="?page={{categories.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
 {% endblock body %}
 
 {% comment %} id="Category_name" {% endcomment %}

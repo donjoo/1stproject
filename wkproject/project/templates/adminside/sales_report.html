@@ -106,8 +106,20 @@
           <td style="font-weight: bold;">₹{{ grand_total }}</td>
       </tr>
     </tbody>
+    
 </table>
+{% if orders.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{orders.previous_page_number}}">Previous</a>
 
+
+{%  endif %}
+Page {{orders.number}} of {{orders.paginator.num_pages}}
+{% if orders.has_next %}
+<a href="?page={{orders.next_page_number}}">Next</a>
+<a href="?page={{orders.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
 
 </div> 
 
@@ -117,7 +129,11 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
+    
+    
 <script>
+  
+
 function exportToPDF() {
     const element = document.getElementById('container_content');
     const opt = {
@@ -141,6 +157,6 @@ function exportToPDF() {
       type: 'base64'
     });
     XLSX.writeFile(fp, 'test.xlsx');
-    }
+    } 
 </script>
 {% endblock %}

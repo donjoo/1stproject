@@ -23,7 +23,6 @@
                             </a>
                         </div>
                         <div class="product-action-1">
-                            <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal"><i class="fi-rs-eye"></i></a>
                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
                             {% comment %} <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> {% endcomment %}
                         </div>
@@ -65,13 +64,22 @@
                         {% endif %}
                         </div>
                         <div>
-                            {% for offer in offers %}
-                            {% if offer.product == p %}
-                            <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
-                            {% endif %}
-                            {% endfor %}
-                            <p></p> 
+                            {% comment %} {% with offer_found=False %} {% endcomment %}
+                                {% for offer in offers %}
+                                    {% if offer.product == p %}
+                                        {% comment %} {% if not offer_found %} {% endcomment %}
+                                            <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
+                                            {% comment %} {% with offer_found=True %} {% endcomment %}
+                                            {% comment %} {% endwith %} {% endcomment %}
+                                        {% comment %} {% endif %} {% endcomment %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% comment %} {% endwith %} {% endcomment %}
                         </div>
+                        
+                        
+                        
+                        
                     </div>
                 </div>
             </div>

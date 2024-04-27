@@ -14,18 +14,15 @@ urlpatterns = [
     path("add_address/",views.add_address,name='add_address'),
     path('search/',views.search_view,name='search'),
     path('filter_view/',views.filter_view,name='filter_view'),
-    path('whishlist/',views.whishlist,name='wishlist'),
+    path('whishlist/',views.wishlist,name='wishlist'),
     path('add-to-wishlist/<str:pid>/',views.add_to_wishlist, name='add_to_wishlist'),
     path('remove-from-wishlist/<str:pid>/',views.remove_from_wishlist, name='remove_from_wishlist'),
     path('shop/',views.shop,name="shop"),
     path('sort_by/',views.sort_by,name="sort_by"),
-
-
-
     path('about/',views.about,name='about')
    
 
 
-   
+       
 
 ]

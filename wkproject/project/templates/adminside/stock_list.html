@@ -44,7 +44,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for stock in page_variants %}
+                    {% for stock in page_stocks %}
                     <tr>
                         <td>{{ stock.variant.product.title }}</td>
                         <td>{{ stock.variant.size }}</td>
@@ -61,15 +61,15 @@
     <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start">
-                {% if page_variants.has_previous %}
-                <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_variants.previous_page_number }}">Previous</a></li>
-                {% endif %}
-                <li class="page-item active"><a class="page-link" href="?page={{ page_variants.number }}">{{ page_variants.number }}</a></li>
-                {% if page_variants.has_next %}
-                <li class="page-item"><a class="page-link" href="?page={{ page_variants.next_page_number }}">Next</a></li>
-                <li class="page-item"><a class="page-link" href="?page={{ page_variants.paginator.num_pages }}">Last</a></li>
-                {% endif %}
+{% if page_stocks.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{page_stocks.previous_page_number}}">Previous</a>
+{% endif %}
+Page{{page_stocks.number}}of{{page_stocks.paginator.num_pages}}
+{% if page_stocks.has_next %}
+<a href="?page={{page_stocks.next_page_number}}">Next</a>
+<a href="?page{{page_stocks.paginator.num_pages}}">Last &raquo</a>
+{% endif %}
             </ul>
         </nav>
     </div>

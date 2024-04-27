@@ -14,6 +14,7 @@ from django.utils import timezone
 from userauth.views import wallet_balence
 import secrets
 from cart.views import apply_offer
+from django.contrib.auth import authenticate
 # from xhtml2pdf import pisa
 
 # Create your views here.
@@ -57,12 +58,18 @@ def cod_payment(request,order_id):
 
     ordered_products = OrderProduct.objects.filter(order=order)
 
+    subtotal = 0
+    for item in ordered_products:
+        subtotal += item.product_price * item.quantity
+
+
     data = {
         'order_number': order.order_number,
-        'transID': payment.payment_id, 
+        'transID': order.payment.payment_id, 
         'order':order, 
         'ordered_products':ordered_products,
-        'payment':payment
+        'payment':order.payment,
+        'subtotal':subtotal,
     }
     
 
@@ -70,6 +77,24 @@ def cod_payment(request,order_id):
 
 
     
+def wallet_auth(request,order_id):
+    order = Order.objects.get(id=order_id)
+    amount = order.order_total
+
+    if request.method == "POST": 
+        password = request.POST.get('password')
+        if not request.user.check_password(password):
+            messages.error(request, 'Your old password is incorrect.')
+            return redirect('orders:wallet_auth',order_id)
+        else:
+            return redirect('orders:wallet_payment', order_id=order_id)
+        
+    context = {
+        'amount':amount,
+
+    }
+    return render(request,'app/walletpay.html',context)
+
 def wallet_payment(request, order_id):
     order = Order.objects.get(id=order_id)
     user = User.objects.get(id=request.user.id)
@@ -94,7 +119,9 @@ def wallet_payment(request, order_id):
     order.save()
 
     CartItem.objects.filter(user=request.user).delete()
-    del request.session['coupon_id']
+    if 'coupon_id' in request.session:
+        coupon_id = request.session['coupon_id']
+        del request.session['coupon_id']
     
 
     email_subject = 'Thank you for your order'
@@ -108,12 +135,17 @@ def wallet_payment(request, order_id):
 
     ordered_products = OrderProduct.objects.filter(order=order)
 
+    subtotal = 0
+    for item in ordered_products:
+        subtotal += item.product_price * item.quantity
+
     data = {
         'order_number': order.order_number,
-        'transID': payment.payment_id, 
+        'transID': order.payment.payment_id, 
         'order':order, 
         'ordered_products':ordered_products,
-        'payment':payment
+        'payment':order.payment,
+        'subtotal':subtotal
     }
 
     return render(request, "app/order_complete.html",data)
@@ -188,6 +220,8 @@ def payment_type(request,payement_option):
     id = request.user.id
     wallet_amount = wallet_balence(request, id)
     if payement_option == "wallet":
+      print(Order.order_total,'yesasbsbsb')
+      print(wallet_amount,'yryryryryryyrry')
       if Order.order_total > wallet_amount:
         print(wallet_amount)
         print(Order.order_total)
@@ -246,6 +280,7 @@ def place_order(request,total=0,quantity=0,):
     grand_total = round(grand_total,2)
     print(grand_total,'begaywidvybgoqwvyubgvbuyvbhubvhu')
     grand_total,offer_price = apply_offer(cart_items, grand_total)
+    grand_total = round(grand_total,2)
 
 
     user = User.objects.all()
@@ -380,7 +415,7 @@ def payment_pending(request,order_id):
     order = Order.objects.get(id = order_id)
     order_products = OrderProduct.objects.filter(order=order)
     total = 0
-    grand_total = 0
+    grand_total = 0      
     coupon_discount = 0
     for item in order_products:
     #  cart_items = item.product
@@ -468,16 +503,15 @@ def return_order(request, order_id):
 
 def order_complete(request):
     order_number=request.GET.get('order_number')
-    transID = request.GET .get('payment_id')
+    transID = request.GET.get('payment_id')
 
-
+    
     try:
         order = Order.objects.get(order_number=order_number, is_ordered=True)
-        order_products = OrderProduct.objects.filter(order_id =order.id)
+        order_products = OrderProduct.objects.filter(order=order)
 
         payment = Payment.objects.get(payment_id=transID)
-
-
+        
         subtotal = 0
         for i in order_products:
             subtotal += i.product_price * i.quantity

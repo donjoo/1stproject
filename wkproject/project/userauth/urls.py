@@ -11,6 +11,7 @@ urlpatterns = [
     path('login_otp/',views.login_otp,name ='login_otp'),
     path('login/otp_verification_login',views.otp_verification_login,name="otp_verification_login"),
     path('user_profile/',views.user_profile,name='user_profile'),
+
     path('profile_update/',views.profile_update,name='profile_update'),
     path('change_password/',views.change_password,name='change_password'),
     path('address_edit/<id>/',views.address_edit,name='address_edit'),
@@ -26,6 +27,6 @@ urlpatterns = [
     path('wallet/',views.user_wallet,name='user_wallet'),
     path('orders_lists/',views.order_list,name='orders_lists'),
     # path('add_funds/',views.ad   d_funds,name='add_funds'),
-
+    path('neww/',views.neww,name='neww'),
 
 ]

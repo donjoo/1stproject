@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from .forms import CreateUserForm,Profileform,PasswordChangeForm,AddFundsForm
 from django.contrib import messages
-from app.models import UserDetails,Transaction,Coupon
+from app.models import UserDetails,Transaction,Coupon,WishList,Product
 from userauth.models import User,Address
 from django.contrib.auth import login,authenticate,logout
 from django.views.decorators.cache import never_cache
@@ -26,6 +26,9 @@ from orders.models import Order
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
+
+def neww(request):
+    return render(request,'userauth/page-account.html')
 
 @never_cache
 def handel_signup(request):
@@ -152,6 +155,18 @@ def handel_login(request):
 
                 except:
                     pass
+                try:
+                    # Transfer wishlist items
+                    wishlist_pids = request.session.get('wishlist', [])
+                    if wishlist_pids:
+                        wishlist = WishList.objects.get_or_create(user=user)[0]
+                        products = Product.objects.filter(pid__in=wishlist_pids)
+                        wishlist.products.add(*products)
+                        del request.session['wishlist']
+
+                except WishList.DoesNotExist:
+                    pass
+
                 login(request,user)
                 messages.success(request,'Login successful.')
                 url = request.META.get('HTTP_REFERER')
@@ -209,9 +224,7 @@ def login_otp(request):
     return render(request, "userauth/login_otp.html")
 
 def forgot_password(request):
-    if request.user.is_authenticated:
-        messages.warning(request, "Hey, you are already logged in.")
-        return redirect("app:index")
+    
     if request.method == "POST":
         email = request.POST.get("email")
         request.session["email"] = email
@@ -351,7 +364,7 @@ def user_profile(request):
     if not request.user.is_authenticated:
         return redirect('userauth:login')
     try:
-        address = Address.objects.filter(user=request.user)
+        address = Address.objects.filter(user=request.user,status= 'False')
     except Address.DoesNotExist:
         address = None
     userdetail = UserDetails.objects.get(user=request.user)
@@ -366,15 +379,25 @@ def user_profile(request):
     except:
         order_products = None
 
+    try:
+        profile = UserDetails.objects.get(user=request.user)
+        # address = Address.objects.get(user=request.user)
+    except UserDetails.DoesNotExist:
+        # Create UserDetails instance if it doesn't exist
+        profile = UserDetails(user=request.user)
+        profile.save()
+    form = Profileform(instance=profile)
+
   
    
     context = {
-       
+        'form':form,
         'address':address,
         'user':userdetail,
         'orders': orders,
         'order_products':order_products,
     }
+    
     return render(request,"userauth/user_profile.html",context)
 
 def order_list(request):
@@ -423,7 +446,7 @@ def address_edit(request,id):
         address.save()
 
        
-        return redirect('userauth:user_profile')
+        return redirect('userauth:user_profile') 
 
    
     try:
@@ -453,39 +476,12 @@ def delete_address(request,id):
         address = Address.objects.get(id=id)
     except ValueError:
         return redirect('userauth:user_profile')
-    address.delete()
+    # address.delete()
+    address.status = True
+    address.save()
 
     return redirect('userauth:user_profile')
         
-
-# def profile_update(request):
-   
-#     try:
-#         profile = UserDetails.objects.get(user=request.user)
-#     except UserDetails.DoesNotExist:
-#         # Create UserDetails instance if it doesn't exist
-#         profile = UserDetails(user=request.user)
-#         profile.save()
-#     if request.method == 'POST':
-         
-#          form = Profileform(request.POST, request.FILES,instance=profile)
-#          if form.is_valid():
-#              new_form=form.save(commit=False)
-#              new_form.user = request.user
-#              new_form.save()
-#              messages.success(request,'profile updated successfully')
-#              return redirect('app:index')
-         
-#          else:
-#              form = Profileform(instance=profile)
-
-#          context={
-#          'form':form,
-#          'profile':profile   
-#          }
-
-#          return render(request,'userauth/user_profile.html',context)
-
 def profile_update(request):
     try:
         profile = UserDetails.objects.get(user=request.user)
@@ -500,7 +496,7 @@ def profile_update(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Profile updated successfully')
-            return redirect('app:index')
+            return redirect('userauth:user_profile')
     else:
         form = Profileform(instance=profile)
 
@@ -516,22 +512,27 @@ def profile_update(request):
     
 @login_required
 def change_password(request):
+    print(request.user)
+    print(request.user.username)
     if request.method == 'POST':
         old_password = request.POST.get('old_password')
-        new_password1 = request.POST.get('new_password1')
-        new_password2 = request.POST.get('new_password2')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
         
         if not request.user.check_password(old_password):
             messages.error(request, 'Your old password is incorrect.')
             return redirect('userauth:change_password')
         
-        if new_password1 != new_password2:
+        if new_password != confirm_password:
             messages.error(request, 'The new passwords do not match.')
             return redirect('userauth:change_password')
         
         # Update the user's password
-        request.user.set_password(new_password1)
-        request.user.save()
+        # request.user.set_password(new_password1)
+        # request.user.save()
+        user = User.objects.get(email=request.user)
+        user.set_password(new_password)
+        user.save()
         
         messages.success(request, 'Your password was successfully updated!')
         return redirect('userauth:user_profile')
@@ -567,14 +568,15 @@ def cancel_order(request, order_id,):
         data.save()
         messages.success(request, 'Order has been cancelled successfully.')
         if data.payment:
+            print('here')
             if (
                 data.payment.payment_method == "Paypal"
-                or data.payment.payment_method == "wallet payment"
+                or data.payment.payment_method == "Wallet"
             ):
                 
                 amount = data.order_total
                 user = request.user
-
+                print(amount,user)
                 Transaction.objects.create(
                     user=user,
                     description="Cancelled Order " + str(order_id),
@@ -598,14 +600,30 @@ def cancel_order(request, order_id,):
 
 
 def return_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    if order.status != 'Returned':
-        order.status = 'Returned'
-        order.save()
-        messages.success(request, 'Order has been returned successfully.')
-    else:
-        messages.warning(request, 'Order is already returned.')
-    return redirect('userauth:my_order', order_id=order_id)
+        if request.method == "POST":
+            data = Order.objects.get(id=order_id)
+            data.status = "Returned"
+            data.save()
+            messages.success(request, 'Order has been returned successfully.')
+            if data.payment:
+                print('here')
+                if (
+                    data.payment.payment_method == "Paypal"
+                    or data.payment.payment_method == "Wallet"
+                ):
+                    
+                    amount = data.order_total
+                    user = request.user
+                    print(amount,user)
+                    Transaction.objects.create(
+                        user=user,
+                        description="Cancelled Order " + str(order_id),
+                        amount=amount,
+                         transaction_type="Credit",
+                    )
+
+            return redirect("userauth:my_order",order_id)
+
 
 
 

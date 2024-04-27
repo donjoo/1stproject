@@ -12,7 +12,8 @@ from cart.views import _cart_id
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 import datetime
 from django.utils import timezone
-
+from django.http import HttpResponseBadRequest
+from django.db.models import OuterRef, Subquery
 
 # Create your views here.
 current_date = datetime.date.today()
@@ -41,12 +42,24 @@ def out_of_stock_products():
     return products_out_of_stock
 
 
-
 def index(request):
     products = Product.objects.all().order_by('-date')
     categories = Category.objects.all() 
-    offers = ProductOffer.objects.filter(start_date__lte=current_date, end_date__gte=current_date)
 
+   
+    # Define a subquery to get the ID of the first offer for each product
+    first_offer_subquery = ProductOffer.objects.filter(
+        product=OuterRef('product'), 
+        start_date__lte=current_date,
+        end_date__gte=current_date
+    ).order_by('-discount').values('id')[:1]
+
+    # Query to retrieve the first offer of each product
+    offers = ProductOffer.objects.filter(
+        id__in=Subquery(first_offer_subquery)
+    ).order_by('product')  # Optionally, you can order the offers by product
+
+    
     paginator = Paginator(products,9)
     page = request.GET.get('page')
     paged_products = paginator.get_page(page)
@@ -66,6 +79,7 @@ def category_list_view(request):
     context ={
         "categories":categories
     }
+    
     return render(request, 'app/category_list.html',context)
 
 def category_product_list(request,cid):
@@ -75,8 +89,12 @@ def category_product_list(request,cid):
     character = AnimeCharacter.objects.all()
 
 
-    products = Product.objects.filter(status='True', category=category)
-     
+    product = Product.objects.filter(status='True', category=category)
+    
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
+
     context = {
         "category":category,
         "products":products,
@@ -93,7 +111,11 @@ def Anime_product_list(request,aid):
     character = AnimeCharacter.objects.all()
 
  
-    products = Product.objects.filter(status='True', anime=anime)
+    product = Product.objects.filter(status='True', anime=anime)
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
      
     context = {
         "products":products,
@@ -111,7 +133,11 @@ def Character_product_list(request,lid):
     characters = AnimeCharacter.objects.all()
 
  
-    products = Product.objects.filter(status='True', character=character)
+    product = Product.objects.filter(status='True', character=character)
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
      
     context = {
        
@@ -126,7 +152,8 @@ def product_detail(request, pid):
     try:
         product = get_object_or_404(Product, pid=pid)
         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=product).exists()
-        offers = ProductOffer.objects.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now(), product=product)
+        # offers = ProductOffer.objects.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now(), product=product).order_by('-discount').first()
+        offer = get_highest_discount_offer(product)
     except Product.DoesNotExist:
         messages.warning(request, 'Product does not exist')
         return redirect("app:index")
@@ -145,12 +172,25 @@ def product_detail(request, pid):
         "p_image": p_image,
         'in_cart': in_cart,
         'sizes': sizes,
-        "offers": offers,
+        "offer": offer,
         "sizes_out_of_stock": sizes_out_of_stock,
         "all_sizes_out_of_stock":all_sizes_out_of_stock
     }
 
     return render(request, 'app/product_detail.html', context)
+
+
+def get_highest_discount_offer(product):
+    offer = ProductOffer.objects.filter(
+        start_date__lte=timezone.now(),
+        end_date__gte=timezone.now(),
+        product=product
+    ).order_by('-discount').first()
+    
+    return offer
+
+
+
 
 def is_size_out_of_stock(pid, size):
     try:
@@ -195,7 +235,7 @@ def add_address(request):
        
 
 
-        return redirect('app:index')
+        return redirect('userauth:user_profile')
     else:
         form_data ={
             'user':user.username,
@@ -206,6 +246,7 @@ def add_address(request):
            ' town':'',
             'state':'',
         }
+        
         
     content={
         
@@ -218,16 +259,22 @@ def add_address(request):
 def search_view(request):
     query = request.GET.get("q")
     print("Received query:", query)  # Debug print
-    products = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query)).order_by('-date')
-    products_count=products.count()
+    product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query)).order_by('-date')
+    product_count=product.count()
     print("Matching products:")  # Debug print
-    for p in products:
+    for p in product:
         print(p.title, "\n\n\n")  # Debug print
+
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
+
     context = {
         'products': products,
         'query': query,
-        'count':products_count
-    }
+        'count':product_count
+    } 
     return render(request, 'app/search.html', context)
 
 
@@ -241,17 +288,22 @@ def filter_view(request):
 
     # Filter products based on price range
     if min_price and max_price:
-        products = Product.objects.filter(price__gte=min_price, price__lte=max_price)
+        product = Product.objects.filter(price__gte=min_price, price__lte=max_price)
     else:
-        products = Product.objects.all()
+        product = Product.objects.all()
 
     # Filter products based on size
     if size:
-         products = products.filter(variants__size__iexact=size)
+         product = product.filter(variants__size__iexact=size)
 
     categories = Category.objects.all()
     animes = CategoryAnime.objects.all()
     character = AnimeCharacter.objects.all()
+
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
 
     context ={
         'products': products,
@@ -261,38 +313,90 @@ def filter_view(request):
         
     }
     return render(request,'app/shop-filter.html',context)
+def wishlist(request):
+    if request.user.is_authenticated:
+        wishlist_items = WishList.objects.filter(user=request.user)
+    else:
+        wishlist_items = []
+        wishlist_pids = request.session.get('wishlist', [])
+        products = Product.objects.filter(pid__in=wishlist_pids)
+        wishlist_items.append({'products': products})
+
+    for item in wishlist_items:
+            products = item.products.all()
 
 
-def whishlist(request):
-    wishlist_items = WishList.objects.filter(user=request.user.id)
-    
+    paginator = Paginator(products, 3)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'wishlist_items': wishlist_items,
+        'wishlist_items':page_obj,
     }
 
     return render(request, 'app/wishlist.html', context)
 
 
 def add_to_wishlist(request, pid):
-    user = request.user
-    product = Product.objects.get(pid=pid)
-    wishlist, created = WishList.objects.get_or_create(user=user)
-    wishlist.products.add(product)
+    product = Product.objects.filter(pid=pid).first()
+    if not product:
+        # Handle case where product does not exist
+        return HttpResponseBadRequest("Product does not exist")
+
+    if request.user.is_authenticated:
+        # For authenticated users, add the product to their wishlist
+        wishlist, created = WishList.objects.get_or_create(user=request.user)
+        wishlist.products.add(product)
+    else:
+        # For anonymous users, add the product to their session-based wishlist
+        print('jnibwj')
+        wishlist_id = _wishlist_id(request)
+        wishlist_pids = request.session.get('wishlist', [])
+        if pid not in wishlist_pids:
+            wishlist_pids.append(pid)
+            request.session['wishlist'] = wishlist_pids
+            print(wishlist_pids,'djvnivu')
+
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 def remove_from_wishlist(request, pid):
-    user = request.user
-    product = Product.objects.get(pid=pid)
-    wishlist = WishList.objects.get(user=user)
-    wishlist.products.remove(product)
+    product = Product.objects.filter(pid=pid).first()
+    if not product:
+        # Handle case where product does not exist
+        return HttpResponseBadRequest("Product does not exist")
+
+    if request.user.is_authenticated:
+        # For authenticated users, remove the product from their wishlist
+        wishlist = WishList.objects.filter(user=request.user).first()
+        if wishlist:
+            wishlist.products.remove(product)
+    else:
+        # For anonymous users, remove the product from their session-based wishlist
+        wishlist_pids = request.session.get('wishlist', [])
+        if pid in wishlist_pids:
+            wishlist_pids.remove(pid)
+            request.session['wishlist'] = wishlist_pids
+
     return redirect('app:wishlist')
 
+
+def _wishlist_id(request):
+    wishlist = request.session.session_key
+    if not wishlist:
+        wishlist = request.session.create()
+    return wishlist
+
+
 def shop(request):
-    products = Product.objects.all()
+    product = Product.objects.all().order_by('-date')
     categories = Category.objects.all()
     animes = CategoryAnime.objects.all()
     character = AnimeCharacter.objects.all()
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
 
     context = {
         'categories':categories,
@@ -301,10 +405,6 @@ def shop(request):
         'products':products
     }
     return render(request,"app/shop-filter.html",context)
-
-from django.http import HttpResponse
-from django.shortcuts import render
-from .models import Product, Category, CategoryAnime, AnimeCharacter
 
 def sort_by(request):
     sort_by = request.GET.get('sort_by')
@@ -316,18 +416,24 @@ def sort_by(request):
     product_ids = [int(id) for id in product_ids if id.isdigit()]
     print(product_ids,'huvuwebvuyw')
     # Filter products based on the received IDs
-    products = Product.objects.filter(id__in=product_ids)
+    product = Product.objects.filter(id__in=product_ids)
     
     if sort_by == 'price_low_high':
-        products = products.order_by('price')
+        product = product.order_by('price')
     elif sort_by == 'price_high_low':
-        products = products.order_by('-price')
+        product = product.order_by('-price')
     elif sort_by == 'release_date':
-        products = products.order_by('release_date')
+        product = product.order_by('release_date')
     
     categories = Category.objects.all()
     animes = CategoryAnime.objects.all()
     characters = AnimeCharacter.objects.all()
+
+
+    p=Paginator(product,8)
+    page = request.GET.get('page')
+    products=p.get_page(page)
+
 
     context = {
         'products': products,

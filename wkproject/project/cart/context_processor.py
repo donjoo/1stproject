@@ -25,5 +25,9 @@ def wishlist_counter(request):
         wishlist_items = WishList.objects.filter(user=request.user)
         for wishlist in wishlist_items:
             wishlist_count += wishlist.products.count()
+    else:
+        # For anonymous users, count the items in the session-based wishlist
+        wishlist_pids = request.session.get('wishlist', [])
+        wishlist_count = len(wishlist_pids)
     print(wishlist_count)
     return {'wishlist_count': wishlist_count}

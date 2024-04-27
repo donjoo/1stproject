@@ -6,19 +6,17 @@
                 <div>
                     <h2 class="content-title card-title">Animes </h2>
                     <p>Add, edit or delete a Character</p>
-                    {% if messages %}
-                    <div class="messages">
-                 {% for message in messages %}
-                    <div class="{% if message.tags %}alert alert-{{ message.tags }}{% endif %}">
-                    {{ message }}
-                    </div>
+                    {% if error_messages %}
+                <div class="alert alert-danger">
+                    <ul>
+                    {% for error_message in error_messages %}
+                        <li>{{ error_message }}</li>
                     {% endfor %}
-                    </div>
-                    {% endif %}
+                    </ul>
                 </div>
-                <div>
-                    <input type="text" placeholder="Search Categories" class="form-control bg-white">
+                {% endif %}
                 </div>
+                
             </div>
             <div class="card">
                 <div class="card-body">
@@ -28,11 +26,7 @@
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th class="text-center">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="" />
-                                                </div>
-                                            </th>
+                                            
                                             {% comment %} <th>ID</th> {% endcomment %}
                                             <th>Name</th>
                                             <th> Anime Name</th>                                        
@@ -43,11 +37,7 @@
                                     <tbody>
                                         {% for char in characters %}
                                         <tr>
-                                            <th class="text-center">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" value="" />
-                                                </div>
-                                            </th>
+                                            
                                             {% comment %} <th scope="row">{{char.lid}}</th> {% endcomment %}
                                             
                                             <td>{{char.name}}</td>
@@ -118,6 +108,18 @@
                 </div> <!-- card body .// -->
             </div> <!-- card .// -->
         </section> <!-- content-main end// --> 
+
+{% if characters.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{characters.previous_page_number}}">Previous</a>
+{%  endif %}
+Page {{characters.number}} of {{characters.paginator.num_pages}}
+{% if characters.has_next %}
+<a href="?page={{characters.next_page_number}}">Next</a>
+<a href="?page={{characters.paginator.num_pages}}">Last  &raquo</a>
+{% endif %}
+
+
 {% endblock body %}
  
 {% comment %} id="Category_name" {% endcomment %}

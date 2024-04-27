@@ -28,7 +28,6 @@
           <strong></strong> {{message}} 
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-
         {% endfor %}
    
             <div class="row">
@@ -47,34 +46,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% comment %} {% for product_id,item in cart_data.items  %}
-                                <tr>
-                                    <td class="image product-thumbnail"><img src="{{item.image}}" alt="#"></td>
-                                    <td class="product-des product-name">
-                                        <h5 class="product-name"><a href=" {% url "app:product_detail" item.pid %}">{{item.title}}</a></h5>
-                                        <p class="font-xs">Maboriosam in a tonto nesciung eget<br> distingy magndapibus.
-                                        </p>
-                                    </td>
-                                    <td class="price" data-title="Price"><span><span>₹</span>{{item.price|floatformat:2}}</span></td>
-                                    <td class="text-center detail-info" data-title="Stock">
-                                        <div class="m-15">
-                                            {% comment %} <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                            <span class="qty-val">1</span>
-                                            <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a> {% endcomment %}
-                                            {% comment %} <input type="number" placeholder="Qty" value="{{item.qty}}" class="W-50">
-                                        </div>
-                                    </td>
-                                    <td class="text-right" data-title="Cart">
-                                        <span>₹{% widthratio item.price 1 item.qty %}</span>
-                                    </td>
-                                    <td class="action" data-title="Refresh"><a href="#" class="text-muted"><i class="fi-rs-refresh"></i></a></td>
-                                    <td class="action" data-title="Remove">
-                                        <button style="border:none; background:none;" class="text-body delete-product" data-product="{{ product_id }}">
-                                            <i class="fi-rs-trash"></i>
-                                        </button>
-                                    </td> 
-                             </tr>
-                                {% endfor %} {% endcomment %} 
+                               
                                 {% for item in cart_items %}
 <tr>
     <td class="image product-thumbnail"><img src="{{ item.product.image.url }}" alt="#"></td>
@@ -131,37 +103,30 @@
 {% endfor %}
                                 <tr>
                                     <td colspan="6" class="text-end">
-                                        <a href="#" class="text-muted"> <i class="fi-rs-cross-small"></i> Clear Cart</a>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="cart-action text-end">
-                        <a class="btn  mr-10 mb-sm-15"><i class="fi-rs-shuffle mr-10"></i>Update Cart</a>
-                        <a href="{% url "app:index" %}" class="btn "><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
+                        <div class="button-container">
+                            <button class="btn  mr-10 mb-sm-15" onclick="reloadPage()">Update Cart</button>
+                            <a href="{% url "app:index" %}" class="btn"><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
+                        </div>
                     </div>
+                    
                     <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
                     <div class="row mb-50">
                         <div class="col-lg-6 col-md-12">
                            
                             <div class="mb-30 mt-50">
                                 <div class="heading_s1 mb-3">
-                                    <h4>Apply Coupon</h4>
+                                   
                                 </div>
                                 <div class="total-amount">
                                     <div class="left">
                                         <div class="coupon">
-                                            <form action="#" target="_blank">
-                                                <div class="form-row row justify-content-center">
-                                                    <div class="form-group col-lg-6">
-                                                        <input class="font-medium" name="Coupon" placeholder="Enter Your Coupon">
-                                                    </div>
-                                                    <div class="form-group col-lg-6">
-                                                        <button class="btn  btn-sm"><i class="fi-rs-label mr-10"></i>Apply</button>
-                                                    </div>
-                                                </div>
-                                            </form>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -197,7 +162,7 @@
                                     </table>
                                 </div>
                                 {% comment %} {% if totalcartitems %} {% endcomment %}
-                                   <a href="{% url "cart:Checkout" %}" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+                                   <a href="{% url "cart:Checkout" %}" class="btn proceed-to-checkout-btn"> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
                                 {% comment %} {% endif %} {% endcomment %}
                             </div>
                         </div>
@@ -284,5 +249,47 @@
        
     });
     
-    </script>  
+    </script> 
+
+<script>
+    // JavaScript function to reload the page
+    function reloadPage() {
+        location.reload();
+    }
+</script>
+    
+
+
+
+<script>
+    $(document).ready(function() {
+        // AJAX for proceeding to checkout
+        $(".proceed-to-checkout-btn").click(function(e) {
+            e.preventDefault();
+            $.ajax({
+                type: "GET", // Change the request type if needed
+                url: $(this).attr("href"),
+                success: function(data) {
+                    // Check if there are messages in the response
+                    if (data.message) {
+                        // Display the message
+                        alert(data.message);
+                        $("#error-message").text(data.message).show();
+
+                    } else {
+                        // No message found, proceed to the checkout page
+                        window.location.href = "{% url 'cart:Checkout' %}";
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error('Error during AJAX request:', xhr.statusText);
+                    // Show generic error message
+                    alert('Error during AJAX request. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
+    
 {% endblock content %}

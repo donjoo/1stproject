@@ -77,6 +77,19 @@
 </main>
 
 
+{% if coupons.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{coupons.previous_page_number}}">Previous</a>
+
+
+{%  endif %}
+Page {{coupons.number}} of {{coupons.paginator.num_pages}}
+{% if coupons.has_next %}
+<a href="?page={{coupons.next_page_number}}">Next</a>
+<a href="?page={{coupons.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
+
 
 {% endblock body %}
 

@@ -7,26 +7,12 @@
                     <h2 class="content-title card-title">Products List</h2>
                  
                 </div>
-                <div>
-                    <a href="#" class="btn btn-primary btn-sm rounded">Create new</a>
-                </div>
+                
             </div>
             <div class="card mb-4">
                 <header class="card-header">
                     <div class="row align-items-center">
-                        <div class="col col-check flex-grow-0">
-                            <div class="form-check ms-2">
-                                <input class="form-check-input" type="checkbox" value="">
-                            </div>
-                        </div>
-                        <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
-                            <select class="form-select">
-                                <option selected>All category</option>
-                                <option>Electronics</option>
-                                <option>Clothes</option>
-                                <option>Automobile</option>
-                            </select>
-                        </div>
+
                        
                 </header> <!-- card-header end// -->
                 <div class="card-body">
@@ -66,10 +52,12 @@
                                     <td><a href="#"> <h6 class="mb-0">{{ product.character}}</h6></a></td>
                                     <td><a href="#"> <h6 class="mb-0">{% if product.status %} <span style="color: rgb(143, 143, 39);">Active</span>  {% else %} <span style="color: rgb(120, 40, 40);">Blocked</span> {%endif %}</h6></a></td>
                                     <td>{{ product.price }}</td>
-                                    <td class="text-end">
-                                        <span class="badge rounded-pill {% if product.stock_count != '0' %} alert-success {% else %} alert-danger {% endif %}">
-                                            {% if product.stock_count == '0' %} Out of Stock  {% else %}{{product.stock_count}}  {% endif %} </span>
-                                    </td>
+                                    <td><a href="#"> <h6 class="mb-0"> {{product.in_stock}}</h6></a></td>
+
+                                    {% comment %} <td class="text-end">
+                                     } <span class="badge rounded-pill {% if product.stock_count != '0' %} alert-success {% else %} alert-danger {% endif %}"> 
+                                            {% if product.stock_count == '0' %} Out of Stock  {% else %} {{product.stock_count}}  {% endif %} </span>
+                                    </td> {% endcomment %}
 
 
 

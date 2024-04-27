@@ -3,25 +3,22 @@
 {% block content %}
         <section class="content-main">
             <div class="content-header">
-                <div>
-                    <h2 class="content-title card-title">Address </h2>
-                    <p>Edit Address</p>
-                </div>
-                <div>
-                    <input type="text" placeholder="Search Categories" class="form-control bg-white">
-                </div>
+             
+                    <h2 class="content-title card-title">Edit Address</h2>
+                
+               
             </div>
-            <div class="card">
-                <div class="card-body">
-                    <div class="col-md-3">
-                        <form method="post" action="" enctype="multipart/form-data">
-                            {% csrf_token %}
-                           
+<div class="card">
+    <div class="card-body">
+        <div class="col-md-3">
+            <form method="post" action="" enctype="multipart/form-data">
+                {% csrf_token %}
+            
                            
 
     <div class="mb-4">
     <label for="user" class="form-label">User</label>
-    <input type="text" class="form-control"  name="user" value="{{user }}" disabled>
+    <input type="text" class="form-control"  name="user" value="{{user}}" disabled>
 </div> 
 <div class="mb-4">
     <label for="house" >Flat,house no</label>

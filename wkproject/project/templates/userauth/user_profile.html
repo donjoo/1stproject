@@ -4,6 +4,15 @@
 
 <section class="pt-150 pb-150">
     <div class="container">
+                                         
+        {% for message in messages  %}
+        <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+          <strong></strong> {{message}}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        {% endfor %}
+
         <div class="row">
             <div class="col-lg-10 m-auto">
                 <div class="row">
@@ -18,10 +27,7 @@
                                     <a class="nav-link"  href="{% url "userauth:orders_lists" %}"><i class="fi-rs-shopping-bag mr-10"></i>Orders</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#track-orders" role="tab" aria-controls="track-orders" aria-selected="false"><i class="fi-rs-shopping-cart-check mr-10"></i>Track Your Order</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="true"><i class="fi-rs-marker mr-10"></i>My Address</a>
+                                    <a class="nav-link {% if request.GET.tab == 'address' %}show active{% endif %}" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="true"><i class="fi-rs-marker mr-10"></i>My Address</a>
                                 </li>
                                 <li class="nav-item" >
                                     <a class="nav-link" href="{% url "userauth:user_wallet" %}"><i></i> My Wallet</a>
@@ -33,10 +39,10 @@
                                     <a class="nav-link" id="account-edit-tab" data-bs-toggle="tab" href="#account-edit" role="tab" aria-controls="account-edit" aria-selected="true"><i class="fi-rs-user mr-10"></i>Account Edit</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" id="change-password-tab" data-bs-toggle="tab" href="{% url "userauth:change_password" %}" role="tab" aria-controls="change-password" aria-selected="true"><i class="fi-rs-user mr-10"></i>Change-Password</a>
+                                    <a class="nav-link" id="change-password-tab" data-bs-toggle="tab" href="#change-password" role="tab" aria-controls="change-password" aria-selected="true"><i class="fi-rs-user mr-10"></i>Change-Password</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="page-login-register.html"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
+                                    <a class="nav-link" href="{% url "userauth:logout" %}"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
                                 </li>
                                
                                 
@@ -116,8 +122,12 @@
 
                                     </div>
                                     {% endfor %}
+                                </div>  
+                                <div class="text-left mt-3">
+                                    <a href="{% url "app:add_address" %}" class="btn btn-primary">Add new address</a>
                                 </div>
-                            </div>
+                        </div>
+
                             <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
                                 <div class="card">
                                     <div class="card-header">
@@ -189,11 +199,11 @@
                                 <h5>New Password</h5>
                         </div>
                         <div class="card-body">
-                            <p>Already have an account? <a href="page-login-register.html">Log in instead!</a></p>
-                            <form action="{% url 'userauth:change_password' %}" method ="POST" enctype="multipart/form-data"> {% csrf_token %}
+                            
+                        <form action="{% url 'userauth:change_password' %}" method ="POST" enctype="multipart/form-data"> {% csrf_token %}
                             <div class="form-group col-md-12">
                                 <label>Current Password <span class="required">*</span></label>
-                                <input required="" class="form-control square" name="password" type="password">
+                                <input required="" class="form-control square" name="old_password" type="password">
                             </div>
                             <div class="form-group col-md-12">
                                 <label>New Password <span class="required">*</span></label>
@@ -207,6 +217,9 @@
                                 <button type="submit" class="btn btn-fill-out submit" name="submit" value="Submit">Save</button>
                             </div>
                         </form>
+                        <div class="login_footer form-group">
+                            <a class="text-muted" href="{% url 'userauth:forgot_password' %}">Forgot password?</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -219,6 +232,9 @@
     </div>
 </section>
 </main>
+
+
+    
 
 
 {% endblock content  %}

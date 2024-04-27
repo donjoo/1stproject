@@ -28,13 +28,13 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for wishlist_item in wishlist_items %}
-                                {% for product in wishlist_item.products.all %}          
+                                
+                                {% for product in wishlist_items %}          
                               <tr>
                                    
                                     <td class="image product-thumbnail"><img src="{{product.image.url}}" alt="#"></td>
                                     <td class="product-des product-name">
-                                        <h5 class="product-name"><a href="shop-product-right.html">{{product.title}}</a></h5>
+                                        <h5 class="product-name"><a href="{% url 'app:product_detail' product.pid %}">{{product.title}}</a></h5>
                                         <p class="font-xs">{{product.anime}},{{product.character}}<br> {{product.descriptions}}
                                         </p>
                                     </td>
@@ -48,14 +48,29 @@
                                     <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td>
                                 </tr>
                                 {% endfor %}
-                                {% endfor %}
+                                
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+        <div>
+            {% if wishlist_items.has_previous %}
+            <a href="?page=1">&laquo; First</a>
+            <a href="?page={{ wishlist_items.previous_page_number }}">Previous</a>
+            {% endif %}
+            
+            Page {{ wishlist_items.number }} of {{ wishlist_items.paginator.num_pages }}
+            
+            {% if wishlist_items.has_next %}
+            <a href="?page={{ wishlist_items.next_page_number }}">Next</a>
+            <a href="?page={{ wishlist_items.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </div>
     </section>
+
+
 </main>
 {% endblock content %}
 

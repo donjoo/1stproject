@@ -60,6 +60,7 @@ class Category(models.Model):
     title = models.CharField(max_length=100,default="Merch")
     image=models.ImageField(upload_to='category',default='category.jpg',null=True,blank=True)
     is_blocked=models.BooleanField(default=False)
+    delete = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -78,6 +79,8 @@ class CategoryAnime(models.Model):
     title = models.CharField(max_length=100,default="anime")
     image=models.ImageField(upload_to='anime',default='anime.jpg',null=True,blank=True)
     is_blocked=models.BooleanField(default=False)
+    delete = models.BooleanField(default=False)
+
     
     class Meta:
         verbose_name_plural ="Anime"
@@ -96,6 +99,8 @@ class AnimeCharacter(models.Model):
     animename = models.ForeignKey(CategoryAnime,on_delete=models.SET_NULL,null=True,related_name='chracter')
     image=models.ImageField(upload_to='character',default='char.jpg',null=True,blank=True)
     is_blocked=models.BooleanField(default=False)
+    delete = models.BooleanField(default=False)
+
     
     class Meta:
         verbose_name_plural ="AnimeCharacter"
@@ -132,6 +137,7 @@ class Product(models.Model):
     
 
     # product_status = models.CharField(choices=STATUS,max_length=10,default="in_review")
+    delete = models.BooleanField(default=False)
     status = models.BooleanField(default=True)
     in_stock = models.BooleanField(default=True)
     featured = models.BooleanField(default=True)
@@ -181,6 +187,7 @@ class Variants(models.Model):
     size = models.CharField(max_length=100)
     is_active = models.BooleanField(default = True)
     created_date = models.DateTimeField(auto_now=True)
+    delete = models.BooleanField(default=False)
 
     def __str__(self):
         return self.size
@@ -259,6 +266,8 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     active = models.BooleanField(default=True)
+    delete = models.BooleanField(default=False)
+
 
 
     def is_valid(self):
@@ -314,15 +323,14 @@ class ProductOffer(models.Model):
     discount = models.DecimalField(max_digits=5, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
+    delete = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
+
 
 class CategoryOffer(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     discount = models.DecimalField(max_digits=5, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
-
-class ReferralOffer(models.Model):
-    referrer = models.ForeignKey(User, related_name='referral_offers', on_delete=models.CASCADE)
-    discount = models.DecimalField(max_digits=5, decimal_places=2)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    delete = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
