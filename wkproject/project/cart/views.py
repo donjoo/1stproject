@@ -80,36 +80,12 @@ def add_cart(request,pid):
                                         'message': f"Insufficient stock. Only available."
                                     }
                         return JsonResponse(response_data)  
-                        # error_message = "Sorry, the requested quantity is not available in stock."
-                        # messages.error(request, error_message)
-                        # django_messages = [str(message) for message in messages.get_messages(request)]  # Convert Message objects to strings
-                        # return JsonResponse({"success": False, "message": error_message, "django_messages": django_messages})
-                #             return redirect('cart:cart')
                 else:
-                    # messages.error(request,"please select a size.")
-                    # return redirect('app:product_detail',product.pid)
                     response_data = {
                                         'status': 'error',
                                         'message': f"please select a size."
                                     }
                     return JsonResponse(response_data) 
-                    # else:
-                            # django_messages = request.POST.getlist('django_messages[]')
-                            # for msg in django_messages:
-                            #                 tag, message = msg.split(':')
-                            #                 if tag == 'success':
-                            #                     messages.success(request, message)
-                            #                 elif tag == 'info':
-                            #                     messages.info(request, message)
-                            #                 elif tag == 'warning':
-                            #                     messages.warning(request, message)
-                            #                 elif tag == 'error':
-                            #                     messages.error(request, message)
-                            # error_message = "An error occurred while removing item from cart."
-                            # return JsonResponse({"success": False, "message": error_message})
-                            # messages.error(request, "An error occurred while removing item from cart.")
-                            # return JsonResponse({"success": False, "message": "Anoccurred while removing item from cart."})                
-                    # return JsonResponse({"success": False, "message": "Please select a size."})
             else:
                 item = CartItem.objects.create(product=product,quantity=1,user=current_user)
 
@@ -353,7 +329,7 @@ def apply_coupon(request):
         if form.is_valid():          
             code = form.cleaned_data['code']
             try:
-                coupon = Coupon.objects.get(code=code) #valid_to__gte=timezone.now(), active=True)
+                coupon = Coupon.objects.get(code=code)
                 if coupon.valid_to < timezone.now() and coupon.active == True:
                     messages.error(request,"coupon expired.")
                     request.session['coupon_id'] = None
@@ -374,10 +350,6 @@ def remove_coupon(request):
         if coupon_id:
             # Remove the coupon from session or database
             del request.session['coupon_id']
-            # Optionally, you may want to update other related data
-            # For example, recalculating the order total without the coupon
-            # And updating the cart or order accordingly
-            # Optionally, you can display a success message
             messages.success(request, 'Coupon removed successfully.')
     return redirect('cart:Checkout')
 
@@ -470,36 +442,4 @@ def Checkout(request):
       
 
     return render(request, 'app/checkout.html', context)
-
-
-# @login_required(login_url='userauth:login')
-# def Checkout(request,total=0,quantity=0,cart_items=None):
-#     shipping=0
-#     grand_total=0
-#     try:
-#         if request.user.is_authenticated:
-#             cart_items = CartItem.objects.filter(user=request.user,is_active=True)
-#         else:          
-#             cart = Cart.objects.get(cart_id=_cart_id(request))
-#             cart_items = CartItem.objects.filter(cart=cart,is_active=True)
-#         for cart_item in cart_items:
-#             total += (cart_item.product.price * cart_item.quantity)
-#             quantity += cart_item.quantity
-
-#         shipping = (3 * total)/100
-#         grand_total = total + shipping
-#     except ObjectDoesNotExist:
-#         pass
-#     user = User.objects.all()
-#     address = Address.objects.filter(user=request.user)
-#     context = {
-#         'total':total,
-#         'quantity':quantity,
-#         'cart_items':cart_items,  
-#         'shipping':shipping,
-#         'grand_total':grand_total,
-#         'address':address,
-#     }
-#     return render(request,'app/checkout.html' ,context)
-
 
