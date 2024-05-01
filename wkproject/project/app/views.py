@@ -22,10 +22,10 @@ current_date = datetime.date.today()
 
 def out_of_stock_products():
     products_out_of_stock = []
-    products = Product.objects.all()
+    products = Product.objects.filter(delete='False')
 
     for product in products:
-        variants = Variants.objects.filter(product=product)
+        variants = Variants.objects.filter(product=product,delete='False')
         out_of_stock = True
 
         for variant in variants:
@@ -43,12 +43,12 @@ def out_of_stock_products():
 
 
 def index(request):
-    products = Product.objects.all().order_by('-date')
-    categories = Category.objects.all() 
+    products = Product.objects.filter(delete='False').order_by('-date')
+    categories = Category.objects.filter(delete='False') 
 
    
     # Define a subquery to get the ID of the first offer for each product
-    first_offer_subquery = ProductOffer.objects.filter(
+    first_offer_subquery = ProductOffer.objects.filter(delete='False',
         product=OuterRef('product'), 
         start_date__lte=current_date,
         end_date__gte=current_date
@@ -75,7 +75,7 @@ def index(request):
 
 
 def category_list_view(request):
-    categories = Category.objects.all()
+    categories = Category.objects.filter(delete='False')
     context ={
         "categories":categories
     }
@@ -84,12 +84,12 @@ def category_list_view(request):
 
 def category_product_list(request,cid):
     category = Category.objects.get(cid=cid)
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    character = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    character = AnimeCharacter.objects.filter(delete='False')
 
 
-    product = Product.objects.filter(status='True', category=category)
+    product = Product.objects.filter(status='True', category=category,delete='False')
     
     p=Paginator(product,8)
     page = request.GET.get('page')
@@ -106,12 +106,12 @@ def category_product_list(request,cid):
 
 def Anime_product_list(request,aid):
     anime = CategoryAnime.objects.get(aid=aid)
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    character = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    character = AnimeCharacter.objects.filter(delete='False')
 
  
-    product = Product.objects.filter(status='True', anime=anime)
+    product = Product.objects.filter(status='True', anime=anime,delete='False')
 
     p=Paginator(product,8)
     page = request.GET.get('page')
@@ -128,12 +128,12 @@ def Anime_product_list(request,aid):
 
 def Character_product_list(request,lid):
     character = AnimeCharacter.objects.get(lid=lid)
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    characters = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    characters = AnimeCharacter.objects.filter(delete='False')
 
  
-    product = Product.objects.filter(status='True', character=character)
+    product = Product.objects.filter(status='True', character=character,delete='False')
 
     p=Paginator(product,8)
     page = request.GET.get('page')
@@ -159,7 +159,7 @@ def product_detail(request, pid):
         return redirect("app:index")
     
     p_image = product.p_images.all()
-    sizes = Variants.objects.filter(product=product)
+    sizes = Variants.objects.filter(product=product,delete='False')
 
     # Passing pid to is_size_out_of_stock function
     sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
@@ -184,7 +184,8 @@ def get_highest_discount_offer(product):
     offer = ProductOffer.objects.filter(
         start_date__lte=timezone.now(),
         end_date__gte=timezone.now(),
-        product=product
+        product=product,
+        delete='False'
     ).order_by('-discount').first()
     
     return offer
@@ -195,7 +196,7 @@ def get_highest_discount_offer(product):
 def is_size_out_of_stock(pid, size):
     try:
         product = Product.objects.get(pid=pid)
-        variant = Variants.objects.get(product=product, size=size)
+        variant = Variants.objects.get(product=product, size=size,delete='False')
         stock = Stock.objects.get(variant=variant)
         return stock.stock <= 0
     except (Product.DoesNotExist, Variants.DoesNotExist, Stock.DoesNotExist):
@@ -259,7 +260,7 @@ def add_address(request):
 def search_view(request):
     query = request.GET.get("q")
     print("Received query:", query)  # Debug print
-    product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query)).order_by('-date')
+    product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query),filter(delete='False')).order_by('-date')
     product_count=product.count()
     print("Matching products:")  # Debug print
     for p in product:
@@ -275,7 +276,7 @@ def search_view(request):
         'query': query,
         'count':product_count
     } 
-    return render(request, 'app/search.html', context)
+    return render(request, 'app/search.html', context) 
 
 
 
@@ -288,17 +289,17 @@ def filter_view(request):
 
     # Filter products based on price range
     if min_price and max_price:
-        product = Product.objects.filter(price__gte=min_price, price__lte=max_price)
+        product = Product.objects.filter(price__gte=min_price, price__lte=max_price,delete='False')
     else:
-        product = Product.objects.all()
+        product = Product.objects.filter(delete='False')
 
     # Filter products based on size
     if size:
-         product = product.filter(variants__size__iexact=size)
+         product = product.filter(variants__size__iexact=size,delete='False')
 
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    character = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    character = AnimeCharacter.objects.filter(delete='False')
 
 
     p=Paginator(product,8)
@@ -389,10 +390,10 @@ def _wishlist_id(request):
 
 
 def shop(request):
-    product = Product.objects.all().order_by('-date')
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    character = AnimeCharacter.objects.all()
+    product = Product.objects.filter(delete='False').order_by('-date')
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    character = AnimeCharacter.objects.filter(delete='False')
 
     p=Paginator(product,8)
     page = request.GET.get('page')
@@ -425,8 +426,8 @@ def sort_by(request):
     elif sort_by == 'release_date':
         product = product.order_by('release_date')
     
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
     characters = AnimeCharacter.objects.all()
 
 
@@ -446,4 +447,5 @@ def sort_by(request):
 
 
 def about(request):
+    
     return render(request,"app/about.html")

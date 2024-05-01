@@ -129,13 +129,11 @@
                                             </a>
                                         </div>
                                         <div class="product-action-1">
-                                            <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal"><i class="fi-rs-eye"></i></a>
                                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
-                                            {% comment %} <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a> {% endcomment %}
                                         </div>
-                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                        {% comment %} <div class="product-badges product-badges-position product-badges-mrg">
                                             <span class="hot">Hot</span>
-                                        </div>
+                                        </div> {% endcomment %}
                                     </div>
                                     <div class="product-content-wrap" style="min-height: 150px;">
                                         <div class="product-category">

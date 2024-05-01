@@ -30,7 +30,8 @@
                                     <th scope="col">Discount</th>
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
-                                    {% comment %} <th scope="col">active</th> {% endcomment %}
+                                    <th scope="col">Active</th>
+                                    <th scope="col">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -51,9 +52,17 @@
                                         <span class="color3 font-weight-bold">{{offer.end_date}}</span>
                                     </td>
                                     <td class="text-right">
-                                        {% comment %} <span class="color3 font-weight-bold">{{coupon.active}}</span> {% endcomment %}
+                                        <span class="color3 font-weight-bold">{{offer.active}}</span>
                                     </td>
-                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
+                                    <td class="text-right">
+                                        <div class="dropdown"> 
+                                            <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                <div class="dropdown-menu">
+                                                    <a class="dropdown-item" href="{% url 'adminside:block_product_offer' offer.id %}">{% if not offer.active %} Active {% else %} Unactive{% endif %}</a>
+                                                    <a class="dropdown-item text-danger" href="{% url 'adminside:delete_product_offer' offer.id %}">Delete</a>
+                                                </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -90,6 +99,8 @@ Page {{product_offers.number}} of {{product_offer.paginator.num_pages}}
                                     <th scope="col">Discount</th>
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
+                                    <th scope="col">Active</th>
+                                    <th scope="col">Action</th>
                                     {% comment %} <th scope="col">active</th> {% endcomment %}
                                 </tr>
                             </thead>
@@ -111,9 +122,17 @@ Page {{product_offers.number}} of {{product_offer.paginator.num_pages}}
                                         <span class="color3 font-weight-bold">{{offer.end_date}}</span>
                                     </td>
                                     <td class="text-right">
-                                        {% comment %} <span class="color3 font-weight-bold">{{coupon.active}}</span> {% endcomment %}
+                                        <span class="color3 font-weight-bold">{{offer.active}}</span>
                                     </td>
-                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
+                                    <td class="text-right">
+                                        <div class="dropdown"> 
+                                            <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                <div class="dropdown-menu">
+                                                    <a class="dropdown-item" href="{% url 'adminside:block_category_offer' offer.id %}">{% if not offer.active %} Active {% else %} Unactive{% endif %}</a>
+                                                    <a class="dropdown-item text-danger" href="{% url 'adminside:delete_category_offer' offer.id %}">Delete</a>
+                                                </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

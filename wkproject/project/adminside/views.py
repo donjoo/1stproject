@@ -255,13 +255,13 @@ def add_product(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
         
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    characters = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    characters = AnimeCharacter.objects.filter(delete='False')
 
     if request.method == 'POST':
         product_name = request.POST.get('name')
-        description = request.POST.get('describtion')
+        descriptions = request.POST.get('descriptions')
         max_price = request.POST.get('old_price')
         sale_price = request.POST.get('price')
         category_name = request.POST.get('category')
@@ -299,7 +299,7 @@ def add_product(request):
         if validation_errors:
             form_data = {
                 'name':product_name,
-                'description':description,
+                'descriptions':descriptions,
                 'old_price':max_price,
                 'price':sale_price,
                 'category':category_name,
@@ -337,7 +337,7 @@ def add_product(request):
             category=category,
             anime=anime,
             character=character,
-            descriptions=description,
+            descriptions=descriptions,
             specifications=specifications,
             old_price=max_price,
             price=sale_price,
@@ -361,7 +361,7 @@ def add_product(request):
     else:
         form_data ={
             'name':'',
-            'description':'',
+            'descriptions':'',
             'specifications':'',
             'old_price':'',
             'price':'',
@@ -404,10 +404,10 @@ def add_product(request):
 def delete_product(request,pid):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
-    try:
+    try:  
         product=Product.objects.get(pid=pid)
-        product.active = False
-        product.save()
+        product.delete = True
+        product.save()  
         return redirect('adminside:product_list')
     except Product.DoesNotExist:
         return HttpResponse("product not Found",status=404)
@@ -424,7 +424,7 @@ def product_list(request):
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
     # products = Product.objects.all().order_by('-date') 
-    p=Paginator(Product.objects.filter(active='True').order_by('-date'),10)
+    p=Paginator(Product.objects.filter(delete='False').order_by('-date'),10)
     page = request.GET.get('page')
     productss=p.get_page(page)
 
@@ -459,7 +459,7 @@ def product_edit(request, pid):
     validation_errors = []
     if request.method == 'POST':
         product.title = request.POST.get('name')
-        product.descriptions = request.POST.get('describtion')
+        product.descriptions = request.POST.get('descriptions')
         product.old_price = float(request.POST.get('old_price'))
         product.price = float(request.POST.get('price'))
         product.category = get_object_or_404(Category, title=request.POST.get('category'))
@@ -533,7 +533,7 @@ def product_edit(request, pid):
         'error_messages':error_messages,
         'existing_data': {
             'name': product.title,
-            'describtion': product.descriptions,
+            'descriptions': product.descriptions,
             'old_price': product.old_price,
             'price': product.price,
             'category': product.category.title if product.category else '',
@@ -636,7 +636,7 @@ def category_list(request):
             return redirect('adminside:admin_login')
     
     # categories = Category.objects.all()
-    p=Paginator(Category.objects.all().order_by('-date'),10)
+    p=Paginator(Category.objects.filter(delete='False').order_by('-date'),10)
     page = request.GET.get('page')
     categories=p.get_page(page)
     
@@ -688,7 +688,8 @@ def delete_category(request,cid):
         category = Category.objects.get(cid=cid)
     except ValueError:
         return redirect('adminside:category_list')
-    category.delete()
+    category.delete=True
+    category.save()
 
     return redirect('adminside:category_list')
         
@@ -754,7 +755,7 @@ def animecat_list(request):
             return redirect('adminside:admin_login')
     
     
-    p=Paginator(CategoryAnime.objects.all().order_by('-id'),10)
+    p=Paginator(CategoryAnime.objects.filter(delete='False').order_by('-id'),10)
     page = request.GET.get('page')
     Animes=p.get_page(page)
 
@@ -807,7 +808,8 @@ def delete_animecat(request,aid):
         anime = CategoryAnime.objects.get(aid=aid)
     except ValueError:
         return redirect('adminside:animecat_list')
-    anime.delete()
+    anime.delete = True
+    anime.save()
 
     return redirect('adminside:animecat_list')
         
@@ -890,8 +892,8 @@ def character_list(request):
             return redirect('adminside:admin_login')
     
    
-    animes = CategoryAnime.objects.all()
-    p=Paginator( AnimeCharacter.objects.all().order_by('-id'),10)
+    animes = CategoryAnime.objects.filter(delete='False')
+    p=Paginator( AnimeCharacter.objects.filter(delete = 'False').order_by('-id'),10)
     page = request.GET.get('page')
     characters=p.get_page(page)
 
@@ -944,7 +946,8 @@ def delete_character(request,lid):
        character = get_object_or_404(AnimeCharacter, lid=lid)
     except ValueError:
         return redirect('adminside:character_list')
-    character.delete()
+    character.delete = True
+    character.save()
 
     return redirect('adminside:character_list')
         
@@ -978,7 +981,7 @@ def add_newvariant(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
 
-    products = Product.objects.all()
+    products = Product.objects.filter(delete='False')
     
     if request.method == 'POST':
         print('httttt')
@@ -1007,15 +1010,15 @@ def newvariant_list(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
         
-    products = Product.objects.all()
+    products = Product.objects.filter(delete='False')
     selected_product = None
     
     if request.method == 'POST':
         product_id = request.POST.get('product')
         selected_product = Product.objects.get(title=product_id)
-        variants = Variants.objects.filter(product=selected_product)
+        variants = Variants.objects.filter(product=selected_product,delete='False')
     else:
-        variants = Variants.objects.all()
+        variants = Variants.objects.filter(delete='False')
         
     paginator = Paginator(variants, 10)
     page_number = request.GET.get('page')
@@ -1034,13 +1037,13 @@ def newvariant_list(request):
 @cache_control(no_cache=True,must_revalidaate=True,no_store=True)
 def delete_size(request,id):
     if not request.user.is_superadmin:
-        return redirect('adminside:admin_login')
-        
-    try:
+        return redirect('adminside:admin_login')      
+    try:  
         size = Variants.objects.get(id=id)
     except ValueError:
-        return redirect('adminside:newvariant_list')
-    size.delete()
+        return redirect('adminside:newvariant_list')       
+    size.delete = True                                      
+    size.save()  
 
     return redirect('adminside:newvariant_list')
         
@@ -1079,7 +1082,7 @@ def add_stock(request):
         messages.success(request, 'Stock updated successfully.')
         return redirect('adminside:stock_list')
 
-    products = Product.objects.all()
+    products = Product.objects.filter(delete = 'False')
     context = {'products': products}
     return render(request, 'adminside/add_stock.html', context)
 
@@ -1088,7 +1091,7 @@ def get_variants(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
     product_id = request.GET.get('product_id')
-    variants = Variants.objects.filter(product_id=product_id).values('id', 'size')
+    variants = Variants.objects.filter(product_id=product_id,delete='False').values('id', 'size')
     return JsonResponse({'variants': list(variants)})
 
 
@@ -1096,8 +1099,8 @@ def stock_list(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
 
-    products = Product.objects.all()
-    variants = Variants.objects.all()
+    products = Product.objects.filter(delete = 'False')
+    variants = Variants.objects.filter(delete='False')
   
     selected_product = None
     
@@ -1251,7 +1254,7 @@ def coupon_list(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
 
-    coupons = Coupon.objects.all().order_by('-id')
+    coupons = Coupon.objects.filter(delete='False').order_by('-id')
     p=Paginator(coupons,5)
     page = request.GET.get('page')
     couponss =p.get_page(page)
@@ -1274,7 +1277,8 @@ def delete_coupon(request,id):
         coupon = Coupon.objects.get(id=id)
     except ValueError:
         return redirect('adminside:coupon_list')
-    coupon.delete()
+    coupon.delete = True
+    coupon.save()
 
     return redirect('adminside:coupon_list')
         
@@ -1303,8 +1307,8 @@ def offer_list(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
 
-    product_offer = ProductOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today()).order_by('-id')
-    category_offer = CategoryOffer.objects.filter(start_date__lte=date.today(),end_date__gte=date.today()).order_by('-id')
+    product_offer = ProductOffer.objects.filter(delete='False',start_date__lte=date.today(),end_date__gte=date.today()).order_by('-id')
+    category_offer = CategoryOffer.objects.filter(delete = 'False',start_date__lte=date.today(),end_date__gte=date.today()).order_by('-id')
 
     p=Paginator(product_offer,5)
     page = request.GET.get('page')
@@ -1329,6 +1333,38 @@ def create_product_offer(request):
     return render(request,"adminside/create_product_offer.html",{'form':form})
 
 
+@login_required(login_url='adminside:admin_login')
+@cache_control(no_cache=True,must_revalidaate=True,no_store=True)
+def delete_product_offer(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+        
+    try:
+        offer = ProductOffer.objects.get(id=id)
+    except ValueError:
+        return redirect('adminside:offer_list')
+    offer.delete = True
+    offer.save()
+
+    return redirect('adminside:offer_list')
+        
+
+def block_product_offer(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
+    offer=get_object_or_404(ProductOffer,id=id)
+
+    if offer.active:
+        offer.active=False
+
+    else:
+        offer.active=True
+    offer.save()
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+
+
 def create_category_offer(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
@@ -1340,6 +1376,38 @@ def create_category_offer(request):
     else:
         form = CategoryOfferForm()
     return render(request,"adminside/create_category_offer.html",{'form':form})
+
+
+@login_required(login_url='adminside:admin_login')
+@cache_control(no_cache=True,must_revalidaate=True,no_store=True)
+def delete_category_offer(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+        
+    try:
+        offer = CategoryOffer.objects.get(id=id)
+    except ValueError:
+        return redirect('adminside:offer_list')
+    offer.delete = True
+    offer.save()
+
+    return redirect('adminside:offer_list')
+        
+
+def block_category_offer(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
+    offer=get_object_or_404(CategoryOffer,id=id)
+
+    if offer.active:
+        offer.active=False
+
+    else:
+        offer.active=True
+    offer.save()
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
@@ -1391,7 +1459,7 @@ def sales_report(request):
         'start_date_value': start_date_value,
         'end_date_value': end_date_value,
         'grand_total':grand_totall
-    }
+    }        
 
     return render(request, 'adminside/sales_report.html', context)
 

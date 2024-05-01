@@ -53,7 +53,7 @@ def add_cart(request,pid):
         product_size_set = set([sizess.id for sizess in product_size])
         print( product_size_set,'set')
         is_cart_item_exists = CartItem.objects.filter(product=product,user=current_user).exists()
-        if is_cart_item_exists:
+        if is_cart_item_exists:        
             cart_item = CartItem.objects.filter(product=product,user = current_user)
             
             ex_var_list = []
@@ -86,8 +86,13 @@ def add_cart(request,pid):
                         # return JsonResponse({"success": False, "message": error_message, "django_messages": django_messages})
                 #             return redirect('cart:cart')
                 else:
-                    messages.error(request,"please select a size.")
-                    return redirect('app:product_detail',product.pid)
+                    # messages.error(request,"please select a size.")
+                    # return redirect('app:product_detail',product.pid)
+                    response_data = {
+                                        'status': 'error',
+                                        'message': f"please select a size."
+                                    }
+                    return JsonResponse(response_data) 
                     # else:
                             # django_messages = request.POST.getlist('django_messages[]')
                             # for msg in django_messages:

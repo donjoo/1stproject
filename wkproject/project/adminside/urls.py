@@ -64,7 +64,11 @@ urlpatterns = [
 
     path('offer_list',views.offer_list,name='offer_list'),
     path('create_product_offer/',views.create_product_offer,name='create_product_offer'),
+    path('delete_product_offer/<id>/',views.delete_product_offer,name='delete_product_offer'),
+    path('block_product_offer/<id>',views.block_product_offer,name='block_product_offer'),
     path('create_category_offer',views.create_category_offer,name='create_category_offer'),
+    path('delete_category_offer/<id>/',views.delete_category_offer,name='delete_category_offer'),
+    path('block_category_offer/<id>/',views.block_category_offer,name='block_category_offer'),
 
 
     path('sales_report/',views.sales_report,name='sales_report'),
