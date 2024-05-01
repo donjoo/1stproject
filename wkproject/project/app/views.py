@@ -38,7 +38,6 @@ def out_of_stock_products():
 
         if out_of_stock:
             products_out_of_stock.append(product)
-    print(products_out_of_stock)
     return products_out_of_stock
 
 
@@ -64,7 +63,6 @@ def index(request):
     page = request.GET.get('page')
     paged_products = paginator.get_page(page)
     out_of_stock_product = out_of_stock_products()
-    print(out_of_stock_product)
     context = {
         "products":paged_products,   
         "offers":offers,
@@ -152,7 +150,6 @@ def product_detail(request, pid):
     try:
         product = get_object_or_404(Product, pid=pid)
         in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=product).exists()
-        # offers = ProductOffer.objects.filter(start_date__lte=timezone.now(), end_date__gte=timezone.now(), product=product).order_by('-discount').first()
         offer = get_highest_discount_offer(product)
     except Product.DoesNotExist:
         messages.warning(request, 'Product does not exist')
@@ -164,9 +161,7 @@ def product_detail(request, pid):
     # Passing pid to is_size_out_of_stock function
     sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
     all_sizes_out_of_stock = all(sizes_out_of_stock.values())
-     
-    for size in sizes:
-       print(sizes_out_of_stock[size.size])
+
     context = {
         "product": product,
         "p_image": p_image,
@@ -206,9 +201,6 @@ def is_size_out_of_stock(pid, size):
 def add_address(request):
     if not request.user.is_authenticated:
         return redirect('userauth:handel_login')
-        
-   
-    # user = User.objects.get(pk=request.user.pk)
     user = request.user
    
 
@@ -259,13 +251,8 @@ def add_address(request):
 
 def search_view(request):
     query = request.GET.get("q")
-    print("Received query:", query)  # Debug print
     product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query),filter(delete='False')).order_by('-date')
     product_count=product.count()
-    print("Matching products:")  # Debug print
-    for p in product:
-        print(p.title, "\n\n\n")  # Debug print
-
 
     p=Paginator(product,8)
     page = request.GET.get('page')
@@ -281,12 +268,9 @@ def search_view(request):
 
 
 def filter_view(request):
-    print('heklpppppppppppppppppppppppppppppppppp')
     min_price = request.GET.get('min_price')
     max_price = request.GET.get('max_price')
     size = request.GET.get('size')
-    # print('size')
-
     # Filter products based on price range
     if min_price and max_price:
         product = Product.objects.filter(price__gte=min_price, price__lte=max_price,delete='False')
@@ -350,14 +334,11 @@ def add_to_wishlist(request, pid):
         wishlist.products.add(product)
     else:
         # For anonymous users, add the product to their session-based wishlist
-        print('jnibwj')
         wishlist_id = _wishlist_id(request)
         wishlist_pids = request.session.get('wishlist', [])
         if pid not in wishlist_pids:
             wishlist_pids.append(pid)
             request.session['wishlist'] = wishlist_pids
-            print(wishlist_pids,'djvnivu')
-
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
@@ -410,12 +391,9 @@ def shop(request):
 def sort_by(request):
     sort_by = request.GET.get('sort_by')
     product_ids_string = request.GET.get('products')
-    print(product_ids_string)  # Get the comma-separated string of product IDs
     product_ids = product_ids_string.split(',') if product_ids_string else []  # Split the string into a list of IDs
-    print(product_ids)
     # Convert the list of IDs to integers
     product_ids = [int(id) for id in product_ids if id.isdigit()]
-    print(product_ids,'huvuwebvuyw')
     # Filter products based on the received IDs
     product = Product.objects.filter(id__in=product_ids)
     

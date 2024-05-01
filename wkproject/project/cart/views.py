@@ -29,7 +29,6 @@ def _cart_id(request):
 
 def add_cart(request,pid):
     current_user = request.user
-    print(current_user)
     product = Product.objects.get(pid=pid)
     if current_user.is_authenticated:
         
@@ -44,14 +43,9 @@ def add_cart(request,pid):
                 
                 sizess = Variants.objects.get(product=product,size__iexact=value)
                 product_size.append(sizess)
-                print(product_size,"hiiiierhtei")
-                print('here')
             except:       
                 pass
-        for sizess in product_size:
-            print(sizess)
         product_size_set = set([sizess.id for sizess in product_size])
-        print( product_size_set,'set')
         is_cart_item_exists = CartItem.objects.filter(product=product,user=current_user).exists()
         if is_cart_item_exists:        
             cart_item = CartItem.objects.filter(product=product,user = current_user)
@@ -62,7 +56,6 @@ def add_cart(request,pid):
                 existing_variations = item.variations.all()
                 ex_var_list.append(list(existing_variations))
                 id.append(item.id)
-                print(list(id),'heyydyehyuhf') 
             ex_var_list = [set(item.variations.values_list('id', flat=True)) for item in cart_item]
 
             if  product_size_set in ex_var_list:
@@ -91,7 +84,6 @@ def add_cart(request,pid):
 
                 if len(product_size)> 0:
                     item.variations.clear()
-                    print('hekllo')
                     item.variations.add(*product_size)                
                     item.save()
             
@@ -133,8 +125,6 @@ def add_cart(request,pid):
         
         try:
             cart =Cart.objects.get(cart_id = _cart_id(request))
-            print('now')
-            print('just')
         except Cart.DoesNotExist:
             cart = Cart.objects.create(
                 cart_id = _cart_id(request)
@@ -228,32 +218,24 @@ def apply_offer(cart_items, grand_total):
         category = product.category
         
         quantity = (cart_item.quantity-1)
-        print(quantity,'quantity')
         product_offer = get_product_offer(product)
         category_offer = get_category_offer(category)
         
         if product_offer and category_offer:
             offer = max(product_offer, category_offer)
-            print(offer,'kkjjjj')
         elif product_offer:
             offer = product_offer
-            print(offer,'kkjjjj')
         elif category_offer:    
             offer = category_offer
-            print(offer,'kkjjjj')
         else:
             offer = 0
-        print(offer,'kkccjjjj')
         offer += offer*quantity
-        print(offer,'kkjjjjaaa')
         offer = Decimal(offer)
         if offer > Decimal(0):
             grand_total = Decimal(grand_total)
             grand_total -= offer
             applied_offer = offer
             has_offer = True
-    print(grand_total,'jjj')
-    print(applied_offer,'jjjj')
     return grand_total, applied_offer
 
 
@@ -428,7 +410,6 @@ def Checkout(request):
     }
 
     if request.method == 'POST':
-        print("helllooo\n\n\n\n\n\n\n")
         if coupon_form.is_valid():
             code = coupon_form.cleaned_data['code']
             try:
@@ -438,8 +419,5 @@ def Checkout(request):
             except Coupon.DoesNotExist:
                 request.session['coupon_id'] = None
                 messages.error(request, 'Invalid coupon code. Please try again.')
-          
-      
-
     return render(request, 'app/checkout.html', context)
 
