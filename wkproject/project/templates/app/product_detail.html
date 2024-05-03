@@ -1,8 +1,8 @@
 ﻿{% extends "partials/base.html" %}
 {% load static %}
 {% load custom_filters %}
-
 {% block content %}
+
 <section class="mt-50 mb-50">
     <div class="container">
         <div id="error-message" style="padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f8d7da; color: #721c24; display: none;"></div>        
@@ -44,17 +44,7 @@
                                               <div><img src="{{ p.Images.url }}" alt="product image"></div>
                                             {% endif %}
                                             {% endfor %}
-                                            <!-- THUMBNAILS -->
-                                            {% comment %} <div class="slider-nav-thumbnails pl-15 pr-15">
-                                            {% for p in  product_images %}
-                                            <div><img src="{{p.image.url}}"  alt="product image"></div> {% endcomment %}
-                                            {% comment %} <div><img src="{% static 'assets/imgs/shop/thumbnail-4.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-5.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-6.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-7.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-8.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-9.jpg' %}"   alt="product image"></div> {% endcomment %}
-                                            {% comment %} {% endfor %} {% endcomment %}
+                                            
                                         </div>
                                 </div>
                                     <div class="col-md-6 col-sm-12 col-xs-12">
@@ -70,12 +60,9 @@
                                             <div class="product-price primary-color float-left">
                                                 <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
                                                 <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
-                                                {% comment %} <span class="save-price  font-md color3 ml-15">-{{product.get_percentage|floatformat:0}}%off   </span> {% endcomment %}
-                                                {% comment %} {% for offer in offers %} {% endcomment %}
                                                 {% if offer.discount %}
                                                 <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
                                                 {% endif %}
-                                                {% comment %} {% endfor %} {% endcomment %}
                                             </div>
                                         </div>
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
@@ -109,19 +96,7 @@
                                         {% endif %}
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
-                                            {% comment %} <div class="detail-qty border radius">
-                                                <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
-                                                <span class="qty-val">1</span>
-                                                <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                            </div> {% endcomment %}
-
-                                            {% comment %} <input type="number" value="1" name="" id="product-quantity" class="w-25 mb-10 product-quantity-{{ product.id }}">
-                                            <div class="product-extra-link2">
-                                                {% endcomment %}
-                                                {% comment %} <input type="hidden" value="{{ product.id}}" class="product-id" name="" id="">
-                                                <input type="hidden" value="{{ product.title}}" class="product-title" name="" id=""> {% endcomment %}
-
-                                                {% comment %} <input type="hidden" value="1" id="product-quantity-{{ product.id }}" class="product-quantity-{{ product.id }}"> {% endcomment %}
+                                           
                                                 <input type="hidden" value="{{ product.pid }}" id="product-pid-{{ product.id }}" class="product-pid-{{ product.id }}">
                                                 <input type="hidden" value="{{ product.image.url }}" class="product-image-{{ product.id }}">
                                                 <input type="hidden" value="{{ product.id }}" class="product-id-{{ product.id }}">
@@ -144,8 +119,6 @@
                                 </div>
                             
                              </div>
-                        {% comment %} </div> 
-                    </div> {% endcomment %}
                             <div class="row">
                                 <div class="col-lg-10 m-auto entry-main-content">
                                     <h2 class="section-title style-1 mb-30">Description</h2>
@@ -155,9 +128,6 @@
                                         <ul class="product-more-infor mt-30">
                                             <li><span>style</span> {{product.fit}}</li>
                                             <li><span>Fabric</span> {{product.fabric}}</li>
-                                            {% comment %} <li><span>Quantity Per Case</span> 100ml</li>
-                                            <li><span>Ethyl Alcohol</span> 70%</li>
-                                            <li><span>Piece In One</span> Carton</li> {% endcomment %}
                                         </ul>
                                         <hr class="wp-block-separator is-style-dots">
                                         <p>{{product.specifications}}</p>

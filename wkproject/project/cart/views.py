@@ -17,7 +17,7 @@ from decimal import Decimal
 
 current_date = datetime.date.today()
 
-
+ 
 # Create your views here.
 
 def _cart_id(request):
@@ -37,8 +37,6 @@ def add_cart(request,pid):
             for item in request.POST:   
                 key = item
                 value = request.POST[key]
-        
-
             try:
                 
                 sizess = Variants.objects.get(product=product,size__iexact=value)

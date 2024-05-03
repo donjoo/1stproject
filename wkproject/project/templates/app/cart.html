@@ -1,5 +1,4 @@
 {% extends "partials/base.html" %}
-
 {% load static %}
 {% block content%} 
 
@@ -41,17 +40,15 @@
                                     <th scope="col">Price</th>
                                     <th scope="col" class="text-center">Quantity</th>
                                     <th scope="col">Subtotal</th>
-                                    {% comment %} <th scope="col">Refresh</th> {% endcomment %}
                                     <th scope="col">Remove</th>
                                 </tr>
                             </thead>
                             <tbody>
                                
-                                {% for item in cart_items %}
+{% for item in cart_items %}
 <tr>
     <td class="image product-thumbnail"><img src="{{ item.product.image.url }}" alt="#"></td>
     <td class="product-des product-name">
-      
         <h5 class="product-name"><a href="{% url 'app:product_detail' item.product.pid %}">{{ item.product.title }}</a></h5>
         <p class="font-xs">
             {% if item.variations.all %}
@@ -67,14 +64,8 @@
    
 
    <td class="price" data-title="Price"><span><span>₹</span>{{ item.product.price|floatformat:2 }}</span></td>
-     {% comment %} <td class="text-center detail-info" data-title="Stock">
-        <div class="m-15">
-            <a href=" {% url "cart:add_cart" item.product.pid %}" type="number" placeholder="Qty" value="{{ item.quantity }}" class="W-50"></a>
-        </div>
-    </td> {% endcomment %}
 
 <td>
-  
     <div class="input-group">
         <a href="{% url 'cart:remove_cart' item.product.pid item.id %}" class=" remove-btn btn btn-outline-secondary" type="button" id="button-minus"><i class="fa fa-minus"></i></a>
         <input type="text" class="form-control" value="{{ item.quantity }}" aria-label="Item quantity">
@@ -93,7 +84,6 @@
 
 
     <td class="text-right" data-title="Cart"><span>₹{{ item.sub_total }}</span></td>
-    {% comment %} <td class="action" data-title="Refresh"><a href="#" class="text-muted"><i class="fi-rs-refresh"></i></a></td> {% endcomment %}
     <td class="action" data-title="Remove">
         <a href="{% url 'cart:remove_cart_item' item.product.pid item.id %}" onclick="return confirm('Are you sure u want to delete this item?')" style="border:none; background:none;" class="text-body delete-product" >
             <i class="fi-rs-trash"></i>
@@ -161,9 +151,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                {% comment %} {% if totalcartitems %} {% endcomment %}
                                    <a href="{% url "cart:Checkout" %}" class="btn proceed-to-checkout-btn"> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
-                                {% comment %} {% endif %} {% endcomment %}
                             </div>
                         </div>
                     </div>

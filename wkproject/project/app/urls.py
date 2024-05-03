@@ -7,7 +7,6 @@ app_name = "app"
 urlpatterns = [
     path('',views.index,name='index'),
     path('product_detail/<str:pid>/',views.product_detail,name='product_detail'),
-    path('category/',views.category_list_view,name='category_list'),
     path("category/<cid>/",views.category_product_list,name='category_product_list'),
     path("Anime/<aid>/",views.Anime_product_list,name='Anime_product_list'),
     path("character/<lid>/",views.Character_product_list,name='Character_product_list'),
@@ -19,7 +18,6 @@ urlpatterns = [
     path('remove-from-wishlist/<str:pid>/',views.remove_from_wishlist, name='remove_from_wishlist'),
     path('shop/',views.shop,name="shop"),
     path('sort_by/',views.sort_by,name="sort_by"),
-    path('about/',views.about,name='about')
    
 
 

@@ -15,11 +15,7 @@ from userauth.views import wallet_balence
 import secrets
 from cart.views import apply_offer
 from django.contrib.auth import authenticate
-# from xhtml2pdf import pisa
-
 # Create your views here.
-
-
 
 def generate_transaction_id():
     # Generate a random UUID (Universally Unique Identifier)
@@ -38,9 +34,6 @@ def cod_payment(request,order_id):
 
     order.is_ordered =True
     order.save()
-    
-
-    cart_items = CartItem.objects.filter(user=request.user)
          
     CartItem.objects.filter(user=request.user).delete()
     if 'coupon_id' in request.session:
@@ -61,7 +54,6 @@ def cod_payment(request,order_id):
     subtotal = 0
     for item in ordered_products:
         subtotal += item.product_price * item.quantity
-
 
     data = {
         'order_number': order.order_number,
@@ -98,7 +90,6 @@ def wallet_auth(request,order_id):
 def wallet_payment(request, order_id):
     order = Order.objects.get(id=order_id)
     user = User.objects.get(id=request.user.id)
-    cart_items = CartItem.objects.filter(user=request.user)
 
     Transaction.objects.create(
         user=user,
@@ -155,35 +146,20 @@ def wallet_payment(request, order_id):
 def payment(request):
     user = request.user
     body = json.loads(request.body)
-    print(body['orderID'], 'thi is the header of paye')
-    print(body['orderID'])
     order_id = body['orderID']
     order = Order.objects.get(user=request.user,is_ordered=False,order_number=order_id)
-    
-    # order.payment(
-    #     user = request.user,
-    print(body['transID'])
+
     order.payment.payment_id = body['transID']
     order.payment.amount_paid = order.order_total
     order.payment.status = body['status']
     order.payment.save()
-    print(order.payment.payment_id)
-    
-    # payment.save()
 
-    # order.payment=payment
     order.is_ordered =True
     order.save()
-
-
-
-    cart_items = CartItem.objects.filter(user=request.user)
 
     CartItem.objects.filter(user=request.user).delete()
     if 'coupon_id' in request.session:
        del request.session['coupon_id']
-
-
 
     email_subject = 'Thank you for your order'
     message = render_to_string('app/order_recieved_email.html',{
@@ -193,23 +169,10 @@ def payment(request):
     to_email = request.user.email
     send_email = EmailMessage(email_subject,message,to=[to_email])
     send_email.send()
-    # try:
-    #     print(order.order_number,'heyy youuu')
-    # except:
-    #     print('order.order_number')
 
-
-    try:
-        print(order.payment.payment_id,'hey yuuuu')
-    except:
-        print('payment.payment_id')
-
-
-  
     data = {
         'order_number': order.order_number,
         'transID': order.payment.payment_id,
-        # Add any other relevant data here
     }
 
     return JsonResponse(data)
@@ -220,19 +183,12 @@ def payment_type(request,payement_option):
     id = request.user.id
     wallet_amount = wallet_balence(request, id)
     if payement_option == "wallet":
-      print(Order.order_total,'yesasbsbsb')
-      print(wallet_amount,'yryryryryryyrry')
+      
       if Order.order_total > wallet_amount:
-        print(wallet_amount)
-        print(Order.order_total)
         messages.warning(request, "Insufficient Balence!")
         return False  
     return True  
     
-    
-
-
-  
 
 def place_order(request,total=0,quantity=0,):
     id = request.user.id
@@ -254,40 +210,26 @@ def place_order(request,total=0,quantity=0,):
         quantity += cart_item.quantity
     subtotal=total 
     shipping = (3 * total) / 100
-    print(subtotal,'subtotalyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy')
-    print(total,'totalhhhhhhhhhhhhhyyyyyyyyyyyyyyy')
-    print(float(total),'totalhhhhhhhhhhhhh')
-
+    
     if coupon_id:
             try:
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
                 percentage =  (coupon.discount/ 100) * float(total)
                 subtotal = float(total) - percentage
-                print(coupon.discount/ 100,'couponnnnnnnnnnnnnnnnn')
-                print(float(total),'totalhhhhhhhhhhhhhyyyyyyyyyyyyyyy')
-
+                
                 coupon_discount = coupon.discount
             except Coupon.DoesNotExist:
                 pass
 
-    print(subtotal,'subtotallllllllllllllllllllllllllllllllllll')
-
     subtotal = float(subtotal)
-    print(subtotal,'subtotalbegaywidvybgolllllllllllllllllllllllllllllllllllllllllll')
-
-    print(grand_total,'begaywidvybgo')
     grand_total = subtotal + float(shipping)
     grand_total = round(grand_total,2)
-    print(grand_total,'begaywidvybgoqwvyubgvbuyvbhubvhu')
     grand_total,offer_price = apply_offer(cart_items, grand_total)
     grand_total = round(grand_total,2)
 
-
     user = User.objects.all()
     billing = Address.objects.all()
-
    
-    
     if request.method == "POST":
         form = OrderForm(request.POST)
 
@@ -297,16 +239,11 @@ def place_order(request,total=0,quantity=0,):
                 
                 wallet_amount = wallet_balence(request, id)
                 if payment == "Wallet":
-                    print('wallelttttttttt\n\n\n\n\n')
-                    print(grand_total, wallet_amount)
                     if grand_total > wallet_amount:
-                        print(wallet_amount)
-                        print(grand_total)
                         messages.warning(request, "Insufficient Balance!")
                         return redirect('cart:Checkout')  # Stop the order creation process
                 
                 if payment == "cash on delivery":
-                    print('cash on delivery\n\n\n\n\n')
                     if grand_total > 1000:
                         messages.warning(request,"COD is not available for orders above 1000")
                         return redirect('cart:Checkout')
@@ -322,8 +259,6 @@ def place_order(request,total=0,quantity=0,):
                 if offer_price:
                   data.offer_price=offer_price
                     
-                print(data.billing_address,data.shipping_address,data.order_note,data.order_total)
-                # data.shipping = shipping
                 data.ip = request.META.get('REMOTE_ADDR')
                 data.save()
                 current_date = datetime.date.today()
@@ -343,7 +278,6 @@ def place_order(request,total=0,quantity=0,):
                 except ValueError as e:
                     return HttpResponse(f"Error: {e}")
 
-                # d = datetime.date(yr, mt,dt)
                 current_date = d.strftime("%Y%m%d")
                 order_number = current_date + str(data.id)
                 data.order_number = order_number
@@ -363,16 +297,8 @@ def place_order(request,total=0,quantity=0,):
 
                 )
                 payment_data.save()
-              
-                
-                data.payment = payment_data
-                
+                data.payment = payment_data 
                 data.save()
-
-            
-                
-                    
-
 
                 order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)
                 order_products(request,order,payment_data)
@@ -392,24 +318,9 @@ def place_order(request,total=0,quantity=0,):
                 for field, errors in form.errors.items():
                     for error in errors:
                          messages.error(request, f"Error in {field}: {error}")
-        return redirect('cart:Checkout')
-          
-        # except ValidationError as e:
-        #     messages.error(request,e.message)
-        #     return redirect('cart:Checkout')          
+        return redirect('cart:Checkout')          
     else:        
-        print("yeaaaa a its herereerere")
         return redirect('app:index')
-
-#                     'order':order,
-#                     'cart_items':cart_items,
-#                     'total':total,
-#                     'grand_total':grand_total,
-#                     'shipping':shipping,
-#                     'payment':payement,
-#                     'coupon_discount':coupon_discount,
-#                     'offer_price':offer_price,
-
 
 def payment_pending(request,order_id):
     order = Order.objects.get(id = order_id)
@@ -417,9 +328,10 @@ def payment_pending(request,order_id):
     total = 0
     grand_total = 0      
     coupon_discount = 0
+
     for item in order_products:
-    #  cart_items = item.product
-     total += (item.product.price * item.quantity)
+        total += (item.product.price * item.quantity)
+
     cart_items = order_products
     grand_total = order.order_total
     shipping = order.shipping
@@ -451,8 +363,6 @@ def order_products(request,order,payment_data):
 
     cart_items = CartItem.objects.filter(user=request.user)
 
-    # payment = order.payment
-    print('product')
     for item in cart_items:
         orderproduct = OrderProduct()
         orderproduct.order_id = order.id
@@ -463,15 +373,11 @@ def order_products(request,order,payment_data):
         orderproduct.product_price = item.product.price
         orderproduct.ordered=True
         orderproduct.save()
-        print('order producttttt')
 
 
         cart_item =CartItem.objects.get(id=item.id)
         product_variation = cart_item.variations.all()
-        print('hiii1')
-        print('hiii1')
         orderproduct=OrderProduct.objects.get(id = orderproduct.id)
-        print('hiii2')
         orderproduct.variations.set(product_variation)
         orderproduct.save()
 
@@ -483,9 +389,6 @@ def order_products(request,order,payment_data):
             stock.stock -= item.quantity
             stock.save()
 
-    # CartItem.objects.filter(user=request.user).delete()
-    # if 'coupon_id' in request.session:
-    #    del request.session['coupon_id']
 
 def return_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -496,10 +399,6 @@ def return_order(request, order_id):
     else:
         messages.warning(request, 'Order is already returned.')
     return redirect('order_detail', order_id=order_id)
-
-
-
-
 
 def order_complete(request):
     order_number=request.GET.get('order_number')
@@ -529,23 +428,6 @@ def order_complete(request):
     except (Payment.DoesNotExist,Order.DoesNotExist):
         return redirect('app:index')
 
-
-
-
-# def download_invoice_pdf(request):
-#     html_string = render_to_string('order_complete.html',{
-#         'order':order,
-#         'ordered_products':order_products,
-#         'subtotal':subtotal,
-#     })
-
-#     pisa_status = pisa.CreatePDF(html, dest=response)
-
-#     # Return PDF response
-#     if pisa_status.err:
-#         return HttpResponse('We had some errors <pre>' + html + '</pre>')
-#     return response 
-        
 
     
 

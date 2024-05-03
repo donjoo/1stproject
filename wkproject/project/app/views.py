@@ -72,13 +72,7 @@ def index(request):
     return render(request,'app/index.html',context)
 
 
-def category_list_view(request):
-    categories = Category.objects.filter(delete='False')
-    context ={
-        "categories":categories
-    }
-    
-    return render(request, 'app/category_list.html',context)
+
 
 def category_product_list(request,cid):
     category = Category.objects.get(cid=cid)
@@ -424,6 +418,3 @@ def sort_by(request):
 
 
 
-def about(request):
-    
-    return render(request,"app/about.html")
