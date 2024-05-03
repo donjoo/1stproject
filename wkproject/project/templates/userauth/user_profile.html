@@ -94,9 +94,7 @@
                                         <div class="card mb-3 mr-3 mb-lg-0" style="width: 400px;">
                                             <div class="card-header">
                                                 <h5 class="mb-0">Address</h5>
-                                            </div>
-                                            {% comment %} <div class="card-body"> {% endcomment %}
-                                                
+                                            </div>                                                
                                                     <div class="col-lg-6">
                                                         <address>
                                                             User: <strong>{{ ad.user.username }}</strong><br>
@@ -113,7 +111,6 @@
                                                  
                                                     <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                                     <div class="dropdown-menu">
-                                                        <!-- <a class="dropdown-item" href="#">View detail</a> -->
                                                         <a class="dropdown-item" href="{% url 'userauth:address_edit' ad.id  %}">edit_info</a>
                                                         <a class="dropdown-item text-danger" href="{% url 'userauth:delete_address' ad.id %}">Delete</a>
                                                     </div>

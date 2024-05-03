@@ -2,52 +2,43 @@
 {% load static %}
 {% block content %}
         <section class="content-main">
-            <div class="content-header">
-             
-                    <h2 class="content-title card-title">Edit Address</h2>
-                
-               
+            <div class="content-header">      
+                    <h2 class="content-title card-title">Edit Address</h2>           
             </div>
 <div class="card">
     <div class="card-body">
         <div class="col-md-3">
             <form method="post" action="" enctype="multipart/form-data">
                 {% csrf_token %}
-            
-                           
+                            <div class="mb-4">
+                                <label for="user" class="form-label">User</label>
+                                <input type="text" class="form-control"  name="user" value="{{user}}" disabled>
+                            </div> 
+                            <div class="mb-4">
+                                <label for="house" >Flat,house no</label>
+                                <input type="text"   name="house"  value="{{addresses.house}}" required>
+                            </div>
 
-    <div class="mb-4">
-    <label for="user" class="form-label">User</label>
-    <input type="text" class="form-control"  name="user" value="{{user}}" disabled>
-</div> 
-<div class="mb-4">
-    <label for="house" >Flat,house no</label>
-    <input type="text"   name="house"  value="{{addresses.house}}" required>
-</div>
-
-<div class="mb-4">
-    <label for="street" class="form-label">Area,Street,Village</label>
-    <input type="text" class="form-control"  name="street" placeholder="street" value="{{addresses.street }}" required>
-</div>
-<div class="mb-4">
-    <label for="landmark" class="form-label">Landmark</label>
-    <input type="text" class="form-control"  name="landmark" placeholder="E,g near appolo hospital" value="{{addresses.landmark }}" required>
-</div>
-<div class="mb-4">
-    <label for="pincode" class="form-label">Pincode</label>
-    <input type="text" class="form-control" name="pincode" placeholder="6 digits" value="{{addresses.pincode }}" required>
-</div>
-<div class="mb-4">
-    <label for="town" class="form-label">Town/City</label>
-    <input type="text" class="form-control" name="town" placeholder=" " value="{{addresses.town }}" required>
-</div>
-<div class="mb-4">
-    <label for="state" class="form-label">State</label>
-    <input type="text" class="form-control" name="state"  value="{{addresses.state }}" required>
-</div>
-                            
-                                
-                        
+                            <div class="mb-4">
+                                <label for="street" class="form-label">Area,Street,Village</label>
+                                <input type="text" class="form-control"  name="street" placeholder="street" value="{{addresses.street }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="landmark" class="form-label">Landmark</label>
+                                <input type="text" class="form-control"  name="landmark" placeholder="E,g near appolo hospital" value="{{addresses.landmark }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="pincode" class="form-label">Pincode</label>
+                                <input type="text" class="form-control" name="pincode" placeholder="6 digits" value="{{addresses.pincode }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="town" class="form-label">Town/City</label>
+                                <input type="text" class="form-control" name="town" placeholder=" " value="{{addresses.town }}" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" class="form-control" name="state"  value="{{addresses.state }}" required>
+                            </div>            
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Applay Changes</button>
                             </div>

@@ -1,6 +1,5 @@
 {% extends "partials/base.html" %}
 {% block content %}
-
 <section class="content-main">
     <div class="content-header">
         <div>
@@ -42,8 +41,7 @@
                             {% if order.order_note %}
                             <b>Order note:</b>{{order.order_note}}
                             {% endif %}
-                            {% comment %} <p class="card-text">{{order.billing_address.house}}</p> {% endcomment %}
-                            {% comment %} <a href="#" class="btn btn-primary">Go somewhere</a> {% endcomment %}
+                           
                         </div>
                     </article>
                 </div> <!-- col// -->
@@ -61,15 +59,10 @@
                                 <p class="card-text">{{order.shipping_address.street}} ,{{order.shipping_address.landmark}}</p>
                                 <p class="card-text">{{order.shipping_address.town}}  ,{{order.shipping_address.state}}</p>
                                 <p class="card-text">{{order.shipping_address.pincode}}</p>
-                               
-                                {% comment %} <p class="card-text">{{order.billing_address.house}}</p> {% endcomment %}
-                                {% comment %} <a href="#" class="btn btn-primary">Go somewhere</a> {% endcomment %}
                             </div>
                         </div>
                     </article>
                 </div> <!-- col// -->
-
-
                 <div class="col-md-4">
                     <article class="icontext align-items-start">
                         <span class="icon icon-sm rounded-circle bg-primary-light">
@@ -78,10 +71,8 @@
                         <div class="text">
                             <h6 class="mb-1">Order info</h6>
                             <p class="mb-1">
-                                {% comment %} Shipping: Fargo express <br>  {% endcomment %}
                                 Pay method: {{order.payment.payment_method}} <br> Status: {{order.status}}
-                            </p>
-                            
+                            </p>             
                         </div>
                     </article>
                 </div> <!-- col// -->
@@ -132,11 +123,9 @@
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>Coupon:-{{order.coupon.discount}}</dt>
-                                                {% comment %} <dd>${{order.shipping}}</dd> {% endcomment %}
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>Offer:-{{order.offer_price}}</dt>
-                                                {% comment %} <dd>${{order.shipping}}</dd> {% endcomment      %}
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>Grand total:</dt>
