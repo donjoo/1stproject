@@ -1,9 +1,5 @@
 {% extends "partials/admin_base.html" %}
 {% block body %}
-
-
-
-
 <main class="main">
     <div class="page-header breadcrumb-wrap">
         <div class="container">
@@ -29,7 +25,6 @@
                                     <th scope="col">Valid to</th>
                                     <th scope="col">active</th>
                                     <th scope="col">Action</th>
-
                                 </tr>
                             </thead>
                             <tbody>
@@ -64,7 +59,6 @@
                                     </div>
                                 </div>
                                 </td>
-                                    {% comment %} <td class="action" data-title="Remove"><a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a></td> {% endcomment %}
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -75,8 +69,6 @@
         </div>
     </section>
 </main>
-
-
 {% if coupons.has_previous %}
 <a href="?page=1">&laquo First</a>
 <a href="?page={{coupons.previous_page_number}}">Previous</a>
@@ -87,9 +79,7 @@ Page {{coupons.number}} of {{coupons.paginator.num_pages}}
 {% if coupons.has_next %}
 <a href="?page={{coupons.next_page_number}}">Next</a>
 <a href="?page={{coupons.paginator.num_pages}}">Last  &raquo</a>
-
 {% endif %}
-
 
 {% endblock body %}
 

@@ -20,25 +20,12 @@
                                             {% endfor %}
                                             
                                         </div>
-                                    </div>
-                   
-                    
-                                        <div class="slider-nav-thumbnails pl-15 pr-15">
+                                    </div>                  
+                                   <div class="slider-nav-thumbnails pl-15 pr-15">
                                             <div><img src="{{ product.image.url }}" alt="product image"></div>
                                             {% for p in p_image %}
                                             <div><img src="{{ p.Images.url }}" alt="product image"></div>
                                             {% endfor %}
-                                            <!-- THUMBNAILS -->
-                                            {% comment %} <div class="slider-nav-thumbnails pl-15 pr-15">
-                                            {% for p in  product_images %}
-                                            <div><img src="{{p.image.url}}"  alt="product image"></div> {% endcomment %}
-                                            {% comment %} <div><img src="{% static 'assets/imgs/shop/thumbnail-4.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-5.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-6.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-7.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-8.jpg' %}"  alt="product image"></div>
-                                            <div><img src="{% static 'assets/imgs/shop/thumbnail-9.jpg' %}"   alt="product image"></div> {% endcomment %}
-                                            {% comment %} {% endfor %} {% endcomment %}
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-sm-12 col-xs-12">
@@ -57,7 +44,6 @@
                                             <div class="product-price primary-color float-left">
                                                 <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
                                                 <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
-                                                {% comment %} <span class="save-price  font-md color3 ml-15">-{{product.get_percentage|floatformat:0}}%off   </span> {% endcomment %}
                                             </div>
                                         </div>
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
@@ -67,7 +53,6 @@
                                         </div>
                                        
                                         <div class="attr-detail attr-size">
-                                            {% comment %} {% if not all_sizes_out_of_stock %} {% endcomment %}
                                             <div class="row">
                                             
                                                     <h6>Sizes: </h6>
@@ -86,12 +71,10 @@
                                                         {% for offer in offers  %}
                                                         <p>Offer:<span style="color: red;">{{ offer.discount }} off</span></p>
                                               {% endfor %}
-                                              {% comment %} {% if catoffers %} {% endcomment %}
                                               <h6>Category Offers: </h6>
                                               {% for off in catoffers  %}
                                               <p>Offer:<span style="color: red;">{{ off.discount }} off</span></p>
                                               {% endfor %}  
-                                              {% comment %} {% endif %}                                                                                       {% endcomment %}
                                             </div>                                      
                                         </div>                            
                                         </div>
@@ -112,9 +95,6 @@
                                 <ul class="product-more-infor mt-30">
                                     <li><span>style</span> {{product.fit}}</li>
                                     <li><span>Fabric</span> {{product.fabric}}</li>
-                                    {% comment %} <li><span>Quantity Per Case</span> 100ml</li>
-                                    <li><span>Ethyl Alcohol</span> 70%</li>
-                                    <li><span>Piece In One</span> Carton</li> {% endcomment %}
                                 </ul>
                                 <hr class="wp-block-separator is-style-dots">
                                 <p>{{product.specifications}}</p>

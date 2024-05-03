@@ -12,16 +12,6 @@
     <div class="card mb-4">
         <header class="card-header">
             <div class="row align-items-center">
-                
-                {% comment %} <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
-                    <label for="product" class="form-label">Select Product</label>
-                    <select class="form-select" id="product" name="product">
-                        <option value="" selected disabled>Select a product</option>
-                        {% for product in products %}
-                        <option value="{{ product.id }}">{{ product.title }}</option>
-                        {% endfor %}
-                    </select>
-                </div> {% endcomment %}
             </div>
         </header> <!-- card-header end// -->
         <div class="card-body">
@@ -45,21 +35,15 @@
                              
                                 <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                 <div class="dropdown-menu">
-                                    <!-- <a class="dropdown-item" href="#">View detail</a> -->
-                                    {% comment %} <a class="dropdown-item" href="{% url 'adminside:product_edit' product.pid  %}">edit_info</a> {% endcomment %}
                                     <a class="dropdown-item text-danger" href="{% url 'adminside:delete_size' variant.id %}">Delete</a>
                                     <form class="mt-3 mb-3" method="post" action="{% url 'adminside:block_size' variant.id %}" style="display: inline;">{% csrf_token %}
                                      <button type="submit" class="btn btn-sm {% if not variant.is_active %}btn-danger{% else %}btn-success{% endif %}">
                                     {% if not variant.is_active %}Unblock{% else %}Block{% endif %}
                                 </button>
-                              </form>
-
-                                   
-                                </div>
-                            <!-- dropdown //end -->
-                         
+                              </form>                                 
+                             </div>
+                            <!-- dropdown //end -->                     
                         </td>
-
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -69,15 +53,15 @@
     <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start">
-{% if page_variants.has_previous %}
-<a href="?page=1">&laquo First</a>
-<a href="?page={{page_variants.previous_page_number}}">Previous</a>
-{%  endif %}
-Page {{page_variants.number}} of {{page_variants.paginator.num_pages}}
-{% if page_variants.has_next %}
-<a href="?page={{page_variants.next_page_number}}">Next</a>
-<a href="?page={{page_variants.paginator.num_pages}}">Last  &raquo</a>
-{% endif %}
+                {% if page_variants.has_previous %}
+                <a href="?page=1">&laquo First</a>
+                <a href="?page={{page_variants.previous_page_number}}">Previous</a>
+                {%  endif %}
+                Page {{page_variants.number}} of {{page_variants.paginator.num_pages}}
+                {% if page_variants.has_next %}
+                <a href="?page={{page_variants.next_page_number}}">Next</a>
+                <a href="?page={{page_variants.paginator.num_pages}}">Last  &raquo</a>
+                {% endif %}
             </ul>
         </nav>
     </div>

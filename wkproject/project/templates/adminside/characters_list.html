@@ -16,7 +16,6 @@
                 </div>
                 {% endif %}
                 </div>
-                
             </div>
             <div class="card">
                 <div class="card-body">
@@ -27,7 +26,6 @@
                                     <thead>
                                         <tr>
                                             
-                                            {% comment %} <th>ID</th> {% endcomment %}
                                             <th>Name</th>
                                             <th> Anime Name</th>                                        
                                             <th>Image</th>
@@ -36,31 +34,22 @@
                                     </thead>
                                     <tbody>
                                         {% for char in characters %}
-                                        <tr>
-                                            
-                                            {% comment %} <th scope="row">{{char.lid}}</th> {% endcomment %}
-                                            
+                                        <tr>                                            
                                             <td>{{char.name}}</td>
                                             <td>{{char.animename}}</td>
-                                            
                                             <td>
                                               {% if char.image %}
                                               <img src="{{ char.image.url }}" class="img-sm img-thumbnail" alt="">
                                               {% else %}
                                               <p>No image available</p>
-                                              {% endif %}
-                                             
+                                              {% endif %}                                   
                                             </td>
-    
                                             <td class="text-end" >
                                                 <div class="dropdown">
                                                  
                                                     <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                                     <div class="dropdown-menu">
-                                                        <!-- <a class="dropdown-item" href="#">View detail</a> -->
-                                                        <a class="dropdown-item" href="{% url 'adminside:character_edit' char.lid  %}">edit_info</a>
-        
-        
+                                                        <a class="dropdown-item" href="{% url 'adminside:character_edit' char.lid  %}">edit_info</a>       
                                                         <a class="dropdown-item" href="{% url 'adminside:available_characters' char.lid %}">{% if not char.is_blocked %} Available {% else %} Unavailable{% endif %}</a>
                                                         <a class="dropdown-item text-danger" href="{% url 'adminside:delete_character' char.lid %}">Delete</a>
                                                     </div>
@@ -74,9 +63,6 @@
                                 </table>
                             </div>
                       </div> <!-- .col// -->
-
-
-
 
                       <div class="col-md-3">
                          <form method="post" action="{% url 'adminside:add_character'  %}"enctype="multipart/form-data"> 
@@ -118,8 +104,5 @@ Page {{characters.number}} of {{characters.paginator.num_pages}}
 <a href="?page={{characters.next_page_number}}">Next</a>
 <a href="?page={{characters.paginator.num_pages}}">Last  &raquo</a>
 {% endif %}
-
-
 {% endblock body %}
  
-{% comment %} id="Category_name" {% endcomment %}

@@ -1,14 +1,7 @@
 {% extends "partials/admin_base.html" %}
 {% load static %}
 {% block body %}
-{% comment %} <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Stock</title>
-    <!-- Add any additional CSS files you need -->
-</head> {% endcomment %}
+
 <div class="card-body">
     <form method="POST" action="{% url 'adminside:add_stock' %}" enctype="multipart/form-data" style="padding: 20px; background-color: #fff; border-radius: 5px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         {% csrf_token %}

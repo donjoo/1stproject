@@ -6,11 +6,9 @@
     <div class="content-header">
         <div>
             <h2 class="content-title card-title">Stock List</h2>
-        </div>
-        
+        </div>     
     </div>
     <div class="card mb-4">
-       
         <div class="card-body">
             <table class="table table-striped">
                 <thead>
@@ -18,8 +16,7 @@
                         <th>Product</th>
                         <th>Size</th>
                         <th>Stock</th>
-                        <th>Status</th>
-                        
+                        <th>Status</th>                       
                     </tr>
                 </thead>
                 <tbody>
@@ -29,8 +26,6 @@
                         <td>{{ stock.variant.size }}</td>
                         <td>{{ stock.stock }}</td>
                         <td>{{ stock.variant.is_active }}</td>
-                       
-
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -40,15 +35,15 @@
     <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start">
-{% if page_stocks.has_previous %}
-<a href="?page=1">&laquo First</a>
-<a href="?page={{page_stocks.previous_page_number}}">Previous</a>
-{% endif %}
-Page{{page_stocks.number}}of{{page_stocks.paginator.num_pages}}
-{% if page_stocks.has_next %}
-<a href="?page={{page_stocks.next_page_number}}">Next</a>
-<a href="?page{{page_stocks.paginator.num_pages}}">Last &raquo</a>
-{% endif %}
+                {% if page_stocks.has_previous %}
+                <a href="?page=1">&laquo First</a>
+                <a href="?page={{page_stocks.previous_page_number}}">Previous</a>
+                {% endif %}
+                Page{{page_stocks.number}}of{{page_stocks.paginator.num_pages}}
+                {% if page_stocks.has_next %}
+                <a href="?page={{page_stocks.next_page_number}}">Next</a>
+                <a href="?page{{page_stocks.paginator.num_pages}}">Last &raquo</a>
+                {% endif %}
             </ul>
         </nav>
     </div>

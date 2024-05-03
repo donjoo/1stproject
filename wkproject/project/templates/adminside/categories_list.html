@@ -55,10 +55,7 @@
                                                  
                                                     <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                                     <div class="dropdown-menu">
-                                                        <!-- <a class="dropdown-item" href="#">View detail</a> -->
                                                         <a class="dropdown-item" href="{% url 'adminside:category_edit' category.cid  %}">edit_info</a>
-        
-        
                                                         <a class="dropdown-item" href="{% url 'adminside:available_category' category.cid %}">{% if not category.is_blocked %} Available {% else %} Unavailable{% endif %}</a>
                                                         <a class="dropdown-item text-danger" href="{% url 'adminside:delete_category' category.cid %}">Delete</a>
                                                     </div>
@@ -114,5 +111,3 @@ Page {{categories.number}} of {{categories.paginator.num_pages}}
 
 {% endif %}
 {% endblock body %}
-
-{% comment %} id="Category_name" {% endcomment %}

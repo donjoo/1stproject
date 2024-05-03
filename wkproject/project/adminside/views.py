@@ -55,28 +55,17 @@ def admin_index(request):
     order_count = order_count.count
     mothly_earnings =  calculate_average_earnings_per_month(request)
 
-
     end_date = timezone.now()
     start_date = end_date - timedelta(days=7)
-
-
     daily_order_counts = (
             Order.objects
             .filter(created_at__range=(start_date, end_date))
-            .values('created_at')
+            .values('created_at__date')
             .annotate(order_count=Count('id'))
-            .order_by('created_at')
+            .order_by('created_at__date')
         )
-    print(f'daily orrderr {daily_order_counts}')
-    print('SQL Query:', daily_order_counts.query)
-    dates = [entry['created_at'].strftime('%Y-%m-%d') for entry in daily_order_counts]
+    dates = [entry['created_at__date'].strftime('%Y-%m-%d') for entry in daily_order_counts]
     counts = [entry['order_count'] for entry in daily_order_counts]
-    print('Daily Chart Data:')
-    print('Dates:', [entry['created_at'] for entry in daily_order_counts])
-    print('Counts:', [entry['order_count'] for entry in daily_order_counts])
-    print(dates)
-    print(counts)
-
 
     end_date = timezone.now()
     start_date = end_date - timedelta(days=365) 
@@ -108,7 +97,6 @@ def admin_index(request):
         'statuses':statuses,
         'order_counts':order_counts,
         'orders':orderss,
-        # 'dates':dates,
         'revenue':revenue,
         'product_count':product_count,
         'category_count':category_count,
@@ -120,7 +108,6 @@ def admin_index(request):
         'yearlyCounts':yearlyCounts,
         'monthlyDates':monthlyDates,
         'monthlyCounts':monthlyCounts,
-        # 'amounts':amounts,
         'best_selling_products':best_selling_products,
         'best_selling_categories':best_selling_categories,
         'best_selling_characters':best_selling_characters,
@@ -607,11 +594,15 @@ def add_category(request):
         if Category.objects.filter(title=cat_name).exists():
             messages.error(request, 'Category with this name already exists.')
 
+        p=Paginator(Category.objects.filter(delete='False').order_by('-date'),10)
+        page = request.GET.get('page')
+        categories=p.get_page(page)
         if not cat_name.strip():
             validation_errors = ["Name is required."]
             context = {
             'messages':validation_errors,
-            'category_image':request.FILES.get('category_image')
+            'category_image':request.FILES.get('category_image'),
+            'categories':categories
 
             }
             return render(request, 'adminside/categories_list.html',context)
@@ -624,9 +615,9 @@ def add_category(request):
                
     else:
         
-        return render(request, 'adminside/categories_list.html')
+        return redirect('adminside:category_list')
     
-    return render(request, 'adminside/categories_list.html')
+    return redirect('adminside:category_list')
 
 
 @login_required(login_url='adminside:admin_login')
@@ -635,7 +626,6 @@ def category_list(request):
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
     
-    # categories = Category.objects.all()
     p=Paginator(Category.objects.filter(delete='False').order_by('-date'),10)
     page = request.GET.get('page')
     categories=p.get_page(page)
@@ -1473,131 +1463,3 @@ def grand_total(orders):
     return grand_total
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @login_required(login_url='adminside:admin_login')
-# def add_variant(request):
-#     if not request.user.is_authenticated or not request.user.is_superadmin:
-#         return redirect("adminside:admin_login")
-
-#     products = Product.objects.all()
-
-#     if request.method == 'POST':
-#         form = ProductVariantForm(request.POST)
-#         if form.is_valid():
-#             product_title = form.cleaned_data['product']
-#             product = get_object_or_404(Product, title=product_title)
-#             stock_count_s = form.cleaned_data['stock_count_s']
-#             stock_count_m = form.cleaned_data['stock_count_m']
-#             stock_count_l = form.cleaned_data['stock_count_l']
-#             stock_count_xl = form.cleaned_data['stock_count_xl']
-#             stock_count_xxl = form.cleaned_data['stock_count_xxl']
-
-
-#             # Create variants for each size
-#             variant_s = product.variants.create(size='S', stock_count=stock_count_s)
-#             variant_m = product.variants.create(size='M', stock_count=stock_count_m)
-#             variant_l = product.variants.create(size='L', stock_count=stock_count_l)
-#             variant_xl = product.variants.create(size='XL', stock_count=stock_count_xl)
-#             variant_xxl = product.variants.create(size='XXL', stock_count=stock_count_xxl)
-
-
-#             return redirect('adminside:variant_list')
-#     else:
-#         form = ProductVariantForm()      
-
-#     context = {     
-#         'form': form,
-#         'products': products,
-#     }
-
-#     return render(request, 'adminside/add_variant.html', context)
-
-
-# def variant_list(request):
-#     if not request.user.is_authenticated or not request.user.is_superadmin:
-#         return redirect("adminside:admin_login")
-        
-#     products = Product.objects.all()
-#     selected_product = None
-    
-#     if request.method == 'POST':
-#         product_id = request.POST.get('product')
-#         selected_product = Product.objects.get(title=product_id)
-#         variants = ProductVariants.objects.filter(product=selected_product)
-#     else:
-#         variants = ProductVariants.objects.all()
-        
-#     paginator = Paginator(variants, 10)
-#     page_number = request.GET.get('page')
-#     page_variants = paginator.get_page(page_number)
-
-#     context = {
-#         "products": products,
-#         "selected_product": selected_product,
-#         "page_variants": page_variants
-#     }
-
-#     return render(request, 'adminside/variant_list.html', context)
-
-
-# def varient_edit(request,vid):
-#     if not request.user.is_authenticated:
-#         if not request.user.is_super_admin:
-#             return redirect("adminside:admin_login")
-        
-
-#     varients = get_object_or_404(ProductVariants,vid=vid)
-#     if request.method == 'POST':
-#         var_size = request.POST.get("size") 
-#         var_stock = request.POST.get("stock_count")
-        
-
-   
-#     varients.size =var_size
-#     varients.stock =var_stock
-    
-
-#     varients.save()
-
- 

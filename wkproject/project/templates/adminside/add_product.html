@@ -125,30 +125,4 @@
     </form>
     </div>
 </section>
-{% comment %} <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#id_anime').change(function() {
-        var animeId = $(this).val();
-        $.ajax({
-            url: '{% url "adminside:get_characters" %}',
-            type: 'GET', // Specify the request type
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }, // Include the X-Requested-With header
-            data: {
-                'aid': animeId
-            },
-            dataType: 'json',
-            success: function(data) {
-                $('#id_character').empty();
-                $.each(data, function(key, value) {
-                    $('#id_character').append($('<option>', {
-                        value: value.id,
-                        text: value.name
-                    }));
-                });
-            }
-        });
-    });
-});
-</script> {% endcomment %}
 {% endblock %}

@@ -53,20 +53,11 @@
                                     <td><a href="#"> <h6 class="mb-0">{% if product.status %} <span style="color: rgb(143, 143, 39);">Active</span>  {% else %} <span style="color: rgb(120, 40, 40);">Blocked</span> {%endif %}</h6></a></td>
                                     <td>{{ product.price }}</td>
                                     <td><a href="#"> <h6 class="mb-0"> {{product.in_stock}}</h6></a></td>
-
-                                    {% comment %} <td class="text-end">
-                                     } <span class="badge rounded-pill {% if product.stock_count != '0' %} alert-success {% else %} alert-danger {% endif %}"> 
-                                            {% if product.stock_count == '0' %} Out of Stock  {% else %} {{product.stock_count}}  {% endif %} </span>
-                                    </td> {% endcomment %}
-
-
-
                                     <td class="text-end" >
                                         <div class="dropdown">
                                          
                                             <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                             <div class="dropdown-menu">
-                                                <!-- <a class="dropdown-item" href="#">View detail</a> -->
                                                 <a class="dropdown-item" href="{% url 'adminside:product_edit' product.pid  %}">edit_info</a>
                                                 <a class="dropdown-item text-danger" href="{% url 'adminside:delete_product' product.pid %}">Delete</a>
                                                 <form class="mt-3 mb-3" method="post" action="{% url 'adminside:block_unblock_products' product.pid %}" style="display: inline;">{% csrf_token %}
@@ -80,33 +71,11 @@
                                         <!-- dropdown //end -->
                                      
                                     </td>
-
-
-
-
-                                    {% comment %} <td>
-                                        <a class="dropdown-item text-danger" href="{% url 'adminside:delete_product' product.pid %}">Delete</a>
-                                        <form class="mt-3 mb-3" method="post" action="{% url 'adminside:block_unblock_products' product.pid %}" style="display: inline;">{% csrf_token %}
-                                         <button type="submit" class="btn btn-sm {% if not product.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                                        {% if not product.is_active %}Unblock{% else %}Block{% endif %}
-                                    </button>
-                                  </form>
-                                  </td> {% endcomment %}
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-        
-                    
-
-
-
-
-
-
-
-
                 </div> <!-- card-body end// -->
             </div> <!-- card end// -->
             
