@@ -176,7 +176,6 @@ def payment(request):
     }
 
     return JsonResponse(data)
-    # return render(request,'app:category_list')
 
 
 def payment_type(request,payement_option):
@@ -350,11 +349,7 @@ def payment_pending(request,order_id):
         'payment':payment,
         'coupon_discount':coupon_discount,
         'offer_price':offer_price,
-
-
-
    }
-   
    
     return render(request,'app/payements.html',context)
 

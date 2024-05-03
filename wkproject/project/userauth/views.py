@@ -27,9 +27,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
 
-def neww(request):
-    return render(request,'userauth/page-account.html')
-
 @never_cache
 def handel_signup(request):
     if request.method == 'POST':
@@ -42,29 +39,17 @@ def handel_signup(request):
             request.session["username"]=username
             request.session["password"]=password
             request.session["email"]=email
-            # nameuser = User.objects.create(username=username, email=email, password=password)
-            # nameuser.is_active=True
-            # nameuser.save()
+
             messages.success(request,f'hey {username},your account was created succesfully')
             email=request.POST["email"]
             send_otp(request)
             return render(request,'userauth/otp.html',{"email":email})
 
-
-            # user = User.objects.get(username=username,email=email,password=password)  
-            # user.is_active = True
-            # user.save()
-       
-
     else:
         form = CreateUserForm()
-
     
     context = {'form':form}
     return render(request,'userauth/signup.html',context)
-
-def sample(request):
-    return render(request,"userauth/sample.html")
 
 @never_cache
 def send_otp(request):
@@ -72,9 +57,7 @@ def send_otp(request):
     for x in range(0,4):
         s += str(random.randint(0,9))
     request.session["otp"]=s
-    print("yes")
     send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
-    print("nooo")
     return render(request,"userauth/otp.html")
     
 def otp_verification(request):
@@ -136,9 +119,7 @@ def handel_login(request):
                             existing_variations = item.variations.all()
                             ex_var_list.append(list(existing_variations))
                             id.append(item.id)
-                            print(list(id))           
                         
-
                         for pr in product_size:
                             if pr in ex_var_list:
                                 index = ex_var_list.index(pr)
@@ -172,7 +153,6 @@ def handel_login(request):
                 url = request.META.get('HTTP_REFERER')
                 try:
                     query = requests.utils.urlparse(url).query
-                    print('query--',query)
                     params = dict(x.split('=') for x in query.split('&'))
                     if 'next' in params:
                         nextpage = params['next']
@@ -185,12 +165,8 @@ def handel_login(request):
         except:
             messages.warning(request,f'User with {email} doesnt exists')
 
-
     context={}
     return render(request,'userauth/login.html',context)
-
-
-
 
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -202,7 +178,6 @@ def login_otp(request):
     if request.method == "POST":
         email = request.POST.get("email")
         request.session["email"] = email
-        print(email)
 
         if not User.objects.filter(email=email).exists():
             messages.error(request, "Invalid email address.")
@@ -229,7 +204,6 @@ def forgot_password(request):
         email = request.POST.get("email")
         request.session["email"] = email
         request.session["method"] = "forgot_password"
-        print(email)
 
         if not User.objects.filter(email=email).exists():
             messages.error(request, "Invalid email address.")

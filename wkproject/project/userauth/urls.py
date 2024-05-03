@@ -16,7 +16,6 @@ urlpatterns = [
     path('change_password/',views.change_password,name='change_password'),
     path('address_edit/<id>/',views.address_edit,name='address_edit'),
     path('delete_address/<id>/',views.delete_address,name='delete_address'),
-    path('sample/',views.sample,name='sample'),
     path('my_order/<int:order_id>/',views.my_order,name='my_order'),
     path('cancel_order/<int:order_id>/',views.cancel_order,name='cancel_order'),
     path('return_order/<int:order_id>/',views.return_order,name='return_order'),
@@ -26,7 +25,5 @@ urlpatterns = [
 
     path('wallet/',views.user_wallet,name='user_wallet'),
     path('orders_lists/',views.order_list,name='orders_lists'),
-    # path('add_funds/',views.ad   d_funds,name='add_funds'),
-    path('neww/',views.neww,name='neww'),
 
 ]

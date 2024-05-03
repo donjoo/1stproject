@@ -23,8 +23,30 @@ from django.db.models.functions import TruncMonth,TruncYear
 current_date = timezone.now()   
 
 
-def new(request):
-    return render(request,'adminside/new.html')
+def admin_login(request):
+    if request.user.is_authenticated:
+        if request.user.is_superadmin:
+            return redirect('adminside:admin_index')
+    if request.method == "POST":
+        email = request.POST['email']
+        password = request.POST['password']
+        user = authenticate(request,email=email,password=password)
+        if user:
+            if user.is_authenticated:
+                login(request,user)
+                return redirect('adminside:admin_index')
+            messages.error(request,"invalid admin credentials!")
+    return render(request,'adminside/admin_login.html')
+
+
+def admin_logout(request):
+    logout(request)
+    return redirect('adminside:admin_login')
+
+
+
+
+'''-----Admin Dasboard--------'''
 
 
 @login_required(login_url='adminside:admin_login')
@@ -38,12 +60,6 @@ def admin_index(request):
     
     best_selling_characters = OrderProduct.objects.filter(ordered=True).exclude(order__status='Cancelled').values('product__character__name').annotate(total_quantity=Count('product')).order_by('-total_quantity')[:10]
     
-
-    orders = Order.objects.all().order_by('-created_at')
-    # dates = [order.created_at for order in orders]
-    # dates = [order.created_at.strftime('%Y.%m.%d') for order in orders]  # Format dates using strftime
-
-    amounts = [order.order_total for order in orders]
 
     orderss = Order.objects.all().order_by('-created_at').exclude(status='Cancelled').exclude(status='Returned')[:6]
     revenue = calculate_revenue(request)
@@ -123,15 +139,10 @@ def calculate_revenue(request):
         products = OrderProduct.objects.filter(order = order)
         for item in products:
             revenue += item.product_price * item.quantity
-    print(revenue)
     return revenue
 
 
 def calculate_monthly_revenue(year, month):
-    current_date = datetime.now()
-    # year = current_date.year
-    # month = current_date.month
-
     total_earnings = 0
     orders = Order.objects.filter(created_at__year = year,created_at__month = month).exclude(status = 'Cancelled').exclude(status = 'Returned')
     for order in orders:
@@ -166,33 +177,6 @@ def calculate_average_earnings_per_month(request):
         return average_earnings_per_month
     else:
         return 0
-
-def admin_login(request):
-    if request.user.is_authenticated:
-        if request.user.is_superadmin:
-            return redirect('adminside:admin_index')
-    if request.method == "POST":
-        email = request.POST['email']
-        password = request.POST['password']
-        print(email,password)
-        user = authenticate(request,email=email,password=password)
-        print(user)
-        if user:
-            if user.is_authenticated:
-                login(request,user)
-                return redirect('adminside:admin_index')
-            messages.error(request,"invalid admin credentials!")
-    return render(request,'adminside/admin_login.html')
-
-
-def admin_logout(request):
-    logout(request)
-    return redirect('adminside:admin_login')
-
-
-
-
-'''-----Admin Dasboard--------'''
 
 
 @login_required(login_url='adminside:admin_login')
@@ -313,11 +297,8 @@ def add_product(request):
 
         
         category = get_object_or_404(Category, title=category_name)
-        print(category)
         anime = get_object_or_404(CategoryAnime, title=anime_name)
-        print(anime)
         character = get_object_or_404(AnimeCharacter, name=character_name)
-        print(character)
     
         product = Product(
             title=product_name,
@@ -372,22 +353,6 @@ def add_product(request):
     }
     return render(request,'adminside/add_product.html',content)
 
-
-
-# def get_characters(request):
-#     if request.headers.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest' and request.method == 'GET':
-#         print('heyyhyhvy')
-#         anime_id = request.GET.get('aid')
-#         characters = AnimeCharacter.objects.filter(animename_id=anime_id).values('id', 'name')
-#         print("Received anime ID:", anime_id)
-#         print("Characters:", characters)
-#         return JsonResponse(list(characters), safe=False)
-#     else:
-#         # Handle invalid requests
-#         return JsonResponse({'error': 'Invalid request'})
-
-
-
 def delete_product(request,pid):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
@@ -410,20 +375,17 @@ def product_list(request):
     if request.user.is_authenticated:
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
-    # products = Product.objects.all().order_by('-date') 
     p=Paginator(Product.objects.filter(delete='False').order_by('-date'),10)
     page = request.GET.get('page')
     productss=p.get_page(page)
 
     context = {
-        # "products":products,
         "productss":productss
     }
     return render(request,'adminside/products_list.html',context)
 
 
 def block_unblock_products(request, pid):
-    
   if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
   product = get_object_or_404(Product, pid=pid)
@@ -459,12 +421,6 @@ def product_edit(request, pid):
         product.collar = request.POST.get('collar')
         product.specifications = request.POST.get('specifications')
 
-        # # Handle image upload
-        # new_image_file = request.FILES.get('image_field')
-        # if new_image_file:
-        #     product.image = new_image_file
-
-        # Handle image deletion
         product_name=request.POST.get('name')
         if not product_name.strip():
             validation_errors = ["Title is required."]
@@ -506,9 +462,9 @@ def product_edit(request, pid):
 
         return redirect('adminside:product_list')
 
-    categories = Category.objects.all()
-    animes = CategoryAnime.objects.all()
-    characters = AnimeCharacter.objects.all()
+    categories = Category.objects.filter(delete='False')
+    animes = CategoryAnime.objects.filter(delete='False')
+    characters = AnimeCharacter.objects.filter(delete='False')
 
     error_messages = validation_errors
     context = {
@@ -554,12 +510,12 @@ def products_details(request, pid):
         sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
         all_sizes_out_of_stock = all(sizes_out_of_stock.values())
         offers = ProductOffer.objects.filter(product=product,start_date__lte = current_date,end_date__gte = current_date)
-        # catoffers = CategoryOffer.objects.filter(category = product.anime,start_date__lte = current_date,end_date__gte = current_date)
+        catoffers = CategoryOffer.objects.filter(category = product.category,start_date__lte = current_date,end_date__gte = current_date)
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
     context = {
         'offers':offers,
-        # 'catoffers':catoffers,
+        'catoffers':catoffers,
         'product': product,
         'product_images': product_images,
         'sizes_out_of_stock':sizes_out_of_stock,
@@ -609,10 +565,7 @@ def add_category(request):
         else:
             cat_data = Category(title=cat_name, image=request.FILES.get('category_image'))
             cat_data.save()
-            print("yes")
-            messages.success(request, 'Category added successfully.')
-
-               
+            messages.success(request, 'Category added successfully.')  
     else:
         
         return redirect('adminside:category_list')
@@ -635,8 +588,6 @@ def category_list(request):
     }   
     return render(request,'adminside/categories_list.html',context)
 
-
-
 def category_edit(request,cid):
     if request.user.is_authenticated:
         if not request.user.is_superadmin:
@@ -648,18 +599,12 @@ def category_edit(request,cid):
     if request.method == 'POST':
         cat_name = request.POST.get("category_name")
         cat_img = request.FILES.get('category_image')
-
-
         categories.title =cat_name
         if cat_img is not None:
              categories.image=cat_img 
-
-        categories.save()
-
-       
+        categories.save() 
         return redirect('adminside:category_list')
 
-    
     context = {
         "categories_title": categories.title,
         "categories_image": categories.image,
@@ -687,12 +632,10 @@ def delete_category(request,cid):
 def available_category(request,cid):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
-    
-    category=get_object_or_404(Category,cid=cid)
 
+    category=get_object_or_404(Category,cid=cid)
     if category.is_blocked:
         category.is_blocked=False
-
     else:
         category.is_blocked=True
     category.save()
@@ -711,8 +654,6 @@ def add_animecat(request):
             return redirect('adminside:admin_login')
     if request.method == 'POST':
         anime_name = request.POST.get('anime_name')
-
-
         if not anime_name.strip():
             validation_errors = ["Name is required."]
             p=Paginator(CategoryAnime.objects.all().order_by('-id'),10)
@@ -723,8 +664,7 @@ def add_animecat(request):
                 'animes':Animes
             }
             return render(request, 'adminside/animecat_list.html',context)
-
-
+        
         if CategoryAnime.objects.filter(title=anime_name).exists():
             messages.error(request, 'Category with this name already exists.')
         else:
@@ -743,13 +683,9 @@ def animecat_list(request):
     if request.user.is_authenticated:
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
-    
-    
     p=Paginator(CategoryAnime.objects.filter(delete='False').order_by('-id'),10)
     page = request.GET.get('page')
     Animes=p.get_page(page)
-
-    
     context = {
         'animes':Animes
     }   
@@ -764,22 +700,16 @@ def animecat_edit(request,aid):
     
     animes = get_object_or_404(CategoryAnime,aid=aid)
 
-
     if request.method == 'POST':
         anime_name = request.POST.get("anime_name")
         anime_img = request.FILES.get('anime_image')
-
-
         animes.title =anime_name
         if anime_img is not None:
              animes.image=anime_img 
-
         animes.save()
 
-       
         return redirect('adminside:category_list')
 
-    
     context = {
         "categories_title": animes.title,
         "categories_image": animes.image,
@@ -820,16 +750,10 @@ def available_animecat(request,aid):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
 
-
-
                  # CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER
                  # CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER
                  # CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER
                  # CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER# CATEGORYANIMECHARACTER
-
-
-     
-    
 
 
 @login_required(login_url='adminside:admin_login')
@@ -837,11 +761,8 @@ def add_character(request):
     if request.user.is_authenticated:
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
-      
-    
+       
     animes = CategoryAnime.objects.all()
-    # anime_instance = get_object_or_404(CategoryAnime, title=anime_name)
-    
 
     if request.method == 'POST':
         
@@ -865,7 +786,6 @@ def add_character(request):
             anime_name = get_object_or_404(CategoryAnime, title=anime_name)
             char_data = AnimeCharacter(name=char_name,animename=anime_name ,image=request.FILES.get('char_image'))
             char_data.save()
-            print("yes")
             messages.success(request, 'Category added successfully.') 
               
     else:
@@ -873,7 +793,6 @@ def add_character(request):
         return redirect('adminside:character_list')
     
     return redirect('adminside:character_list')
-
 
 
 def character_list(request):
@@ -895,7 +814,6 @@ def character_list(request):
     return render(request,'adminside/characters_list.html',context)
 
        
-
 def character_edit(request,lid):
     if not request.user.is_authenticated:
         return redirect('adminside:admin_login')
@@ -958,14 +876,12 @@ def available_characters(request,lid):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
 
+              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
+              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
+              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
+              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
 
 
-
-              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
-              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
-              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
-              #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS #PRODUCTVARIENTS
-                
 @login_required(login_url='adminside:admin_login')
 def add_newvariant(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
@@ -974,10 +890,8 @@ def add_newvariant(request):
     products = Product.objects.filter(delete='False')
     
     if request.method == 'POST':
-        print('httttt')
         product_id = request.POST.get('product')  
         size = request.POST.get('size')
-        print(product_id,'hyyyyyy')
 
         # Retrieve product by title
         product = get_object_or_404(Product, pid = product_id)
@@ -1114,9 +1028,6 @@ def stock_list(request):
 
     return render(request, 'adminside/stock_list.html', context)
        
-
-
-
                             # ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT
                             # ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT
                             # ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT# ORDER MANAGMENT
@@ -1131,7 +1042,6 @@ def order_list(request):
     page = request.GET.get('page')
     orders=p.get_page(page)
 
-
     context={
         'orders': orders,
 
@@ -1139,17 +1049,11 @@ def order_list(request):
     return render(request, 'adminside/order_list.html',context)
 
 
-
-
-
-
-
 def order_detail(request, order_id):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
-    # coupon = Coupon.objects.filter(id=order.coupon_id)
 
     subtotal = 0
     for i in order_products:
@@ -1157,6 +1061,7 @@ def order_detail(request, order_id):
     for item in order_products:
         item.total_price = item.product.price * item.quantity 
     coupon = None
+
     if order.coupon:
         try:
             coupon = Coupon.objects.get(id=order.coupon_id)
@@ -1190,11 +1095,11 @@ def update_order_status(request, order_id):
 
 from django.core.exceptions import ObjectDoesNotExist
 
+
 def admin_cancel_order(request, order_id):
     try:
         order = Order.objects.get(id=order_id)
         messages.success(request, 'Order has been cancelled successfully.')
-
         if order.payment:
             if (
                 order.payment.payment_method == "Paypal"
@@ -1218,13 +1123,10 @@ def admin_cancel_order(request, order_id):
         messages.error(request, 'An error occurred while cancelling the order: {}'.format(str(e)))
 
 
-
-
                 # COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT
                 # COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT
                 # COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT
                 # COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT
-
 
 
 def create_coupon(request):
@@ -1252,9 +1154,7 @@ def coupon_list(request):
     context = {
         'coupons':couponss,
     }
-
     return render(request,'adminside/coupon_list.html',context)
-
 
 
 @login_required(login_url='adminside:admin_login')
@@ -1309,6 +1209,7 @@ def offer_list(request):
     category_offers=p.get_page(page)
 
     return render(request,"adminside/offer_list.html",{'product_offers':product_offers,'category_offers':category_offers})
+
 
 def create_product_offer(request):
     if not request.user.is_superadmin:
@@ -1389,20 +1290,20 @@ def block_category_offer(request,id):
         return redirect('adminside:admin_login')
     
     offer=get_object_or_404(CategoryOffer,id=id)
-
     if offer.active:
         offer.active=False
-
     else:
         offer.active=True
     offer.save()
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
+
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
                             # SALES_REPORT# SALES_REPORT# SALES_REPORT# SALES_REPORT
+
 
 def sales_report(request):
     if not request.user.is_superadmin:

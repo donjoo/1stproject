@@ -179,9 +179,6 @@ def get_highest_discount_offer(product):
     
     return offer
 
-
-
-
 def is_size_out_of_stock(pid, size):
     try:
         product = Product.objects.get(pid=pid)
