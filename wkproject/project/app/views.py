@@ -245,7 +245,7 @@ def add_address(request):
 
 def search_view(request):
     query = request.GET.get("q")
-    product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query),filter(delete='False')).order_by('-date')
+    product = Product.objects.filter(Q(title__icontains=query) | Q(descriptions__icontains=query)|Q(specifications__icontains=query),delete='False').order_by('-date')
     product_count=product.count()
 
     p=Paginator(product,8)

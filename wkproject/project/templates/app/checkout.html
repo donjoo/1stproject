@@ -225,20 +225,6 @@
                         </form>
                     </div>
                 </div>
-                
-
-
-                {% comment %} <form method="post" action="{% url 'cart:apply_coupon' %}">
-                    {% csrf_token %}
-                    <label for="code">Coupon Code:</label>
-                    <input type="text" id="coupon_code" name="code">
-                    <button type="submit">Apply Coupon</button>
-                </form> {% endcomment %}
-
-
-
-
-
                     {% if coupon_discount %}
                     <div class="col">
                         <form method="post" action="{% url 'cart:remove_coupon' %}">

@@ -22,8 +22,6 @@
                             {% if order.order_note %}
                             <b>Order note:</b>{{order.order_note}}
                             {% endif %}
-                            {% comment %} <p class="card-text">{{order.billing_address.house}}</p> {% endcomment %}
-                            {% comment %} <a href="#" class="btn btn-primary">Go somewhere</a> {% endcomment %}
                         </div>
                     </div>
 
@@ -36,13 +34,8 @@
                             <p class="card-text">{{order.shipping_address.street}} ,{{order.shipping_address.landmark}}</p>
                             <p class="card-text">{{order.shipping_address.town}}  ,{{order.shipping_address.state}}</p>
                             <p class="card-text">{{order.shipping_address.pincode}}</p>
-                           
-                            {% comment %} <p class="card-text">{{order.billing_address.house}}</p> {% endcomment %}
-                            {% comment %} <a href="#" class="btn btn-primary">Go somewhere</a> {% endcomment %}
                         </div>
                     </div>
-
-
                     <div class="card">
                         <h5 class="card-header">Payment Method</h5>
                         <div class="card-body">
@@ -50,9 +43,6 @@
                             
                         </div>
                     </div>
-
-
-
                     <div class="card">
                         <h5 class="card-header">Review Product</h5>
                         <div class="card-body">
