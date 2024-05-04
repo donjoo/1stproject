@@ -670,7 +670,6 @@ def add_animecat(request):
         else:
             anime_data = CategoryAnime(title=anime_name, image=request.FILES.get('anime_image'))
             anime_data.save()
-            print("yes")
             messages.success(request, 'Category added successfully.')       
     else:
         return redirect('adminside:animecat_list')

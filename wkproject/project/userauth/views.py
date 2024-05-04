@@ -32,7 +32,6 @@ def handel_signup(request):
     if request.method == 'POST':
         form = CreateUserForm(request.POST,None)
         if form.is_valid():
-            print("hello")
             username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password1')
@@ -486,8 +485,6 @@ def profile_update(request):
     
 @login_required
 def change_password(request):
-    print(request.user)
-    print(request.user.username)
     if request.method == 'POST':
         old_password = request.POST.get('old_password')
         new_password = request.POST.get('new_password')
@@ -542,7 +539,6 @@ def cancel_order(request, order_id,):
         data.save()
         messages.success(request, 'Order has been cancelled successfully.')
         if data.payment:
-            print('here')
             if (
                 data.payment.payment_method == "Paypal"
                 or data.payment.payment_method == "Wallet"
@@ -550,7 +546,6 @@ def cancel_order(request, order_id,):
                 
                 amount = data.order_total
                 user = request.user
-                print(amount,user)
                 Transaction.objects.create(
                     user=user,
                     description="Cancelled Order " + str(order_id),
@@ -580,7 +575,6 @@ def return_order(request, order_id):
             data.save()
             messages.success(request, 'Order has been returned successfully.')
             if data.payment:
-                print('here')
                 if (
                     data.payment.payment_method == "Paypal"
                     or data.payment.payment_method == "Wallet"
@@ -588,7 +582,7 @@ def return_order(request, order_id):
                     
                     amount = data.order_total
                     user = request.user
-                    print(amount,user)
+
                     Transaction.objects.create(
                         user=user,
                         description="Cancelled Order " + str(order_id),
