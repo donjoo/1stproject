@@ -340,7 +340,11 @@ def user_profile(request):
         address = Address.objects.filter(user=request.user,status= 'False')
     except Address.DoesNotExist:
         address = None
-    userdetail = UserDetails.objects.get(user=request.user)
+    try:
+        userdetail = UserDetails.objects.get(user=request.user)
+    except UserDetails.DoesNotExist:
+        userdetail = None
+    
 
     try:
        orders = Order.objects.filter(user=request.user).order_by('-created_at')

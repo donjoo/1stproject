@@ -298,6 +298,7 @@ def wishlist(request):
         products = Product.objects.filter(pid__in=wishlist_pids)
         wishlist_items.append({'products': products})
 
+    products = []
     for item in wishlist_items:
             products = item.products.all()
 
