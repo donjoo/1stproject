@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from orders.models import Order
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from app.models import Variants,Stock
 # Create your views here.
 
 @never_cache
@@ -314,24 +314,6 @@ def logoutUser(request):
                     # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def user_profile(request):
     # user = request.user
     if not request.user.is_authenticated:
@@ -541,6 +523,7 @@ def cancel_order(request, order_id,):
         data = Order.objects.get(id=order_id)
         data.status = "Cancelled"
         data.save()
+        canceladd_stock(request,data)
         messages.success(request, 'Order has been cancelled successfully.')
         if data.payment:
             if (
@@ -559,24 +542,24 @@ def cancel_order(request, order_id,):
 
         return redirect("userauth:my_order",order_id)
 
-# def cancel_order(request, order_id):
-#     order = get_object_or_404(Order, id=order_id)
-#     if order.status != 'Cancelled':
-#         order.status = 'Cancelled'
-#         order.save()
-#         messages.success(request, 'Order has been cancelled successfully.')
-#     else:
-#         messages.warning(request, 'Order is already cancelled.')
-#     return redirect('userauth:my_order', order_id=order_id)
 
-
-
+def canceladd_stock(request,order):
+    order_products = OrderProduct.objects.filter(order=order)
+    
+    for order_product in order_products:
+            print(order_product.variations,'\n\n\n\n\n\n')
+            for varian in order_product.variations.all():
+                variant = Variants.objects.get(product=order_product.product,size=varian)
+                stock = Stock.objects.get(variant=variant)
+                stock.stock += order_product.quantity  # Add the cancelled quantity back to the variation's stock
+                stock.save()
 
 def return_order(request, order_id):
         if request.method == "POST":
             data = Order.objects.get(id=order_id)
             data.status = "Returned"
             data.save()
+            canceladd_stock(request,data)
             messages.success(request, 'Order has been returned successfully.')
             if data.payment:
                 if (
@@ -595,41 +578,6 @@ def return_order(request, order_id):
                     )
 
             return redirect("userauth:my_order",order_id)
-
-
-
-
-
-
-# def view_wallet(request):
-#     try:
-#         wallet = Wallet.objects.get(user=request.user)
-#     except Wallet.DoesNotExist:
-#         # Handle the case where the wallet does not exist for the user
-#         wallet = None 
-#     transactions = Transaction.objects.filter(wallet=wallet)
-#     return render(request, 'app/wallet.html', {'wallet': wallet, 'transactions': transactions})
-
-
-# @csrf_exempt
-# def add_funds(request):
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-#             amount = data.get('amount')
-#             transaction_id = data.get('transaction_id')
-#             if amount is not None and transaction_id is not None:
-#                 wallet, created = Wallet.objects.get_or_create(user=request.user)
-#                 wallet.balance += amount
-#                 wallet.save()
-#                 Transaction.objects.create(wallet=wallet, amount=amount, transaction_id=transaction_id)
-#                 return JsonResponse({'success': True})
-#             else:
-#                 return JsonResponse({'error': 'Invalid JSON data. Required fields are missing.'}, status=400)
-#         except json.JSONDecodeError:
-#             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
-#     else:
-#         return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
 
 
 

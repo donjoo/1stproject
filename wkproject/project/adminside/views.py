@@ -20,6 +20,8 @@ from django.db.models import Sum
 from django.utils.timezone import now
 from django.db.models import Count
 from django.db.models.functions import TruncMonth,TruncYear
+from django.core.exceptions import ObjectDoesNotExist
+from userauth.views import canceladd_stock
 current_date = timezone.now()   
 
 
@@ -1092,12 +1094,11 @@ def update_order_status(request, order_id):
             messages.error(request,"Order is already cancelled")
     return render(request, 'adminside/order_detail.html', {'order': order})
 
-from django.core.exceptions import ObjectDoesNotExist
-
 
 def admin_cancel_order(request, order_id):
     try:
         order = Order.objects.get(id=order_id)
+        canceladd_stock(request,order)
         messages.success(request, 'Order has been cancelled successfully.')
         if order.payment:
             if (
