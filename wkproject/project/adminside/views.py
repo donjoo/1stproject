@@ -507,7 +507,7 @@ def products_details(request, pid):
         product = Product.objects.get(pid=pid)
         product_images = ProductImage.objects.filter(product=product)
         sizes = Variants.objects.filter(product=product)
-
+        p_image = product.p_images.all()
         # Passing pid to is_size_out_of_stock function
         sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
         all_sizes_out_of_stock = all(sizes_out_of_stock.values())
@@ -517,6 +517,7 @@ def products_details(request, pid):
         return HttpResponse("Product not found", status=404)
     context = {
         'offers':offers,
+        'p_image':p_image,
         'catoffers':catoffers,
         'product': product,
         'product_images': product_images,
