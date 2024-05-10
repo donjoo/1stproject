@@ -40,13 +40,13 @@
         </div>
         <nav>
             <ul class="menu-aside">
-                <li class="menu-item active">
+                <li class="menu-item {% if '/admin_index/' in  request.path %} active {%endif%}">
                     <a class="menu-link" href="{% url 'adminside:admin_index' %}"> <i class="icon material-icons md-home"></i>
                         <span class="text">Dashboard</span>
                     </a>
                 </li>
       {% comment %} product{% endcomment %}
-                <li class="menu-item has-submenu">
+                <li class="menu-item has-submenu {% if '/product_list/' in  request.path or '/add_product/' in request.path %} active {%endif%}">
                     <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Product management</span>
                     </a>
@@ -59,8 +59,8 @@
                 </li>
 
 {% comment %} categoryyyyy {% endcomment %}
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
+                <li class="menu-item has-submenu {% if '/characters_list/' in request.path or '/category_list/' in request.path or '/animecat_list/' in request.path%} active {%endif%}">
+                        <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Category management</span>
                     </a>
                     <div class="submenu">
@@ -71,8 +71,8 @@
                 </li>
 
 {% comment %} varient {% endcomment %}
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
+            <li class="menu-item has-submenu {% if '/newvariant_list/' in  request.path or '/add_newvariant/' in request.path %} active {%endif%}">
+                        <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Varient management</span>
                     </a>
                     <div class="submenu">
@@ -84,8 +84,8 @@
 {% comment %} Stock_management {% endcomment %}
 
 
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
+                    <li class="menu-item has-submenu {% if '/add_stock/' in  request.path or '/stock_list/' in request.path %} active {%endif%}">
+                      <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Stock management</span>
                     </a>
                     <div class="submenu">
@@ -95,8 +95,8 @@
                 </li>
 
 {% comment %} order {% endcomment %}
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_cart"></i>
+                    <li class="menu-item has-submenu {% if '/order_list/' in  request.path %} active {%endif%}">
+                        <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_cart"></i>
                         <span class="text">Orders management</span>
                     </a>
                     <div class="submenu">
@@ -104,8 +104,8 @@
                     </div>
                 </li>
 {% comment %} user management {% endcomment %}
-                <li class="menu-item has-submenu">
-                    <a class="menu-link" href="page-sellers-cards.html"> <i class="icon material-icons md-store"></i>
+                    <li class="menu-item has-submenu {% if '/user_management/' in  request.path %} active {%endif%}">
+                        <a class="menu-link" href="page-sellers-cards.html"> <i class="icon material-icons md-store"></i>
                         <span class="text">User management</span>
                     </a>
                     <div class="submenu">                    
@@ -115,7 +115,7 @@
 
 {% comment %} offer management {% endcomment %}
 
-                <li class="menu-item has-submenu">
+                <li class="menu-item has-submenu {% if '/offer_list/' in  request.path or '/create_product_offer/' in request.path or '/create_category_offer/' in request.path %} active {%endif%}">
                     <a class="menu-link" href="#"> <i class="icon material-icons md-shopping_bag"></i>
                         <span class="text">Offer management</span>
                     </a>
@@ -127,7 +127,7 @@
                 </li>
 
 {% comment %} coupon management {% endcomment %}
-                <li class="menu-item has-submenu">
+                <li class="menu-item has-submenu {% if '/create_coupon/' in  request.path or '/coupon_list/' in request.path %} active {%endif%}">
                     <a class="menu-link" href="page-sellers-cards.html"> <i class="icon material-icons md-store"></i>
                         <span class="text">Coupon management</span>
                     </a>
@@ -136,7 +136,7 @@
                         <a href="{% url "adminside:coupon_list" %}">Coupon list</a>
                     </div>
                 </li>
-                <li class="menu-item">
+                <li class="menu-item {% if '/sales_report/' in  request.path %} active {%endif%}">
                     <a class="menu-link" href="{% url "adminside:sales_report" %}"> <i class="icon material-icons md-comment"></i>
                         <span class="text">SalesReport</span>
                     </a>

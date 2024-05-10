@@ -188,7 +188,7 @@ def payment_type(request,payement_option):
         return False  
     return True  
     
-
+import pytz
 def place_order(request,total=0,quantity=0,):
     id = request.user.id
     current_user = request.user
@@ -255,6 +255,7 @@ def place_order(request,total=0,quantity=0,):
                 data.order_note = form.cleaned_data['order_note']
                 data.order_total = round(grand_total,2)
                 data.shipping = shipping
+                data.created_at = datetime.datetime.now()
                 if offer_price:
                   data.offer_price=offer_price
                     
@@ -298,8 +299,9 @@ def place_order(request,total=0,quantity=0,):
                 payment_data.save()
                 data.payment = payment_data 
                 data.save()
-
+                
                 order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)
+                print(order.created_at)
                 order_products(request,order,payment_data)
                 context={
                     'order':order,

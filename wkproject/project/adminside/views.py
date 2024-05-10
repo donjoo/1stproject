@@ -1313,7 +1313,7 @@ def sales_report(request):
     start_date_value = ""
     end_date_value = ""
     grand_totall = 0
-    orders = Order.objects.filter(is_ordered=True).order_by('-created_at').exclude(status='Cancelled')
+    orders = Order.objects.filter(is_ordered=True).order_by('-created_at').exclude(status='Cancelled').exclude(status='Returned')
 
     if request.method == 'POST':
         date_filter = request.POST.get('date_filter')

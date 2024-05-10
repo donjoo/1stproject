@@ -54,11 +54,11 @@ urlpatterns = [
     path('available_coupon/<id>',views.available_coupon,name='available_coupon'),
     path('delete_coupon/<id>',views.delete_coupon,name='delete_coupon'),
 
-    path('offer_list',views.offer_list,name='offer_list'),
+    path('offer_list/',views.offer_list,name='offer_list'),
     path('create_product_offer/',views.create_product_offer,name='create_product_offer'),
     path('delete_product_offer/<id>/',views.delete_product_offer,name='delete_product_offer'),
     path('block_product_offer/<id>',views.block_product_offer,name='block_product_offer'),
-    path('create_category_offer',views.create_category_offer,name='create_category_offer'),
+    path('create_category_offer/',views.create_category_offer,name='create_category_offer'),
     path('delete_category_offer/<id>/',views.delete_category_offer,name='delete_category_offer'),
     path('block_category_offer/<id>/',views.block_category_offer,name='block_category_offer'),
 

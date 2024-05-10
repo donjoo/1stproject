@@ -166,14 +166,15 @@
                     </div>
                 {% endif %}
 
-                {% if order.status != 'Returned' and order.status == 'Delivered' %}
-                    <div class="col-6">
-                        <form method="post" action="{% url 'userauth:return_order' order.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-warning">Return Order</button>
-                        </form>
-                    </div>
-                    {% endif %}
+                {% if order.status != 'Returned' and order.status == 'Delivered' and order.payment.status != 'Payment pending'  %}
+                <div class="col-6">
+                    <form id="returnOrderForm" method="post" action="{% url 'userauth:return_order' order.id %}">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-warning" onclick="confirmReturn()">Return Order</button>
+                    </form>
+                </div>
+                {% endif %}
+
                 </div>
                 
                 </div> <!-- col// -->
@@ -196,6 +197,14 @@
     </div> <!-- card end// -->
     <button onclick="printInvoice()" class="btn btn-primary">Print Invoice</button>
 </section> <!-- content-main end// -->
+
+<script>
+    function confirmReturn() {
+        if (confirm('Are you sure you want to return this order?')) {
+            document.getElementById('returnOrderForm').submit();
+        }
+    }
+</script>
 
 
 <script>
