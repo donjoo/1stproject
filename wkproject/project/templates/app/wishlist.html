@@ -46,7 +46,8 @@
                                         <a href="{% url 'cart:add_cart' product.pid %}"  class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</a>
                                     </td>
                                     <td class="action" data-title="Remove">
-                                        <a href="#" id="removeLink_{{ product.pid }}" data-product-id="{{ product.pid }}"><i class="fi-rs-trash"></i></a>
+                                        {% comment %} <a href="#" id="removeLink_{{ product.pid }}" data-product-id="{{ product.pid }}"><i class="fi-rs-trash"></i></a> {% endcomment %}
+                                        <a href="{% url "app:remove_from_wishlist" product.pid %}"><i class="fi-rs-trash"></i></a>
                                     </td>                             </tr>
                                 {% endfor %}
                                 
@@ -73,7 +74,7 @@
 
 
 </main>
-<script>
+{% comment %} <script>
     document.addEventListener("DOMContentLoaded", function() {
         var removeLinks = document.querySelectorAll("[id^='removeLink_']");
         removeLinks.forEach(function(link) {
@@ -87,7 +88,7 @@
             });
         });
     });
-</script>
+</script> {% endcomment %}
 
 
 {% endblock content %}
