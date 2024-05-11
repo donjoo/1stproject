@@ -188,7 +188,7 @@ def payment_type(request,payement_option):
         return False  
     return True  
     
-import pytz
+
 def place_order(request,total=0,quantity=0,):
     id = request.user.id
     current_user = request.user
