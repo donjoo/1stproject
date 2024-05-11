@@ -1319,17 +1319,17 @@ def sales_report(request):
         date_filter = request.POST.get('date_filter')
         if date_filter == 'daily':
             today = now().date()
-            orders = Order.objects.filter(is_ordered=True, created_at__date=today).order_by('-created_at')
+            orders = Order.objects.filter(is_ordered=True, created_at__date=today).order_by('-created_at').exclude(status='Cancelled').exclude(status='Returned')
         elif date_filter == 'weekly':
             today = now().date()
             start_of_week = today - timedelta(days=today.weekday())
             end_of_week = start_of_week + timedelta(days=6)
-            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_week, end_of_week]).order_by('-created_at')
+            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_week, end_of_week]).order_by('-created_at').exclude(status='Cancelled').exclude(status='Returned')
         elif date_filter == 'yearly':
             today = now().date()
             start_of_year = today.replace(month=1, day=1)
             end_of_year = today.replace(month=12, day=31)
-            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_year, end_of_year]).order_by('-created_at')
+            orders = Order.objects.filter(is_ordered=True, created_at__date__range=[start_of_year, end_of_year]).order_by('-created_at').exclude(status='Cancelled').exclude(status='Returned')
         else:
             start_date = request.POST.get('start_date')
             end_date = request.POST.get('end_date')
@@ -1338,7 +1338,7 @@ def sales_report(request):
             if start_date and end_date:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date, '%Y-%m-%d')
-                orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled')
+                orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled').exclude(status='Returned')
     grand_totall = round(grand_total(orders),2)
 
 
