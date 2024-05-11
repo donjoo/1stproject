@@ -1085,12 +1085,15 @@ def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
         if not order.status == "Cancelled":
-            new_status = request.POST.get('status')
-            order.status = new_status
-            order.save()
-            if new_status == "Cancelled":
-                admin_cancel_order(request,order_id)
-            return redirect('adminside:order_detail', order_id=order_id)
+            if not order.status == "Returned":
+                new_status = request.POST.get('status')
+                order.status = new_status
+                order.save()
+                if new_status == "Cancelled":
+                    admin_cancel_order(request,order_id)
+                return redirect('adminside:order_detail', order_id=order_id)
+            else:
+                 messages.error(request,"Order is already Returned")
         else:
             messages.error(request,"Order is already cancelled")
     return render(request, 'adminside/order_detail.html', {'order': order})
@@ -1338,7 +1341,7 @@ def sales_report(request):
             if start_date and end_date:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d')
                 end_date = datetime.strptime(end_date, '%Y-%m-%d')
-                orders = orders.filter(created_at__range=(start_date, end_date)).exclude(status='Cancelled').exclude(status='Returned')
+                orders = orders.filter(created_at__range=(start_date, end_date),status='Delivered').exclude(status='Cancelled').exclude(status='Returned')
     grand_totall = round(grand_total(orders),2)
 
 

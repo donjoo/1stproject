@@ -547,7 +547,7 @@ def canceladd_stock(request,order):
     order_products = OrderProduct.objects.filter(order=order)
     
     for order_product in order_products:
-            print(order_product.variations,'\n\n\n\n\n\n')
+            print(order_product.variations)
             for varian in order_product.variations.all():
                 variant = Variants.objects.get(product=order_product.product,size=varian)
                 stock = Stock.objects.get(variant=variant)
