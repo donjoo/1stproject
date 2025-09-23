@@ -117,9 +117,10 @@
                             {% for p in products %}
                             <div class="col-lg-3 col-md-4">
                                 <div class="product-cart-wrap mb-30">
+
                                     <div class="product-img-action-wrap">
-                                        <div class="product-img product-img-zoom" style="width: 200px; height: 200px; overflow: hidden;">
-                                            <a href="{% url 'app:product_detail' p.pid %}">
+               <div class="product-img product-img-zoom" 
+                             style="width: 200px; height: 200px; overflow: hidden; display: flex; justify-content: center; align-items: center; margin: 0 auto; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">                                            <a href="{% url 'app:product_detail' p.pid %}">
                                                 {% if p.image %}
                                                     <img class="default-img" src="{{ p.image.url }}" alt="" style="width: 100%; height: auto;">
                                                 {% else %}
@@ -129,7 +130,7 @@
                                             </a>
                                         </div>
                                         <div class="product-action-1">
-                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'app:add_to_wishlist' p.pid %}"><i class="fi-rs-heart"></i></a>
                                         </div>
                                     </div>
                                     <div class="product-content-wrap" style="min-height: 150px;">
