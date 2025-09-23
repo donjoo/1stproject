@@ -43,7 +43,10 @@
                                         <span class="color3 font-weight-bold">{{product.in_stock}}</span>
                                     </td>
                                     <td class="text-right" data-title="Cart">
-                                        <a href="{% url 'cart:add_cart' product.pid %}"  class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</a>
+                                        <!-- <a href="{% url 'cart:add_cart' product.pid %}"  class="btn btn-sm"><i class="fi-rs-shopping-bag mr-5"></i>Add to cart</a> -->
+                                        <a href="javascript:void(0);" class="btn btn-sm add-to-cart-btn" data-product-id="{{ product.pid }}">
+                                            <i class="fi-rs-shopping-bag mr-5"></i>Add to cart
+                                        </a>
                                     </td>
                                     <td class="action" data-title="Remove">
                                         <a href="#" id="removeLink_{{ product.pid }}" data-product-id="{{ product.pid }}"><i class="fi-rs-trash"></i></a>
@@ -74,6 +77,34 @@
 
 
 </main>
+
+
+<!-- Size Modal -->
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Size</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="sizeForm">
+          <input type="hidden" id="modal-product-id">
+          <div class="size-options" id="size-options"></div>
+          <button type="submit" class="btn btn-primary mt-3">Add to Cart</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
  <script>
     document.addEventListener("DOMContentLoaded", function() {
         var removeLinks = document.querySelectorAll("[id^='removeLink_']");
@@ -87,7 +118,93 @@
                 }
             });
         });
+ 
+
+
+
+
+
+
+    // Wishlist add-to-cart
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function(){
+            const pid = this.getAttribute('data-product-id');
+            document.getElementById('modal-product-id').value = pid;
+
+            // Fetch sizes via AJAX
+            fetch(`/get_sizes/${pid}/`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('size-options');
+                    container.innerHTML = '';
+                    data.sizes.forEach(size => {
+                        const label = document.createElement('label');
+                        label.classList.add('me-3');
+                        label.style.display = 'inline-flex';
+                        label.style.alignItems = 'center';
+                        label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}" style="margin-right: 5px;"> ${size.size}`;
+                        container.appendChild(label);
+                        container.appendChild(document.createElement('br'));
+                    });
+
+                    var myModal = new bootstrap.Modal(document.getElementById('sizeModal'));
+                    myModal.show();
+                });
+        });
     });
+
+    document.getElementById('sizeForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const pid = document.getElementById('modal-product-id').value;
+        const selectedInput = document.querySelector(`input[name="${pid}"]:checked`);
+        if(!selectedInput){
+            alert("Please select a size.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append(selectedInput.name, selectedInput.value);
+
+        fetch(`/add_cart/${pid}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(async res => {
+            const text = await res.text();
+            try {
+                const data = JSON.parse(text);
+                if(data.success){
+                    const sizeModalEl = document.getElementById('sizeModal');
+                    const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
+                    if(sizeModal) sizeModal.hide();
+                    alert("Product added to cart!");
+                } else if(data.status === 'error'){
+                    alert(data.message);
+                }
+            } catch(err){
+                window.location.href = "/cart/";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Something went wrong. Please try again.");
+        });
+    });
+
+
+
+   });
+
+
+
+
+
+
+
+
 </script> 
 
 

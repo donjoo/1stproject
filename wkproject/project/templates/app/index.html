@@ -164,9 +164,10 @@ document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
                 container.innerHTML = '';
                 data.sizes.forEach(size => {
                     const label = document.createElement('label');
-                    label.classList.add('me-2');
-                    // radio inputs need a "name" and "value"
-                    label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}"> ${size.size}`;
+                    label.classList.add('me-3'); // adds margin-right to separate options
+                    label.style.display = 'inline-flex'; // keeps radio and text inline
+                    label.style.alignItems = 'center'; // vertically center                    // radio inputs need a "name" and "value"
+                    label.innerHTML = `<input type="radio" name="${pid}" value="${size.size} " style="margin-right: 5px;"> ${size.size}`;
                     container.appendChild(label);
                     container.appendChild(document.createElement('br'));
                 });
