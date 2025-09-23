@@ -8,6 +8,8 @@ __pycache__/
 
 ecom/
 media/
+project/media/
+
 
 # Distribution / packaging
 .Python
