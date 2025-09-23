@@ -377,7 +377,7 @@ def Checkout(request):
                 pass
            
         try:
-            address = Address.objects.filter(user=request.user)
+            address = Address.objects.filter(user=request.user,status= 'False')
                 
         except Address.DoesNotExist:
             address='none'

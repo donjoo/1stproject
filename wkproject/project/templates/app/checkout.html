@@ -28,59 +28,57 @@
                 </div>
             </div>
             <div style="margin-bottom: 20px;">
-                <a class="button" href="{% url 'app:add_address' %}">
+                <!-- <a class="button" href="{% url 'app:add_address' %}">
                     <span style="font-weight:bold;">Add new address</span>
-                </a>
+                </a> -->
+
+                <button type="button" class="button" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+    <span style="font-weight:bold;">Add new address</span>
+</button>
+
             </div>
             <form action="{% url 'orders:place_order'%}" method="POST">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-md-6">
-                        {% if address %}
-                        <div class="mb-25">
-                            <h4>Billing Details</h4>
-                        </div>
-                        <select name="billing_address" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
-                            {% for ad in address %}
-                            <option value="{{ ad.id }}">
-                                <address>
-                                    User: <strong>{{ ad.user.username }}</strong><br>
-                                    House: <strong>{{ ad.house }}</strong><br>
-                                    Street: <strong>{{ ad.street }}</strong><br>
-                                    Landmark: <strong>{{ ad.landmark }}</strong><br>
-                                    Pincode: <strong>{{ ad.pincode }}</strong><br>
-                                    Town: <strong>{{ ad.town }}</strong><br>
-                                    State: <strong>{{ ad.state }}</strong>
-                                </address>
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="mb-25">
-                            <h4>Shipping address</h4>
-                        </div>
-                        <select name="shipping_address" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
-                            {% for ad in address %}
-                            <option value="{{ ad.id }}">
-                                <address>
-                                    User: <strong>{{ ad.user.username }}</strong><br>
-                                    House: <strong>{{ ad.house }}</strong><br>
-                                    Street: <strong>{{ ad.street }}</strong><br>
-                                    Landmark: <strong>{{ ad.landmark }}</strong><br>
-                                    Pincode: <strong>{{ ad.pincode }}</strong><br>
-                                    Town: <strong>{{ ad.town }}</strong><br>
-                                    State: <strong>{{ ad.state }}</strong>
-                                </address>
-                            </option>
-                            {% endfor %}
-                        </select>
-                        <div class="mb-20">
-                            <h5>Additional information</h5>
-                        </div>
-                        <div class="form-group mb-30">
-                            <textarea name="order_note" rows="5" placeholder="Order notes"></textarea>
-                        </div>
-                        {% endif %}
-                    </div>
+    <div class="mb-25">
+        <h4>Billing Details</h4>
+    </div>
+    <select name="billing_address" id="billingAddressDropdown" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
+        {% if address %}
+            {% for ad in address %}
+                <option value="{{ ad.id }}">
+                    {{ ad.house }}, {{ ad.street }}, {{ ad.town }}, {{ ad.state }} - {{ ad.pincode }}
+                </option>
+            {% endfor %}
+        {% else %}
+            <option value="">No addresses found. Please add one.</option>
+        {% endif %}
+    </select>
+
+    <div class="mb-25">
+        <h4>Shipping Address</h4>
+    </div>
+    <select name="shipping_address" id="shippingAddressDropdown" class="form-select form-select-lg mb-3" aria-label=".form-select-lg example">
+        {% if address %}
+            {% for ad in address %}
+                <option value="{{ ad.id }}">
+                    {{ ad.house }}, {{ ad.street }}, {{ ad.town }}, {{ ad.state }} - {{ ad.pincode }}
+                </option>
+            {% endfor %}
+        {% else %}
+            <option value="">No addresses found. Please add one.</option>
+        {% endif %}
+    </select>
+
+    <div class="mb-20">
+        <h5>Additional Information</h5>
+    </div>
+    <div class="form-group mb-30">
+        <textarea name="order_note" rows="5" placeholder="Order notes"></textarea>
+    </div>
+</div>
+
                     <div class="col-md-6">
                         <div class="order_review">
                             <div class="mb-20">
@@ -239,4 +237,123 @@
         </div>
     </section>
 </main>
+
+
+
+
+
+
+
+
+
+
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAddressForm" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="house" class="form-label">Flat, House No</label>
+                        <input type="text" class="form-control" id="house" name="house" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="street" class="form-label">Area, Street, Village</label>
+                        <input type="text" class="form-control" id="street" name="street" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="landmark" class="form-label">Landmark</label>
+                        <input type="text" class="form-control" id="landmark" name="landmark" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pincode" class="form-label">Pincode</label>
+                        <input type="text" class="form-control" id="pincode" name="pincode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="town" class="form-label">Town/City</label>
+                        <input type="text" class="form-control" id="town" name="town" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" class="form-control" id="state" name="state" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const addAddressForm = document.getElementById('addAddressForm');
+
+    addAddressForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(addAddressForm);
+
+        fetch("{% url 'app:add_address' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Close modal
+                const modalElement = document.getElementById('addAddressModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                modalInstance.hide();
+
+                // Create a new <option>
+                const newOption = document.createElement('option');
+                newOption.value = data.address.id;
+                newOption.textContent = `${data.address.house}, ${data.address.street}, ${data.address.town}, ${data.address.state}, ${data.address.pincode}`;
+
+                // Billing Dropdown
+                const billingDropdown = document.getElementById('billingAddressDropdown');
+                if (billingDropdown) {
+                    if (billingDropdown.options.length === 1 && billingDropdown.options[0].value === "") {
+                        billingDropdown.innerHTML = ""; // Clear placeholder
+                    }
+                    billingDropdown.appendChild(newOption.cloneNode(true));
+                }
+
+                // Shipping Dropdown
+                const shippingDropdown = document.getElementById('shippingAddressDropdown');
+                if (shippingDropdown) {
+                    if (shippingDropdown.options.length === 1 && shippingDropdown.options[0].value === "") {
+                        shippingDropdown.innerHTML = ""; // Clear placeholder
+                    }
+                    shippingDropdown.appendChild(newOption);
+                }
+
+                // Reset form
+                addAddressForm.reset();
+
+                alert("Address added successfully!");
+            } else {
+                alert("Failed to add address. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error adding address:", error);
+            alert("Something went wrong. Please try again.");
+        });
+    });
+});
+
+</script>
+
 {% endblock content %}

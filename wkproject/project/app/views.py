@@ -218,6 +218,21 @@ def add_address(request):
         address.save()
        
 
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'address': {
+                    'id': address.id,
+                    'user': address.user.username,
+                    'house': address.house,
+                    'street': address.street,
+                    'landmark': address.landmark,
+                    'pincode': address.pincode,
+                    'town': address.town,
+                    'state': address.state,
+                }
+            }, status=201)
+
 
         return redirect('userauth:user_profile')
     else:
