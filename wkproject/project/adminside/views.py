@@ -204,7 +204,9 @@ def user_management(request):
 
 @login_required(login_url='adminside:admin_login')
 def block_unblock(request,user_id):
-    if not request.user.is_authenticated:
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+    #     return redirect("adminside:admin_login")
+    # if not request.user.is_authenticated:
         return HttpResponse("Unauthorized", status=401)
     user = get_object_or_404(User,id=user_id)
 
@@ -817,8 +819,10 @@ def character_list(request):
 
        
 def character_edit(request,lid):
-    if not request.user.is_authenticated:
-        return redirect('adminside:admin_login')
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+        return redirect("adminside:admin_login")
+    # if not request.user.is_authenticated:
+    #     return redirect('adminside:admin_login')
     
     characters = get_object_or_404(AnimeCharacter,lid=lid)
 
@@ -1100,6 +1104,8 @@ def update_order_status(request, order_id):
 
 
 def admin_cancel_order(request, order_id):
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+        return redirect("adminside:admin_login")
     try:
         order = Order.objects.get(id=order_id)
         canceladd_stock(request,order)
