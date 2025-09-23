@@ -60,13 +60,16 @@
     <div class="container mt-5">
         <div class="text-center">
           <h2 class="font-weight-bold" style="padding-left: 20px;">Confirm Your Account</h2>
+             <p >
+                                        An otp is sent to your gmail!
+            </p>
         </div>
     
         <form action="{% url 'userauth:otp_verification' %}" method="POST" class="mt-4">
           {% csrf_token %}
           <div class="form-group text-center">
             <label for="otp" class="font-weight-bold" style="padding: 30%;">Enter the OTP</label><br>
-            <input type="text" class="form-control-lg" style="padding-left: 115px;"  id="otp" name="otp" placeholder="Enter the OTP" required>
+            <input type="text" class="form-control-lg" style="padding-left: 115px;"  id="otp" name="otp" placeholder="OTP" required>
           </div>
           
           <div class="text-center mt-4" style="padding-left: 120px;" >

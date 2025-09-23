@@ -1140,7 +1140,7 @@ def create_coupon(request):
         form = CouponForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('adminside:admin_index')
+            return redirect('adminside:coupon_list')
     else:
         form = CouponForm()
     return render(request,'adminside/create_coupon.html',{'form':form})

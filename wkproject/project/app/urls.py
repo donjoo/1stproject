@@ -18,7 +18,7 @@ urlpatterns = [
     path('remove-from-wishlist/<str:pid>/',views.remove_from_wishlist, name='remove_from_wishlist'),
     path('shop/',views.shop,name="shop"),
     path('sort_by/',views.sort_by,name="sort_by"),
-   
+    path('get_sizes/<str:pid>/', views.get_sizes, name='get_sizes'),
 
 
        

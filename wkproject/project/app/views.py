@@ -416,3 +416,11 @@ def sort_by(request):
 
 
 
+
+def get_sizes(request, pid):
+    variants = Variants.objects.filter(
+        product__pid=pid, 
+        is_active=True, 
+        delete=False
+    ).values('id', 'size')
+    return JsonResponse({'sizes': list(variants)})
