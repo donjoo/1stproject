@@ -372,7 +372,7 @@ def Checkout(request):
                 total_decimal = Decimal(str(total))
                 discount_amount =  (discount_percentage/ 100) * total_decimal
                 subtotal = total_decimal- discount_amount
-                coupon_discount = coupon.discount
+                coupon_discount = discount_amount #coupon.discount
             except Coupon.DoesNotExist:
                 pass
            

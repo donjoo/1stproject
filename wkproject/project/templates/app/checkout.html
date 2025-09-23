@@ -128,7 +128,7 @@
                                         {% if coupon_discount %}
                                         <tr>
                                             <th>coupon</th>
-                                            <td colspan="2"><em>-{{coupon_discount}}</em></td>
+                                            <td colspan="2"><em>-{{coupon_discount|floatformat:2}}</em></td>
                                         </tr>
                                         {% endif %}
                                         {% if offer_price %}
@@ -140,7 +140,8 @@
                                         <tr>
                                             <th>Total</th>
                                             <td colspan="2" class="product-subtotal">
-                                                <span class="font-xl text-brand fw-900">{{grand_total}}</span>
+                                                <span class="font-xl text-brand fw-900">{{ grand_total|floatformat:2 }}
+</span>
                                             </td>
                                         </tr>
                                     </tbody>
