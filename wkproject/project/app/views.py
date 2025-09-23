@@ -306,9 +306,12 @@ def wishlist(request):
     paginator = Paginator(products, 3)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    out_of_stock_product = out_of_stock_products()
 
     context = {
         'wishlist_items':page_obj,
+        "out_of_stock_products":out_of_stock_product,
+
     }
 
     return render(request, 'app/wishlist.html', context)
