@@ -388,7 +388,12 @@ def address_edit(request,id):
        
             return redirect('userauth:login')
     
+    
+    
     address = get_object_or_404(Address,id=id)
+    if address.user != request.user:
+        messages.error(request, "You are not authorized to edit this address.")
+        return redirect('userauth:user_profile')
     if request.method == 'POST':
         house = request.POST.get("house")
         street = request.POST.get("street")
@@ -438,6 +443,9 @@ def delete_address(request,id):
         
     try:
         address = Address.objects.get(id=id)
+        if address.user != request.user:
+            messages.error(request, "You are not authorized to edit this address.")
+            return redirect('userauth:user_profile')
     except ValueError:
         return redirect('userauth:user_profile')
     # address.delete()
@@ -448,6 +456,11 @@ def delete_address(request,id):
         
 @login_required(login_url='userauth:login')
 def profile_update(request):
+
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+    
     try:
         profile = UserDetails.objects.get(user=request.user)
         # address = Address.objects.get(user=request.user)
@@ -477,6 +490,9 @@ def profile_update(request):
     
 @login_required
 def change_password(request):
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
     if request.method == 'POST':
         old_password = request.POST.get('old_password')
         new_password = request.POST.get('new_password')
@@ -505,8 +521,17 @@ def change_password(request):
 
 @login_required(login_url='userauth:login')
 def my_order(request,order_id):
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+
+
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
+
+    if order.user != request.user:
+        messages.error(request, "You are not authorized to view this order.")
+        return redirect('userauth:orders_lists')
 
     subtotal = 0
     for i in order_products:
@@ -525,8 +550,16 @@ def my_order(request,order_id):
 
 @login_required(login_url='userauth:login')
 def cancel_order(request, order_id,):
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+    
     if request.method == "POST":
         data = Order.objects.get(id=order_id)
+        if data.user != request.user:
+            messages.error(request, "You are not authorized to cancel this order.")
+            return redirect('userauth:orders_lists')
+        
         data.status = "Cancelled"
         data.save()
         canceladd_stock(request,data)
@@ -561,8 +594,15 @@ def canceladd_stock(request,order):
                 stock.save()
 @login_required(login_url='userauth:login')
 def return_order(request, order_id):
+        if not request.user.is_active:
+            messages.error(request, "Your account is blocked.")
+            return redirect('userauth:login')
+        
         if request.method == "POST":
             data = Order.objects.get(id=order_id)
+            if data.user != request.user:
+                messages.error(request, "You are not authorized to return this order.")
+                return redirect('userauth:orders_lists')
             data.status = "Returned"
             data.save()
             canceladd_stock(request,data)
@@ -589,6 +629,9 @@ def return_order(request, order_id):
 
 @login_required(login_url='userauth:login')
 def wallet_balence(request, user_id):
+    if not request.user.is_active:
+        return 0
+    
     datas = Transaction.objects.filter(user=user_id)
     grand_total = 0
     for data in datas:
@@ -603,6 +646,10 @@ def wallet_balence(request, user_id):
 # def user_wallet(request, user_id):
 @login_required(login_url='userauth:login')
 def user_wallet(request):
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+
     user_id = request.user
     total = wallet_balence(request, user_id)
 
