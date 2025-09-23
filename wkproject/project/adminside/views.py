@@ -1172,6 +1172,7 @@ def delete_coupon(request,id):
     except ValueError:
         return redirect('adminside:coupon_list')
     coupon.delete = True
+    coupon.active = False
     coupon.save()
 
     return redirect('adminside:coupon_list')
