@@ -314,6 +314,7 @@ def logoutUser(request):
                     # FORGOT_PASSWORD# FORGOT_PASSWORD# FORGOT_PASSWORD
 
 
+@login_required(login_url='userauth:login')
 def user_profile(request):
     # user = request.user
     if not request.user.is_authenticated:
@@ -359,6 +360,7 @@ def user_profile(request):
     
     return render(request,"userauth/user_profile.html",context)
 
+@login_required(login_url='userauth:login')
 def order_list(request):
     # Retrieve all orders
     all_orders = Order.objects.filter(user=request.user).order_by('-created_at')
@@ -378,6 +380,9 @@ def order_list(request):
 
     return render(request,'userauth/orders_lists.html',{'orders': orders})
 
+
+
+@login_required(login_url='userauth:login')
 def address_edit(request,id):
     if not request.user.is_authenticated:
        
@@ -441,6 +446,7 @@ def delete_address(request,id):
 
     return redirect('userauth:user_profile')
         
+@login_required(login_url='userauth:login')
 def profile_update(request):
     try:
         profile = UserDetails.objects.get(user=request.user)
@@ -497,7 +503,7 @@ def change_password(request):
     return redirect('userauth:user_profile')
 
 
- 
+@login_required(login_url='userauth:login')
 def my_order(request,order_id):
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
@@ -517,7 +523,7 @@ def my_order(request,order_id):
 
    
 
-
+@login_required(login_url='userauth:login')
 def cancel_order(request, order_id,):
     if request.method == "POST":
         data = Order.objects.get(id=order_id)
@@ -542,7 +548,7 @@ def cancel_order(request, order_id,):
 
         return redirect("userauth:my_order",order_id)
 
-
+@login_required(login_url='userauth:login')
 def canceladd_stock(request,order):
     order_products = OrderProduct.objects.filter(order=order)
     
@@ -553,7 +559,7 @@ def canceladd_stock(request,order):
                 stock = Stock.objects.get(variant=variant)
                 stock.stock += order_product.quantity  # Add the cancelled quantity back to the variation's stock
                 stock.save()
-
+@login_required(login_url='userauth:login')
 def return_order(request, order_id):
         if request.method == "POST":
             data = Order.objects.get(id=order_id)
@@ -562,10 +568,10 @@ def return_order(request, order_id):
             canceladd_stock(request,data)
             messages.success(request, 'Order has been returned successfully.')
             if data.payment:
-                if (
-                    data.payment.payment_method == "Paypal"
-                    or data.payment.payment_method == "Wallet"
-                ):
+                # if (
+                #     data.payment.payment_method == "Paypal"
+                #     or data.payment.payment_method == "Wallet"
+                # ):
                     
                     amount = data.order_total
                     user = request.user
@@ -581,7 +587,7 @@ def return_order(request, order_id):
 
 
 
-
+@login_required(login_url='userauth:login')
 def wallet_balence(request, user_id):
     datas = Transaction.objects.filter(user=user_id)
     grand_total = 0
@@ -595,6 +601,7 @@ def wallet_balence(request, user_id):
 
 
 # def user_wallet(request, user_id):
+@login_required(login_url='userauth:login')
 def user_wallet(request):
     user_id = request.user
     total = wallet_balence(request, user_id)

@@ -15,6 +15,8 @@ from userauth.views import wallet_balence
 import secrets
 from cart.views import apply_offer
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
+
 # Create your views here.
 
 def generate_transaction_id():
@@ -142,7 +144,7 @@ def wallet_payment(request, order_id):
     return render(request, "app/order_complete.html",data)
 
 
-
+@login_required(login_url='userauth:login')
 def payment(request):
     user = request.user
     body = json.loads(request.body)
@@ -188,7 +190,7 @@ def payment_type(request,payement_option):
         return False  
     return True  
     
-
+@login_required(login_url='userauth:login')
 def place_order(request,total=0,quantity=0,):
     id = request.user.id
     current_user = request.user
@@ -355,6 +357,8 @@ def payment_pending(request,order_id):
    
     return render(request,'app/payements.html',context)
 
+
+@login_required(login_url='userauth:login')
 def order_products(request,order,payment_data):
 
 
@@ -386,7 +390,7 @@ def order_products(request,order,payment_data):
             stock.stock -= item.quantity
             stock.save()
 
-
+@login_required(login_url='userauth:login')
 def return_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if order.status != 'Returned':
