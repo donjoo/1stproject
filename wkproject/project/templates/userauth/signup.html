@@ -3,7 +3,7 @@
 <html class="no-js" lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Franky</title>
+    <title>AnimWear</title>
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,7 +29,23 @@
 </head>
 <body>
     <section class="full-height">
+            <!-- Logo in corner -->
+<div class="logo" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+    <a href="{% url 'app:index' %}" style="text-decoration: none; display: flex; align-items: baseline;">
+        <span class="anim" style="font-size: 36px; color: #333; font-weight: bold; margin-right: 5px;">
+            Anim
+        </span>
+        <span class="wear" style="font-size: 36px; color: #666; font-weight: bold;">
+            Wear
+        </span>
+    </a>
+</div>
         <div class="login_wrap widget-taber-content p-30 background-white border-radius-5">
+          
+          
+          
+      
+          
             <div class="padding_eight_all bg-white">
                 <div class="heading_s1 text-center mb-4">
                     {% for message in messages %}

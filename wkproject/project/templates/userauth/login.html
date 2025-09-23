@@ -17,8 +17,20 @@
     <link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
 </head>
 <body>
-    <h2 class="text-white text-center bg-dark p-3">Login</h2>
-    
+<h2 class="text-white text-center bg-dark p-3">Login</h2>
+
+<div class="logo" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
+    <a href="{% url 'app:index' %}" style="text-decoration: none; display: flex; align-items: baseline;">
+        <span class="anim" style="font-size: 36px; color: #fff; font-weight: bold; margin-right: 5px;">
+            Anim
+        </span>
+        <span class="wear" style="font-size: 36px; color: #fff; font-weight: bold;">
+            Wear
+        </span>
+    </a>
+</div>
+
+
         <section class="pt-150 pb-150">
             <div class="container">
                 <!-- <div class="row">
