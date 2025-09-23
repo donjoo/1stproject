@@ -1145,8 +1145,12 @@ def create_coupon(request):
     if request.method=='POST':
         form = CouponForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('adminside:coupon_list')
+            discount = form.cleaned_data['discount']
+            if 1 <= discount <= 100:
+                form.save()
+                return redirect('adminside:coupon_list')
+            else:
+                messages.error(request, "Discount must be between 1% and 100%.")
     else:
         form = CouponForm()
     return render(request,'adminside/create_coupon.html',{'form':form})
