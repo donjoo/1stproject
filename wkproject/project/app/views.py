@@ -305,17 +305,23 @@ def filter_view(request):
     }
     return render(request,'app/shop-filter.html',context)
 def wishlist(request):
-    if request.user.is_authenticated:
-        wishlist_items = WishList.objects.filter(user=request.user)
-    else:
-        wishlist_items = []
-        wishlist_pids = request.session.get('wishlist', [])
-        products = Product.objects.filter(pid__in=wishlist_pids)
-        wishlist_items.append({'products': products})
-
     products = []
-    for item in wishlist_items:
-            products = item.products.all()
+
+    if request.user.is_authenticated:
+        wishlist_items = WishList.objects.filter(user=request.user).first()
+        if wishlist_items:
+            products = wishlist_items.products.all()
+    else:
+        # wishlist_items = []
+        wishlist_pids = request.session.get('wishlist', [])
+        if wishlist_pids:
+            products = Product.objects.filter(pid__in=wishlist_pids)
+        # products = Product.objects.filter(pid__in=wishlist_pids)
+        # wishlist_items.append({'products': products})
+
+    # products = []
+    # for item in wishlist_items:
+    #         products = item.products.all()
 
 
     paginator = Paginator(products, 3)
