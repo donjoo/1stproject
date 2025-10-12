@@ -6,242 +6,234 @@
 <section class="mt-50 mb-50">
     <div class="container">
         <div id="error-message" style="padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f8d7da; color: #721c24; display: none;"></div>        
-        <!-- {% for message in messages  %}
-        <div class="alert alert-{{message.tags}} alert-dismissible fade show"role="alert">
-          <strong> {{message}} </strong>
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <div class="row">
+            <div class="col-md-6 col-sm-12 col-xs-12">
+                <div class="detail-gallery">
+                    <form action="{% url 'cart:add_cart' product.pid %}" method="POST">
+                    {% csrf_token %}
+                    <span class="zoom-icon"><i class="fi-rs-search"></i></span>
+
+                    <!-- MAIN SLIDES -->
+                    <div class="product-image-slider">
+                        <figure class="border-radius-10">
+                            <img src="{{product.image.url}}" alt="product image" loading="lazy">
+                        </figure>
+                        {% for p in p_image %}
+                        {% if p.Images %}
+                        <figure class="border-radius-10">
+                            <img src="{{ p.Images.url }}" alt="product image" loading="lazy">
+                        </figure>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- THUMBNAILS -->
+                    <div class="slider-nav-thumbnails pl-15 pr-15">
+                        <div><img src="{{ product.image.url }}" alt="product image"></div>
+                        {% for p in p_image %}
+                        {% if p.Images %}
+                          <div><img src="{{ p.Images.url }}" alt="product image"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-sm-12 col-xs-12">
+                <div class="detail-info">
+                    <h2 class="title-detail">{{product.title}}</h2>
+                    <div class="product-detail-rating">
+                        <div class="pro-details-brand">
+                            <span> Anime: <a href="shop-grid-right.html">{{product.anime}}</a></span>
+                        </div>
+                    </div>
+                    <div class="clearfix product-price-cover">
+                        <div class="product-price primary-color float-left">
+                            <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
+                            <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
+                            {% if offer.discount %}
+                            <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                    <div class="short-desc mb-30">
+                        <p>{{ product.descriptions|truncatechars:150 }}</p>
+                    </div>
+                    <div class="product_sort_info font-xs mb-30">
+                        <ul>
+                            <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
+                            <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
+                        </ul>
+                    </div>
+
+                    {% if not all_sizes_out_of_stock %}
+                    <div class="row">
+                        <div class="item-option-select">
+                            <h6>Select Size </h6>
+                            <select name="size" class="form-control" style="width: 150px; font-size: 14px; padding: 5px 25px 5px 5px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,%3Csvg fill=%22none%22 xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 stroke=%22currentColor%22 width=%2212%22 height=%2212%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22%3E%3C/path%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 5px top 50%;">
+                                {% for size, status in sizes_out_of_stock.items %}
+                                {% if status %}
+                                    <option value="{{ size }}" disabled>{{ size }} (Out of stock)</option>
+                                {% else %}
+                                    <option value="{{ size }}">{{ size }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                    <div class="detail-extralink">
+                        <input type="hidden" value="{{ product.pid }}" id="product-pid-{{ product.id }}" class="product-pid-{{ product.id }}">
+                        <input type="hidden" value="{{ product.image.url }}" class="product-image-{{ product.id }}">
+                        <input type="hidden" value="{{ product.id }}" class="product-id-{{ product.id }}">
+                        <input type="hidden" value="{{ product.title }}" class="product-title-{{ product.id }}">
+
+                        {% if all_sizes_out_of_stock %}
+                        <button type="submit" class="btn btn-primary" disabled><span class="button-text">Out of stock</span></button>
+                        {% else %}
+                        <button type="submit"  class="btn btn-primary"><span class="button-text">Add to cart</span></button>
+                        {% endif %}
+
+                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" product.pid %}"><i class="fi-rs-heart"></i></a>
+                    </div>
+                </div>
+            </div>
+            </form>
         </div>
 
-        {% endfor %} -->
-                               <div class="row">
-                                    <div class="col-md-6 col-sm-12 col-xs-12">
-                
-                                        <div class="detail-gallery">
-                                            <form action="{% url 'cart:add_cart' product.pid %}" method="POST">
-                                            {% csrf_token %}
-                                            <span class="zoom-icon"><i class="fi-rs-search"></i></span>
-                                            <!-- MAIN SLIDES -->
-                                            <div class="product-image-slider">
-                                                <figure class="border-radius-10">
-                                                    <img src="{{product.image.url}}" alt="product image">
-                                                </figure>
-                                                {% for p in p_image %}
-                                                {% if p.Images %}
-                                                <figure class="border-radius-10">
-                                                    <img src="{{ p.Images.url }}" alt="product image">
-                                                </figure>
-                                                {% endif %}
-                                                {% endfor %}
-                                            
-                                        </div>
-                                    </div>
-                   
-                    
-                                        <div class="slider-nav-thumbnails pl-15 pr-15">
-                                            <div><img src="{{ product.image.url }}" alt="product image"></div>
-                                            {% for p in p_image %}
-                                            {% if p.Images %}
-                                              <div><img src="{{ p.Images.url }}" alt="product image"></div>
-                                            {% endif %}
-                                            {% endfor %}
-                                            
-                                        </div>
-                                </div>
-                                    <div class="col-md-6 col-sm-12 col-xs-12">
-                                        <div class="detail-info">
-                                        <h2 class="title-detail">{{product.title}}</h2>
-                                        <div class="product-detail-rating">
-                                            <div class="pro-details-brand">
-                                                <span> Anime: <a href="shop-grid-right.html">{{product.anime}}</a></span>
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="clearfix product-price-cover">
-                                            <div class="product-price primary-color float-left">
-                                                <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
-                                                <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
-                                                {% if offer.discount %}
-                                                <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="bt-1 border-color-1 mt-15 mb-15"></div>
-                                        <div class="short-desc mb-30">
-                                            <p>{{ product.descriptions|truncatechars:150 }}</p>
-                                        </div>
-                                        <div class="product_sort_info font-xs mb-30">
-                                            <ul>
-                                                <li class="mb-10"><i class="fi-rs-refresh mr-5"></i> 30 Day Return Policy</li>
-                                                <li><i class="fi-rs-credit-card mr-5"></i> Cash on Delivery available</li>
-                                            </ul>
-                                        </div>
-    
-                                            {% if not all_sizes_out_of_stock %}
-                                            <div class="row">
-                                            <div class="item-option-select">
-                                                    <h6>Select Size </h6>
-                                                    <select name="size" class="form-control" style="width: 150px; font-size: 14px; padding: 5px 25px 5px 5px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,%3Csvg fill=%22none%22 xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 stroke=%22currentColor%22 width=%2212%22 height=%2212%22%3E%3Cpath stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%222%22 d=%22M19 9l-7 7-7-7%22%3E%3C/path%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 5px top 50%;">
-                                                        {% for size, status in sizes_out_of_stock.items %}
-                                                        {% if status %}
-                                                            <option value="{{ size }}" disabled>{{ size }} (Out of stock)</option>
-                                                        {% else %}
-                                                            <option value="{{ size }}">{{ size }}</option>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                    </select>
-                                                 
-                                            </div>
-                                            
-                                        </div>
-                                        {% endif %}
-                                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                                        <div class="detail-extralink">
-                                           
-                                                <input type="hidden" value="{{ product.pid }}" id="product-pid-{{ product.id }}" class="product-pid-{{ product.id }}">
-                                                <input type="hidden" value="{{ product.image.url }}" class="product-image-{{ product.id }}">
-                                                <input type="hidden" value="{{ product.id }}" class="product-id-{{ product.id }}">
-                                                <input type="hidden" value="{{ product.title }}" class="product-title-{{ product.id }}">
-                                              
-                                                {% if all_sizes_out_of_stock %}
-                                                <button type="submit" class="btn btn-primary" disabled><span class="button-text">Out of stock</span></button>
-                                                {% else %}
-                                                 <button type="submit"  class="btn btn-primary"><span class="button-text">Add to cart</span></button>
-                                                {% endif %}                                              
-                                       
-                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" product.pid %}"><i class="fi-rs-heart"></i></a>
-                                            </div>
-                                        </div>
-                                        
-                                    
-                                   </div>
-                                 </form>
-                                    <!-- Detail Info -->
-                                </div>
-                            
-                             </div>
-                            <div class="row">
-                                <div class="col-lg-10 m-auto entry-main-content">
-                                    <h2 class="section-title style-1 mb-30">Description</h2>
-                                    <div class="description mb-50">
-                                        <p>{{product.descriptions}}</p>
-                                        
-                                        <ul class="product-more-infor mt-30">
-                                            <li><span>style</span> {{product.fit}}</li>
-                                            <li><span>Fabric</span> {{product.fabric}}</li>
-                                        </ul>
-                                        <hr class="wp-block-separator is-style-dots">
-                                        <p>{{product.specifications}}</p>
-                                        <h4 class="mt-30">Packaging & Delivery</h4>
-                                        <hr class="wp-block-separator is-style-wide">
-                                        <p>Every t-shirt you order is packaged with care and attention to detail. 
-                                            We use eco-friendly materials wherever possible to minimize our environmental footprint.
-                                            Your t-shirt will arrive neatly 
-                                            folded and enclosed in a sturdy, recyclable packaging to ensure it reaches you in pristine condition.
-                                        </p>
-                                        
-                                    </div>
-                                    <h3 class="section-title style-1 mb-30">Additional info</h3>
-                                    <table class="font-md mb-30">
-                                        <tbody>
-                                            <tr class="stand-up">
-                                                <th>Fit style</th>
-                                                <td>
-                                                    <p>{{product.fit}}</p>
-                                                </td>
-                                            </tr>
-                                            <tr class="folded-wo-wheels">
-                                                <th>Fabric</th>
-                                                <td>
-                                                    <p>{{product.fabric}}</p>
-                                                </td>
-                                            </tr>
-                                            <tr class="folded-w-wheels">
-                                                <th>Care</th>
-                                                <td>
-                                                    <p>{{product.care}}</p>
-                                                </td>
-                                            </tr>
-                                            <tr class="door-pass-through">
-                                                <th>Sleeve type</th>
-                                                <td>
-                                                    <p>{{product.sleeve}}</p>
-                                                </td>
-                                            </tr>
-                                            <tr >
-                                                <th>Collar style</th>
-                                                <td>
-                                                    <p>{{product.collar}}</p>
-                                                </td>
-                                            </tr>
-                                            
-                                        </tbody>
-                                    </table>
-                                </div> 
-                            </div>  
-<!-- Vendor JS and other scripts -->
+        <!-- PRODUCT DETAILS SECTION -->
+        <div class="row">
+            <div class="col-lg-10 m-auto entry-main-content">
+                <h2 class="section-title style-1 mb-30">Description</h2>
+                <div class="description mb-50">
+                    <p>{{product.descriptions}}</p>
+                    <ul class="product-more-infor mt-30">
+                        <li><span>Style</span> {{product.fit}}</li>
+                        <li><span>Fabric</span> {{product.fabric}}</li>
+                    </ul>
+                    <hr class="wp-block-separator is-style-dots">
+                    <p>{{product.specifications}}</p>
+                    <h4 class="mt-30">Packaging & Delivery</h4>
+                    <hr class="wp-block-separator is-style-wide">
+                    <p>Every t-shirt you order is packaged with care and attention to detail. 
+                        We use eco-friendly materials wherever possible to minimize our environmental footprint.
+                        Your t-shirt will arrive neatly 
+                        folded and enclosed in a sturdy, recyclable packaging to ensure it reaches you in pristine condition.
+                    </p>
+                </div>
+                <h3 class="section-title style-1 mb-30">Additional info</h3>
+                <table class="font-md mb-30">
+                    <tbody>
+                        <tr class="stand-up">
+                            <th>Fit style</th>
+                            <td><p>{{product.fit}}</p></td>
+                        </tr>
+                        <tr class="folded-wo-wheels">
+                            <th>Fabric</th>
+                            <td><p>{{product.fabric}}</p></td>
+                        </tr>
+                        <tr class="folded-w-wheels">
+                            <th>Care</th>
+                            <td><p>{{product.care}}</p></td>
+                        </tr>
+                        <tr class="door-pass-through">
+                            <th>Sleeve type</th>
+                            <td><p>{{product.sleeve}}</p></td>
+                        </tr>
+                        <tr>
+                            <th>Collar style</th>
+                            <td><p>{{product.collar}}</p></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    
-    <!-- Vendor JS-->
-    <script src="assets/js/vendor/modernizr-3.6.0.min.js"></script>
-    <script src="assets/js/vendor/jquery-3.6.0.min.js"></script>
-    <script src="assets/js/vendor/jquery-migrate-3.3.0.min.js"></script>
-    <script src="assets/js/vendor/bootstrap.bundle.min.js"></script>
-    <script src="assets/js/plugins/slick.js"></script>
-    <script src="assets/js/plugins/jquery.syotimer.min.js"></script>
-    <script src="assets/js/plugins/wow.js"></script>
-    <script src="assets/js/plugins/jquery-ui.js"></script>
-    <script src="assets/js/plugins/perfect-scrollbar.js"></script>
-    <script src="assets/js/plugins/magnific-popup.js"></script>
-    <script src="assets/js/plugins/select2.min.js"></script>
-    <script src="assets/js/plugins/waypoints.js"></script>
-    <script src="assets/js/plugins/counterup.js"></script>
-    <script src="assets/js/plugins/jquery.countdown.min.js"></script>
-    <script src="assets/js/plugins/images-loaded.js"></script>
-    <script src="assets/js/plugins/isotope.js"></script>
-    <script src="assets/js/plugins/scrollup.js"></script>
-    <script src="assets/js/plugins/jquery.vticker-min.js"></script>
-    <script src="assets/js/plugins/jquery.theia.sticky.js"></script>
-    <script src="assets/js/plugins/jquery.elevatezoom.js"></script>
-    <!-- Template  JS -->
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/shop.js"></script>
+    </div>
+</section>
 
-    <script>
-        $(document).ready(function() {
-            // AJAX for adding item to cart
-            $("form[action='{% url 'cart:add_cart' product.pid %}']").submit(function(e) {
-                e.preventDefault();
-                var formData = $(this).serialize();
-                var form = $(this); // Save a reference to the form
-                $.ajax({
-                    type: "POST",
-                    url: form.attr("action"),
-                    data: formData,
-                    success: function(data) {
-                        if (data.success) {
-                            // Redirect to cart upon successful addition
-                            window.location.href = "{% url 'cart:cart' %}";
-                        } else {
-                            // Display error message
-                            $("#error-message").text(data.message).show();
-                        }
-                    },
-                    error: function(xhr, textStatus, errorThrown) {
-                        console.error('Error during AJAX request:', xhr.statusText);
-                        // Show generic error message
-                        $("#error-message").text('Error during AJAX request. Please try again.').show();
-                    }
-                });
-            });
+<!-- JS -->
+<script src="assets/js/vendor/jquery-3.6.0.min.js"></script>
+<script src="assets/js/plugins/slick.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/shop.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Slick slider for main images
+    if ($('.product-image-slider').length) {
+        $('.product-image-slider').slick({
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            arrows: true,
+            fade: true,
+            asNavFor: '.slider-nav-thumbnails'
         });
-    </script>
-    
-    
-    
-</body>
 
+        $('.slider-nav-thumbnails').slick({
+            slidesToShow: 4,
+            slidesToScroll: 1,
+            asNavFor: '.product-image-slider',
+            focusOnSelect: true,
+            arrows: false
+        });
+    }
 
+    // Original Add to Cart AJAX
+    $("form[action='{% url 'cart:add_cart' product.pid %}']").submit(function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var form = $(this);
+        $.ajax({
+            type: "POST",
+            url: form.attr("action"),
+            data: formData,
+            success: function(data) {
+                if (data.success) {
+                    window.location.href = "{% url 'cart:cart' %}";
+                } else {
+                    $("#error-message").text(data.message).show();
+                }
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                console.error('Error during AJAX request:', xhr.statusText);
+                $("#error-message").text('Error during AJAX request. Please try again.').show();
+            }
+        });
+    });
+});
+</script>
 
+<style>
+.product-image-slider figure {
+    width: 100%;
+    height: 400px; /* fixed height for the main image container */
+    position: relative;
+    background-color: #fff; /* white space */
+    border-radius: 10px;
+    overflow: hidden;
+}
 
-   
+.product-image-slider figure img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.slider-nav-thumbnails img {
+    height: 80px;
+    width: auto;
+    cursor: pointer;
+}
+
+</style>
+
 {% endblock content %}
