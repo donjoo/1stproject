@@ -25,6 +25,9 @@ import json
 from orders.models import Order
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from app.models import Variants,Stock
+from django.utils import timezone
+from datetime import timedelta
+
 # Create your views here.
 
 @never_cache
@@ -52,34 +55,141 @@ def handel_signup(request):
 
 @never_cache
 def send_otp(request):
-    s =""
-    for x in range(0,4):
-        s += str(random.randint(0,9))
-    request.session["otp"]=s
-    send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+
+    # Store OTP and expiry in session
+    expiry_time = timezone.now() + timedelta(minutes=5)
+    request.session["otp"] = otp
+    request.session["otp_expiry"] = expiry_time.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Prepare email content
+    subject = "Your OTP Code for AnimWear Signup"
+    message = f"""
+                Hello {request.session.get('username', '')},
+
+                Your One-Time Password (OTP) for completing your signup at AnimWear is:
+
+                    🔐 {otp}
+
+                Please enter this code on the verification page within **5 minutes**.
+
+                ⏰ This OTP will expire at: {expiry_time.strftime('%I:%M %p on %B %d, %Y')}.
+
+                If you didn’t request this, please ignore this email.
+
+                Best regards,  
+                AnimWear Team
+                """
+
+    send_mail(
+        subject,
+        message,
+        'djangoalerts0011@gmail.com',
+        [request.session['email']],
+        fail_silently=False,
+    )
     return render(request,"userauth/otp.html")
     
+# def otp_verification(request):
+#     if request.method == 'POST':
+#             otp_ = request.POST.get("otp")
+
+#             if otp_ == request.session["otp"]:
+#                 encrypted_password = make_password(request.session['password'])
+#                 nameuser = User(username=request.session['username'],email=request.session['email'],password=encrypted_password)
+#                 nameuser.is_active = True
+#                 nameuser.save()
+
+#                 newuser = UserDetails(user=nameuser)
+#                 newuser.save()
+
+#                 login(request,nameuser,backend='django.contrib.auth.backends.ModelBackend')
+#                 messages.success(request,'Account activation succesful.You are nw logged in.')
+#                 return redirect('app:index')
+#             else:
+#                 messages.error(request,"OTP doesn't match")
+#     return render(request,'userauth/otp.html')
+
+# ---------------- VERIFY OTP ----------------
 def otp_verification(request):
     if request.method == 'POST':
-            otp_ = request.POST.get("otp")
+        otp_input = request.POST.get("otp")
+        otp_session = request.session.get("otp")
+        otp_expiry_str = request.session.get("otp_expiry")
 
-            if otp_ == request.session["otp"]:
-                encrypted_password = make_password(request.session['password'])
-                nameuser = User(username=request.session['username'],email=request.session['email'],password=encrypted_password)
-                nameuser.is_active = True
-                nameuser.save()
+        if not otp_session or not otp_expiry_str:
+            messages.error(request, "OTP session expired. Please request a new one.")
+            return redirect('userauth:resend_otp')
 
-                newuser = UserDetails(user=nameuser)
-                newuser.save()
+        otp_expiry = timezone.strptime(otp_expiry_str, '%Y-%m-%d %H:%M:%S')
 
-                login(request,nameuser,backend='django.contrib.auth.backends.ModelBackend')
-                messages.success(request,'Account activation succesful.You are nw logged in.')
-                return redirect('app:index')
-            else:
-                messages.error(request,"OTP doesn't match")
-    return render(request,'userauth/otp.html')
+        if timezone.now() > otp_expiry:
+            messages.error(request, "OTP has expired. Please request a new one.")
+            return redirect('userauth:resend_otp')
+
+        if otp_input == otp_session:
+            encrypted_password = make_password(request.session['password'])
+            user = User(
+                username=request.session['username'],
+                email=request.session['email'],
+                password=encrypted_password,
+                is_active=True,
+            )
+            user.save()
+
+            UserDetails.objects.create(user=user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+
+            request.session.pop('otp', None)
+            request.session.pop('otp_expiry', None)
+
+            messages.success(request, 'Account activation successful. You are now logged in.')
+            return redirect('app:index')
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    return render(request, 'userauth/otp.html')
 
 
+
+# ---------------- RESEND OTP ----------------
+@never_cache
+def resend_otp(request):
+    """
+    Sends a new OTP when user clicks 'Resend OTP'.
+    """
+    if not request.session.get('email'):
+        messages.error(request, "Session expired. Please sign up again.")
+        return redirect('userauth:signup')
+
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+    expiry_time = timezone.now() + timedelta(minutes=5)
+
+    request.session["otp"] = otp
+    request.session["otp_expiry"] = expiry_time.strftime('%Y-%m-%d %H:%M:%S')
+
+    subject = "Your New OTP Code for AnimWear Signup"
+    message = f"""
+        Hello {request.session.get('username', '')},
+
+        Here’s your new One-Time Password (OTP) for completing your signup:
+
+            🔐 {otp}
+
+        Please enter this code within **5 minutes**.
+
+        ⏰ This OTP will expire at: {expiry_time.strftime('%I:%M %p on %B %d, %Y')}.
+
+        If you didn’t request this, you can safely ignore this email.
+
+        Best regards,  
+        AnimWear Team
+        """
+
+    send_mail(subject, message, 'djangoalerts0011@gmail.com', [request.session['email']], fail_silently=False)
+
+    messages.info(request, "A new OTP has been sent to your email.")
+    return redirect('userauth:otp_verification')
 
 @never_cache
 def handel_login(request):
@@ -170,6 +280,9 @@ def handel_login(request):
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def login_otp(request):
+    '''
+    Used when user logs in using OTP instead of password.
+    '''
     if request.user.is_authenticated:
         messages.warning(request, "Hey, you are already logged in.")
         return redirect("app:index")
@@ -189,7 +302,7 @@ def login_otp(request):
         try: 
             user = User.objects.get(email=email)
             if user is not None:
-                send_otp_login(request)
+                send_otp_login(request,"login")
                 return render(request, "userauth/otp_login.html", {"email": email})
         except User.DoesNotExist:
             messages.warning(request, f"User with email {email} does not exist.")
@@ -215,7 +328,7 @@ def forgot_password(request):
         try: 
             user = User.objects.get(email=email)
             if user is not None:
-                send_otp_login(request)
+                send_otp_login(request, "forgot_password")
                 return render(request, "userauth/otp_login.html", {"email": email})
         except User.DoesNotExist:
             messages.warning(request, f"User with email {email} does not exist.")
@@ -235,17 +348,42 @@ def forgot_password(request):
 
 @never_cache
 @cache_control(no_cache=True,must_revalidate=True,no_store=True)
-def send_otp_login(request):
-    s=""
-    for x in range(0,4):
-        s += str(random.randint(0,9))
-    request.session["otp"]=s
-    send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
-    return render(request,"userauth/otp_login.html")
+def send_otp_login(request,purpose="login"):
+    '''
+    Used when user logs in using OTP instead of password.
+    Sends OTP to reset password
+    '''
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(4)])
+    expiry_time = timezone.now() + timedelta(minutes=5)
+
+    request.session["otp"] = otp
+    request.session["otp_expiry"] = expiry_time.strftime('%Y-%m-%d %H:%M:%S')
+
+    subject_map = {
+        "login": "Your OTP Code for Login",
+        "forgot_password": "Reset Your Password with OTP"
+    }
+    subject = subject_map.get(purpose, "Your OTP Code")
+
+    message = f"""
+    Hello {request.session.get('username', '') or ''},
+
+    Your One-Time Password (OTP) is: {otp}
+
+    This OTP will expire at {expiry_time.strftime('%I:%M %p on %B %d, %Y')}.
+
+    - AnimWear Team
+    """
+
+    send_mail(subject, message, 'djangoalerts0011@gmail.com', [request.session['email']], fail_silently=False)
 
 @never_cache
 @cache_control(no_cache=True,must_revalidate=True, no_store=True)
 def otp_verification_login(request):
+    '''
+    Used when user logs in using OTP instead of password.
+    Sends OTP to reset password, and after verifying OTP
+    '''
     if request.method == 'POST':
         otp_ = request.POST.get("otp")
 

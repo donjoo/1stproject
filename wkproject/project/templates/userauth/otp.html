@@ -76,7 +76,12 @@
             <button type="submit" class="btn btn-primary btn-lg">Verify</button>
           </div>
         </form>
+        <div class="text-center mt-3">
+    <p>Didn't receive the OTP?</p>
+    <a href="{% url 'userauth:resend_otp' %}" class="btn btn-link">Resend OTP</a>
+</div>
       </div>
+
 </body>
 
 {%if messages%}
