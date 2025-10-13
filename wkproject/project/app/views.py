@@ -46,6 +46,19 @@ def index(request):
     categories = Category.objects.filter(delete='False') 
 
    
+
+    # Get wishlist product IDs for authenticated users
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        wishlist = WishList.objects.filter(user=request.user).first()
+        if wishlist:
+            wishlist_product_ids = list(wishlist.products.values_list('id', flat=True))
+    else:
+        # For guest users (session-based wishlist)
+        wishlist_pids = request.session.get('wishlist', [])
+        wishlist_product_ids = list(Product.objects.filter(pid__in=wishlist_pids).values_list('id', flat=True))
+
+
     # Define a subquery to get the ID of the first offer for each product
     first_offer_subquery = ProductOffer.objects.filter(delete='False',
         product=OuterRef('product'), 
@@ -67,7 +80,8 @@ def index(request):
         "products":paged_products,   
         "offers":offers,
         "categories":categories,
-        "out_of_stock_products":out_of_stock_product
+        "out_of_stock_products":out_of_stock_product,
+        "wishlist_product_ids": wishlist_product_ids,  # 👈 Added this
     }
     return render(request,'app/index.html',context)
 
@@ -188,6 +202,18 @@ def product_detail(request, pid):
     p_image = product.p_images.all()
     sizes = Variants.objects.filter(product=product,delete='False')
 
+    # Check if product is already in wishlist
+    in_wishlist = False
+    if request.user.is_authenticated:
+        wishlist = WishList.objects.filter(user=request.user).first()
+        if wishlist and product in wishlist.products.all():
+            in_wishlist = True
+    else:
+        wishlist_pids = request.session.get('wishlist', [])
+        if pid in wishlist_pids:
+            in_wishlist = True
+
+
     # Passing pid to is_size_out_of_stock function
     sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
     all_sizes_out_of_stock = all(sizes_out_of_stock.values())
@@ -199,7 +225,8 @@ def product_detail(request, pid):
         'sizes': sizes,
         "offer": offer,
         "sizes_out_of_stock": sizes_out_of_stock,
-        "all_sizes_out_of_stock":all_sizes_out_of_stock
+        "all_sizes_out_of_stock":all_sizes_out_of_stock,
+        "in_wishlist": in_wishlist,  # 👈 Add this
     }
 
     return render(request, 'app/product_detail.html', context)
@@ -406,6 +433,18 @@ def filter_view(request):
     # Get out of stock products
     out_of_stock_product = out_of_stock_products()
 
+    # Get wishlist product IDs for authenticated users
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        wishlist = WishList.objects.filter(user=request.user).first()
+        if wishlist:
+            wishlist_product_ids = list(wishlist.products.values_list('id', flat=True))
+    else:
+        # For guest users (session-based wishlist)
+        wishlist_pids = request.session.get('wishlist', [])
+        wishlist_product_ids = list(Product.objects.filter(pid__in=wishlist_pids).values_list('id', flat=True))
+
+
     context = {
         'products': products_paginated,
         'productss': products_paginated,  # For pagination template compatibility
@@ -424,6 +463,8 @@ def filter_view(request):
         'sort_by': sort_by,
         # Available sizes
         'available_sizes': ['S', 'M', 'L', 'XL', 'XXL'],
+        "wishlist_product_ids": wishlist_product_ids, 
+
     }
     
     return render(request, 'app/shop-filter.html', context)

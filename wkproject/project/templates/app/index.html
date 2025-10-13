@@ -25,9 +25,21 @@
                             </a>
                         </div>
 
-                        <div class="product-action-1">
+                        <!-- <div class="product-action-1">
                             <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}"><i class="fi-rs-heart"></i></a>
-                        </div>
+                        </div> -->
+                        <div class="product-action-1">
+    {% if p.id not in wishlist_product_ids %}
+        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" p.pid %}">
+            <i class="fi-rs-heart"></i>
+        </a>
+    {% else %}
+        <a aria-label="Already in Wishlist" class="action-btn hover-up" style="cursor: not-allowed; opacity: 0.5;">
+            <i class="fi-rs-heart text-danger"></i>
+        </a>
+    {% endif %}
+</div>
+
                     </div>
                     <div class="product-content-wrap" style="min-height: 150px;">
                         <div class="product-category">

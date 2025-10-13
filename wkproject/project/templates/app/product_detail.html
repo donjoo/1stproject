@@ -92,13 +92,26 @@
                         <input type="hidden" value="{{ product.id }}" class="product-id-{{ product.id }}">
                         <input type="hidden" value="{{ product.title }}" class="product-title-{{ product.id }}">
 
-                        {% if all_sizes_out_of_stock %}
-                        <button type="submit" class="btn btn-primary" disabled><span class="button-text">Out of stock</span></button>
-                        {% else %}
-                        <button type="submit"  class="btn btn-primary"><span class="button-text">Add to cart</span></button>
-                        {% endif %}
+                     <div class="product-action-buttons">
+    {% if all_sizes_out_of_stock %}
+        <button type="button" class="btn btn-cart disabled" disabled>Out of Stock</button>
+    {% else %}
+        <button type="submit" class="btn btn-cart">Add to Cart</button>
+    {% endif %}
 
-                        <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url "app:add_to_wishlist" product.pid %}"><i class="fi-rs-heart"></i></a>
+    {% if not in_wishlist %}
+        <a href="{% url 'app:add_to_wishlist' product.pid %}" class="btn btn-wishlist">
+            <i class="fi-rs-heart"></i> Wishlist
+        </a>
+    {% else %}
+        <button class="btn btn-wishlist added" disabled>
+            <i class="fi-rs-heart"></i> In Wishlist
+        </button>
+    {% endif %}
+</div>
+
+
+                    
                     </div>
                 </div>
             </div>
@@ -233,6 +246,102 @@ $(document).ready(function() {
     width: auto;
     cursor: pointer;
 }
+
+
+
+.wishlist-wrapper {
+    margin-top: 15px;
+}
+
+.wishlist-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #fff;
+    color: #ff4d6d;
+    border: 2px solid #ff4d6d;
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.wishlist-btn i {
+    font-size: 16px;
+}
+
+.wishlist-btn:hover {
+    background-color: #ff4d6d;
+    color: #fff;
+}
+
+.wishlist-btn.added {
+    background-color: #ff4d6d;
+    color: #fff;
+    cursor: default;
+    border: 2px solid #ff4d6d;
+    opacity: 0.9;
+}
+
+.wishlist-btn.added i {
+    color: #fff;
+}
+
+.product-action-buttons {
+    display: flex;
+    gap: 10px; /* space between buttons */
+    margin-top: 20px;
+    flex-wrap: wrap; /* handles smaller screens */
+}
+
+.product-action-buttons .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.product-action-buttons .btn-cart {
+    background-color: #ff4d6d;
+    color: #fff;
+}
+
+.product-action-buttons .btn-cart:hover {
+    background-color: #e43e5a;
+}
+
+.product-action-buttons .btn-wishlist {
+    background-color: #fff;
+    color: #ff4d6d;
+    border: 2px solid #ff4d6d;
+}
+
+.product-action-buttons .btn-wishlist:hover {
+    background-color: #ff4d6d;
+    color: #fff;
+}
+
+.product-action-buttons .btn-wishlist.added {
+    background-color: #ff4d6d;
+    color: #fff;
+    cursor: default;
+    opacity: 0.9;
+}
+
+.product-action-buttons .btn i {
+    font-size: 16px;
+}
+
 
 </style>
 
