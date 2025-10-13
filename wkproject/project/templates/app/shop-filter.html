@@ -272,9 +272,16 @@
                                             {% if p in out_of_stock_products %}
                                             <p style="color:red;">Out of stock</p>
                                         {% else %}
-                                            <a href="{% url 'cart:add_cart' p.pid %}" class="add add-to-cart-btn hover-up">
-                                                <i class="fi-rs-shopping-bag-add" id="add-to-cart-btn"></i>
-                                            </a>
+                                            <!-- <a href="{% url 'cart:add_cart' p.pid %}" class="add add-to-cart-btn hover-up"> -->
+
+                                        <a href="javascript:void(0);" 
+                                        class="add-to-cart-btn hover-up" 
+                                        data-product-id="{{ p.pid }}">
+                                        <i class="fi-rs-shopping-bag-add"></i>
+                                        </a>
+
+                                                <!-- <i class="fi-rs-shopping-bag-add" id="add-to-cart-btn"></i> -->
+                                            <!-- </a> -->
                                         {% endif %}
                                         </div>
                                         <div>
@@ -313,8 +320,120 @@
     </section>
 </main>
 
+
+
+
+
+
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Size</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="sizeForm">
+          <input type="hidden" id="modal-product-id">
+          <div class="size-options" id="size-options">
+            <!-- Sizes will be loaded here dynamically -->
+          </div>
+          <button type="submit" class="btn btn-primary mt-3">Add to Cart</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+// Handle Add to Cart button click
+document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+        const pid = this.getAttribute('data-product-id');
+        document.getElementById('modal-product-id').value = pid;
+
+        // Fetch sizes via AJAX
+        fetch(`/get_sizes/${pid}/`)
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('size-options');
+                container.innerHTML = '';
+                data.sizes.forEach(size => {
+                    const label = document.createElement('label');
+                    label.classList.add('me-3'); // adds margin-right to separate options
+                    label.style.display = 'inline-flex'; // keeps radio and text inline
+                    label.style.alignItems = 'center'; // vertically center                    // radio inputs need a "name" and "value"
+                    label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}" style="margin-right: 5px;"> ${size.size}`;
+                    container.appendChild(label);
+                    container.appendChild(document.createElement('br'));
+                });
+
+                // Show modal
+                var myModal = new bootstrap.Modal(document.getElementById('sizeModal'));
+                myModal.show();
+            });
+    });
+});
+
+// Submit size form
+document.getElementById('sizeForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const pid = document.getElementById('modal-product-id').value;
+    const selectedInput = document.querySelector(`input[name="${pid}"]:checked`);
+    if(!selectedInput){
+        alert("Please select a size.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append(selectedInput.name, selectedInput.value); // matches view
+
+    fetch(`/add_cart/${pid}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(async res => {
+        const text = await res.text();
+
+        // Try to parse JSON; if fails, assume success and redirect
+        try {
+            const data = JSON.parse(text);
+            if(data.success){
+                const sizeModalEl = document.getElementById('sizeModal');
+                const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
+                if(sizeModal){
+                    sizeModal.hide();
+                }
+                alert("Product added to cart!");
+            } else if(data.status === 'error'){
+                alert(data.message);
+            }
+        } catch(err){
+            // Not JSON, probably full HTML page -> redirect to cart
+            window.location.href = "/cart/";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Something went wrong. Please try again.");
+    });
+});
+
+
+
 $(document).ready(function(){
     // Toggle filter panel
     $("#filterToggle").on("click", function(e){
