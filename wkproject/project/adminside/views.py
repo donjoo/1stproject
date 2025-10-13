@@ -22,6 +22,8 @@ from django.db.models import Count
 from django.db.models.functions import TruncMonth,TruncYear
 from django.core.exceptions import ObjectDoesNotExist
 from userauth.views import canceladd_stock
+import imghdr
+
 current_date = timezone.now()   
 
 
@@ -225,86 +227,139 @@ def block_unblock(request,user_id):
          #PRODUCTMANAGEMENT#PRODUCTMANAGEMENT#PRODUCTMANAGEMENT#PRODUCTMANAGEMENT
 
 
+
+
+def is_valid_image(file):
+    """Validate uploaded file type"""
+    valid_extensions = ['jpeg', 'jpg', 'png', 'gif', 'webp']
+    file_type = imghdr.what(file)
+    return file_type in valid_extensions
+
+
 @login_required(login_url='adminside:admin_login')
 def add_product(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
-        
+
     categories = Category.objects.filter(delete='False')
     animes = CategoryAnime.objects.filter(delete='False')
     characters = AnimeCharacter.objects.filter(delete='False')
 
     if request.method == 'POST':
-        product_name = request.POST.get('name')
-        descriptions = request.POST.get('descriptions')
+        # Collect form data
+        product_name = request.POST.get('name', '').strip()
+        descriptions = request.POST.get('descriptions', '').strip()
+        specifications = request.POST.get('specifications', '').strip()
         max_price = request.POST.get('old_price')
         sale_price = request.POST.get('price')
         category_name = request.POST.get('category')
         anime_name = request.POST.get('anime')
         character_name = request.POST.get('character')
-        fit = request.POST.get('fit')
-        fabric = request.POST.get('fabric')
-        care = request.POST.get('care')
-        sleeve = request.POST.get('sleeve')
-        collar = request.POST.get('collar')
-        specifications=request.POST.get('specifications')
-        
-        
+        fit = request.POST.get('fit', '').strip()
+        fabric = request.POST.get('fabric', '').strip()
+        care = request.POST.get('care', '').strip()
+        sleeve = request.POST.get('sleeve', '').strip()
+        collar = request.POST.get('collar', '').strip()
+        image_file = request.FILES.get('image_field')
 
         validation_errors = []
 
-        if not product_name.strip():
-            validation_errors = ["Title is required."]
+        # --- 1️⃣ Basic Required Field Validation ---
+        if not product_name:
+            validation_errors.append("Product name is required.")
+        if not descriptions:
+            validation_errors.append("Description is required.")
+        if not specifications:
+            validation_errors.append("Specifications are required.")
+        if not fit:
+            validation_errors.append("Fit style is required.")
+        if not fabric:
+            validation_errors.append("Fabric type is required.")
+        if not care:
+            validation_errors.append("Care instructions are required.")
+        if not sleeve:
+            validation_errors.append("Sleeve type is required.")
+        if not collar:
+            validation_errors.append("Collar type is required.")
+        if not category_name:
+            validation_errors.append("Please select a category.")
+        if not anime_name:
+            validation_errors.append("Please select an anime.")
+        if not character_name:
+            validation_errors.append("Please select a character.")
+        if not image_file:
+            validation_errors.append("Main product image is required.")
 
-        image_file = request.FILES.get('image_field')
-        if image_file:
-            if not is_valid_image(image_file):
-                validation_errors.append("Invalid image file format. Only image files are allowed.")
-        
+        # --- 2️⃣ Validate Image File ---
+        if image_file and not is_valid_image(image_file):
+            validation_errors.append("Invalid image file format. Only JPG, PNG, GIF, or WEBP allowed.")
+
+        # --- 3️⃣ Validate Prices ---
         try:
             max_price = float(max_price)
-            if max_price < 0:
-                validation_errors.append("Max price must be a positive number")
+            if max_price <= 0:
+                validation_errors.append("Max price must be greater than 0.")
+        except (ValueError, TypeError):
+            validation_errors.append("Enter a valid number for Max price.")
 
-            sale_price=float(sale_price)
-            if sale_price < 0:
-                validation_errors.append("Sale price must be a positive number")
-        except ValueError as e:
-            validation_errors.append(str(e))
+        try:
+            sale_price = float(sale_price)
+            if sale_price <= 0:
+                validation_errors.append("Sale price must be greater than 0.")
+            elif 'max_price' in locals() and sale_price > max_price:
+                validation_errors.append("Sale price cannot be greater than Max price.")
+        except (ValueError, TypeError):
+            validation_errors.append("Enter a valid number for Sale price.")
+
+
+        text_fields = {
+                "Fit style": fit,
+                "Fabric": fabric,
+                "Care": care,
+                "Sleeve type": sleeve,
+                "Collar style": collar
+            }
+
+        for field_name, value in text_fields.items():
+            if not value.strip():
+                validation_errors.append(f"{field_name} is required.")
+            elif value.strip().isdigit():
+                validation_errors.append(f"{field_name} cannot be a number.")
+            elif len(value.strip()) < 2:
+                validation_errors.append(f"{field_name} must contain at least 2 characters.")
+        # --- 4️⃣ If Validation Fails ---
         if validation_errors:
             form_data = {
-                'name':product_name,
-                'descriptions':descriptions,
-                'old_price':max_price,
-                'price':sale_price,
-                'category':category_name,
-                'anime':anime_name,
-                'character':character_name,
+                'name': product_name,
+                'descriptions': descriptions,
+                'specifications': specifications,
+                'old_price': max_price,
+                'price': sale_price,
+                'category': category_name,
+                'anime': anime_name,
+                'character': character_name,
                 'fit': fit,
                 'fabric': fabric,
                 'care': care,
                 'sleeve': sleeve,
                 'collar': collar,
-                'specifications':specifications
             }
-            content ={
-                'categories':categories,
-                'animes':animes,
-                'characters':characters,
-                'additional_image-count':range(1,4),
-                'error_messages':validation_errors,
-                'form_data':form_data,
+            content = {
+                'categories': categories,
+                'animes': animes,
+                'characters': characters,
+                'additional_image_count': range(1, 4),
+                'error_messages': validation_errors,
+                'form_data': form_data,
+            }
+            return render(request, 'adminside/add_product.html', content)
 
-            } 
-            return render(request,'adminside/add_product.html',content)
-        
-
-        
+        # --- 5️⃣ If Valid, Save Product ---
         category = get_object_or_404(Category, title=category_name)
         anime = get_object_or_404(CategoryAnime, title=anime_name)
         character = get_object_or_404(AnimeCharacter, name=character_name)
-    
-        product = Product(
+
+        product = Product.objects.create(
             title=product_name,
             category=category,
             anime=anime,
@@ -318,44 +373,34 @@ def add_product(request):
             care=care,
             sleeve=sleeve,
             collar=collar,
-            image=request.FILES.get('image_field')
+            image=image_file
         )
-        product.save()
-        additional_image_count = 5
-        for i in range(1,additional_image_count+1):
+
+        # --- 6️⃣ Save Additional Images ---
+        for i in range(1, 5):
             image_field = f'product_image{i}'
-            image= request.FILES.get(image_field)
-            if image:
-                ProductImage.objects.create(product=product,Images=image)
+            img = request.FILES.get(image_field)
+            if img and is_valid_image(img):
+                ProductImage.objects.create(product=product, Images=img)
 
-
+        messages.success(request, "Product added successfully.")
         return redirect('adminside:product_list')
-    else:
-        form_data ={
-            'name':'',
-            'descriptions':'',
-            'specifications':'',
-            'old_price':'',
-            'price':'',
-            'category':'',
-            'anime':'',
-            'character':'',
-            'fit':'',
-            'fabric':'' ,
-            'care':'',
-            'sleeve':'' ,
-            'collar':'' ,
 
-        }
-        
-    content={
-        'characters':characters,
-        'animes':animes,
-        'categories':categories,
-        'additional_image_count':range(1,4),
-        'form_data':form_data,
+    # --- GET request ---
+    form_data = {
+        'name': '', 'descriptions': '', 'specifications': '', 'old_price': '',
+        'price': '', 'category': '', 'anime': '', 'character': '',
+        'fit': '', 'fabric': '', 'care': '', 'sleeve': '', 'collar': ''
     }
-    return render(request,'adminside/add_product.html',content)
+    context = {
+        'characters': characters,
+        'animes': animes,
+        'categories': categories,
+        'additional_image_count': range(1, 4),
+        'form_data': form_data,
+    }
+    return render(request, 'adminside/add_product.html', context)
+
 
 def delete_product(request,pid):
     if not request.user.is_superadmin:
@@ -369,10 +414,10 @@ def delete_product(request,pid):
         return HttpResponse("product not Found",status=404)
 
 
-def is_valid_image(file):
-    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
-    ext = os.path.splitext(file.name)[1]
-    return ext.lower() in valid_extensions
+# def is_valid_image(file):
+#     valid_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+#     ext = os.path.splitext(file.name)[1]
+#     return ext.lower() in valid_extensions
    
 @login_required(login_url='adminside:admin_login')
 def product_list(request):
