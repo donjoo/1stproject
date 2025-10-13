@@ -2,119 +2,230 @@
 {% load static %}
 {% block content %}
 
-    <main class="main">
-        <div class="page-header breadcrumb-wrap">
-            <div class="container">
-                <div class="breadcrumb">
-                    <a href="index.html" rel="nofollow">Home</a>
-                    <span></span> Shop
-                    <span></span> Filters
-                </div>
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="{% url 'app:index' %}" rel="nofollow">Home</a>
+                <span></span> Shop
+                <span></span> Filters
             </div>
         </div>
-        <section class="mt-50 mb-50">
-            <div class="container">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <a class="shop-filter-toogle" href="#">
-                            <span class="fi-rs-filter mr-5"></span>
-                            Filters
-                            <i class="fi-rs-angle-small-down angle-down"></i>
-                            <i class="fi-rs-angle-small-up angle-up"></i>
-                        </a>
-                        <div class="shop-product-fillter-header">
+    </div>
+    
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <a class="shop-filter-toogle" href="#" id="filterToggle">
+                        <span class="fi-rs-filter mr-5"></span>
+                        Filters
+                        <i class="fi-rs-angle-small-down angle-down"></i>
+                        <i class="fi-rs-angle-small-up angle-up"></i>
+                    </a>
+                    
+                    <!-- Filter Form -->
+                    <form method="get" action="{% url 'app:filter_view' %}" id="filterForm">
+                        <div class="shop-product-fillter-header" id="filterPanel">
                             <div class="row">
+                                <!-- Categories Filter -->
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Categories</h5>
-                                    <ul class="categor-list">
+                                    <div class="d-flex justify-content-between align-items-center mb-20">
+                                        <h5 class="mb-0">Categories</h5>
+                                        {% if categories_selected %}
+                                        <small><a href="#" class="text-danger clear-filter" data-filter="category">Clear</a></small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="filter-scroll" style="max-height: 250px; overflow-y: auto;">
                                         {% for cat in categories %}
-                                        <li class="cat-item text-muted">
-                                            <a href="{% url 'app:category_product_list' cat.cid %}">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
+                                                   name="category" 
+                                                   value="{{ cat.cid }}" 
+                                                   id="cat_{{ cat.cid }}"
+                                                   {% if cat.cid in categories_selected %}checked{% endif %}>
+                                            <label class="form-check-label" for="cat_{{ cat.cid }}">
                                                 {{ cat.title }}
-                                            </a>
-                                        </li>
+                                            </label>
+                                        </div>
                                         {% endfor %}
-                                    </ul>
+                                    </div>
                                 </div>
-                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Anime</h5>
-                                    <ul class="categor-list">
-                                        {% for anime in animes %}
-                                        <li class="cat-item text-muted">
-                                            <a href="{% url 'app:Anime_product_list' anime.aid %}">
-                                                {{ anime.title }}
-                                            </a>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Character</h5>
-                                    <ul class="categor-list">
-                                        {% for char in characters %}
-                                        <li class="cat-item text-muted">
-                                            <a href="{% url 'app:Character_product_list' char.lid %}">
-                                                {{ char.name }}
-                                            </a>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Price range</h5>
-                                    <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=100&max_price=200">₹100 - ₹200</a></li>
-                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=200&max_price=500">₹200.00 - ₹500.00</a></li>
-                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=500&max_price=1000">₹500.00 - ₹1000.00</a></li>
-                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=1000&max_price=1500">₹1000.00 - ₹1500.00</a></li>
-                                        <li class="cat-item text-muted"><a href="{% url 'app:filter_view' %}?min_price=1500&max_price=2000">₹1500.00 - ₹2000.00</a></li>
 
-                                    </ul>
-                                </div>
+                                <!-- Anime Filter -->
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-15 mt-20">By Size</h5>
-                                    <ul class="size-filter font-small">
-                                        <li><a href="{% url 'app:filter_view' %}?size=S">S</a></li>
-                                        <li><a href="{% url 'app:filter_view' %}?size=M">M</a></li>
-                                        <li><a href="{% url 'app:filter_view' %}?size=L">L</a></li>
-                                        <li><a href="{% url 'app:filter_view' %}?size=XL">XL</a></li>
-                                        <li><a href="{% url 'app:filter_view' %}?size=XXL">XXL</a></li>
-                                    </ul>
+                                    <div class="d-flex justify-content-between align-items-center mb-20">
+                                        <h5 class="mb-0">Anime</h5>
+                                        {% if animes_selected %}
+                                        <small><a href="#" class="text-danger clear-filter" data-filter="anime">Clear</a></small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="filter-scroll" style="max-height: 250px; overflow-y: auto;">
+                                        {% for anime in animes %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
+                                                   name="anime" 
+                                                   value="{{ anime.aid }}" 
+                                                   id="anime_{{ anime.aid }}"
+                                                   {% if anime.aid in animes_selected %}checked{% endif %}>
+                                            <label class="form-check-label" for="anime_{{ anime.aid }}">
+                                                {{ anime.title }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
                                 </div>
-                                
+
+                                <!-- Character Filter -->
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-20">
+                                        <h5 class="mb-0">Character</h5>
+                                        {% if characters_selected %}
+                                        <small><a href="#" class="text-danger clear-filter" data-filter="character">Clear</a></small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="filter-scroll" style="max-height: 250px; overflow-y: auto;">
+                                        {% for char in characters %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
+                                                   name="character" 
+                                                   value="{{ char.lid }}" 
+                                                   id="char_{{ char.lid }}"
+                                                   {% if char.lid in characters_selected %}checked{% endif %}>
+                                            <label class="form-check-label" for="char_{{ char.lid }}">
+                                                {{ char.name }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Price Range Filter - FIXED VERSION -->
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-20">
+                                        <h5 class="mb-0">Price Range</h5>
+                                        {% if min_price and max_price %}
+                                        <small><a href="#" class="text-danger clear-filter" data-filter="price">Clear</a></small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="price-filter-options">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="price_range" 
+                                                   value="100-200" 
+                                                   id="price1"
+                                                   {% if min_price == "100" and max_price == "200" %}checked{% endif %}>
+                                            <label class="form-check-label" for="price1">₹100 - ₹200</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="price_range" 
+                                                   value="200-500" 
+                                                   id="price2"
+                                                   {% if min_price == "200" and max_price == "500" %}checked{% endif %}>
+                                            <label class="form-check-label" for="price2">₹200 - ₹500</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="price_range" 
+                                                   value="500-1000" 
+                                                   id="price3"
+                                                   {% if min_price == "500" and max_price == "1000" %}checked{% endif %}>
+                                            <label class="form-check-label" for="price3">₹500 - ₹1,000</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="price_range" 
+                                                   value="1000-1500"
+                                                   id="price4"
+                                                   {% if min_price == "1000" and max_price == "1500" %}checked{% endif %}>
+                                            <label class="form-check-label" for="price4">₹1,000 - ₹1,500</label>
+                                        </div>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" 
+                                                   type="radio" 
+                                                   name="price_range" 
+                                                   value="1500-2000" 
+                                                   id="price5"
+                                                   {% if min_price == "1500" and max_price == "2000" %}checked{% endif %}>
+                                            <label class="form-check-label" for="price5">₹1,500 - ₹2,000</label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Size Filter -->
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-20">
+                                        <h5 class="mb-0">By Size</h5>
+                                        {% if sizes_selected %}
+                                        <small><a href="#" class="text-danger clear-filter" data-filter="size">Clear</a></small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="size-filter-options">
+                                        {% for size in available_sizes %}
+                                        <div class="form-check form-check-inline mb-2">
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
+                                                   name="size" 
+                                                   value="{{ size }}" 
+                                                   id="size_{{ size }}"
+                                                   {% if size in sizes_selected %}checked{% endif %}>
+                                            <label class="form-check-label size-label" for="size_{{ size }}">
+                                                {{ size }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Filter Actions -->
+                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
+                                    <h5 class="mb-20">&nbsp;</h5>
+                                    <button type="submit" class="btn btn-primary btn-block mb-2">
+                                        <i class="fi-rs-filter"></i> Apply Filters
+                                    </button>
+                                    <a href="{% url 'app:filter_view' %}" class="btn btn-secondary btn-block">
+                                        <i class="fi-rs-cross"></i> Clear All
+                                    </a>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-12">
-                        <div class="shop-product-fillter">
-                            <div class="totall-product">
-                                <p> We found <strong class="text-brand">{{products.count}}</strong> items for you!</p>
-                            </div>
-                            <div class="sort-by-product-area">
-                                <div class="sort-by-cover">
-                                    <div class="sort-by-product-wrap">
-                                        <div class="sort-by">
-                                            <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
-                                        </div>
-                                        <div class="sort-by-dropdown-wrap">
-                                            <form method="get" action="{% url 'app:sort_by' %}">
-                                                <input type="hidden" name="products" value="{% for product in products %}{{ product.id }},{% endfor %}">
-                                                <select name="sort_by" onchange="this.form.submit()">
-                                                    <option value="" {% if not request.GET.sort_by %}selected{% endif %}>Featured</option>
-                                                    <option value="price_low_high" {% if request.GET.sort_by == 'price_low_high' %}selected{% endif %}>Price: Low to High</option>
-                                                    <option value="price_high_low" {% if request.GET.sort_by == 'price_high_low' %}selected{% endif %}>Price: High to Low</option>
-                                                </select>
-                                            </form>
-                                            
-                                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-12">
+                    <div class="shop-product-fillter">
+                        <div class="totall-product">
+                            <p>We found <strong class="text-brand">{{ products.paginator.count }}</strong> items for you!</p>
+                        </div>
+                        <div class="sort-by-product-area">
+                            <div class="sort-by-cover">
+                                <div class="sort-by-product-wrap">
+                                    <div class="sort-by">
+                                        <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
+                                    </div>
+                                    <div class="sort-by-dropdown-wrap">
+                                        <select name="sort_by" id="sortSelect" class="form-select">
+                                            <option value="" {% if not sort_by %}selected{% endif %}>Featured</option>
+                                            <option value="price_low_high" {% if sort_by == 'price_low_high' %}selected{% endif %}>Price: Low to High</option>
+                                            <option value="price_high_low" {% if sort_by == 'price_high_low' %}selected{% endif %}>Price: High to Low</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row product-grid-3">
-                           
+                    </div>
 
-                            {% for p in products %}
+                    <!-- Products Grid -->
+                    <div class="row product-grid-3">
+   {% for p in products %}
                             <div class="col-lg-3 col-md-4">
                                 <div class="product-cart-wrap mb-30">
 
@@ -178,36 +289,179 @@
                                 </div>
                             </div>
                             {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                        <nav aria-label="Page navigation">
+                            {% if products.has_previous %}
+                            <a href="?{{ request.GET.urlencode }}&page=1">&laquo; First</a>
+                            <a href="?{{ request.GET.urlencode }}&page={{ products.previous_page_number }}">Previous</a>
+                            {% endif %}
                             
-                        </div>
-                        <!--pagination-->
-                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
-                            <nav aria-label="Page navigation example">
-                                {% if products.has_previous %}
-                                <a href="?page=1">&laquo First</a>
-                                <a href="?page={{products.previous_page_number}}">Previous</a>
-                                
-                                
-                                {%  endif %}
-                                Page {{products.number}} of {{productss.paginator.num_pages}}
-                                {% if products.has_next %}
-                                <a href="?page={{products.next_page_number}}">Next</a>
-                                <a href="?page={{products.paginator.num_pages}}">Last  &raquo</a>
-                                
-                                {% endif %}
-                            </nav>
-                        </div>
+                            <span>Page {{ products.number }} of {{ products.paginator.num_pages }}</span>
+                            
+                            {% if products.has_next %}
+                            <a href="?{{ request.GET.urlencode }}&page={{ products.next_page_number }}">Next</a>
+                            <a href="?{{ request.GET.urlencode }}&page={{ products.paginator.num_pages }}">Last &raquo;</a>
+                            {% endif %}
+                        </nav>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function(){
-            $(".sort-by-dropdown-wrap").on("click", function(){
-                $(".sort-by-dropdown").toggle();
-            });
-        });
-    </script>
+        </div>
+    </section>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+    // Toggle filter panel
+    $("#filterToggle").on("click", function(e){
+        e.preventDefault();
+        $("#filterPanel").slideToggle();
+        $(this).find(".angle-down, .angle-up").toggle();
+
+        // Save state in localStorage
+        const isVisible = $("#filterPanel").is(":visible");
+        localStorage.setItem("filterPanelOpen", isVisible ? "true" : "false");
+    });
+
+    // Restore state from localStorage
+    const panelState = localStorage.getItem("filterPanelOpen");
+    if (panelState === "true") {
+        $("#filterPanel").show();
+        $(".angle-down").hide();
+        $(".angle-up").show();
+    }
+
+    // If filters are active (checked checkboxes or selected price)
+    if ($("input:checked").length > 0) {
+        $("#filterPanel").show();
+        $(".angle-down").hide();
+        $(".angle-up").show();
+    }
+
+    // Clear individual filter groups
+    $(".clear-filter").on("click", function(e){
+        e.preventDefault();
+        var filterType = $(this).data("filter");
+        
+        if(filterType === "category"){
+            $("input[name='category']").prop("checked", false);
+        } else if(filterType === "anime"){
+            $("input[name='anime']").prop("checked", false);
+        } else if(filterType === "character"){
+            $("input[name='character']").prop("checked", false);
+        } else if(filterType === "size"){
+            $("input[name='size']").prop("checked", false);
+        } else if(filterType === "price"){
+            $("input[name='price_range']").prop("checked", false);
+        }
+        
+        $("#filterForm").submit();
+    });
+
+    // Handle sorting
+    $("#sortSelect").on("change", function(){
+        var sortValue = $(this).val();
+        var currentUrl = new URL(window.location.href);
+        
+        if(sortValue){
+            currentUrl.searchParams.set('sort_by', sortValue);
+        } else {
+            currentUrl.searchParams.delete('sort_by');
+        }
+        
+        window.location.href = currentUrl.toString();
+    });
+});
+
+</script>
+
+<style>
+    .shop-product-fillter-header {
+        display: none;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .filter-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .filter-scroll::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .filter-scroll::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+    
+    .filter-scroll::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .form-check-input {
+        cursor: pointer;
+    }
+    
+    .size-label {
+        display: inline-block;
+        padding: 5px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-right: 5px;
+    }
+    
+    .form-check-input:checked ~ .size-label {
+        background: #3BB77E;
+        color: white;
+        border-color: #3BB77E;
+    }
+    
+    .clear-filter {
+        font-size: 12px;
+        text-decoration: none;
+    }
+    
+    .clear-filter:hover {
+        text-decoration: underline;
+    }
+
+    .btn-primary {
+        background-color: #3BB77E;
+        border-color: #3BB77E;
+    }
+
+    .btn-primary:hover {
+        background-color: #2a9d68;
+        border-color: #2a9d68;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+
+    .product-action-1.show {
+    position: static !important;
+    margin-top: 5px;
+}
+
+.product-price {
+    display: block;
+    margin-bottom: 5px;
+}
+</style>
 {% endblock content %}

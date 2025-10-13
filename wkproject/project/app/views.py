@@ -74,71 +74,107 @@ def index(request):
 
 
 
-def category_product_list(request,cid):
-    category = Category.objects.get(cid=cid)
-    categories = Category.objects.filter(delete='False')
-    animes = CategoryAnime.objects.filter(delete='False')
-    character = AnimeCharacter.objects.filter(delete='False')
+# def category_product_list(request,cid):
+#     category = Category.objects.get(cid=cid)
+#     categories = Category.objects.filter(delete='False')
+#     animes = CategoryAnime.objects.filter(delete='False')
+#     character = AnimeCharacter.objects.filter(delete='False')
 
 
-    product = Product.objects.filter(status='True', category=category,delete='False')
+#     product = Product.objects.filter(status='True', category=category,delete='False')
     
-    p=Paginator(product,8)
-    page = request.GET.get('page')
-    products=p.get_page(page)
+#     p=Paginator(product,8)
+#     page = request.GET.get('page')
+#     products=p.get_page(page)
 
-    context = {
-        "category":category,
-        "products":products,
-        'categories':categories,
-        'animes':animes,
-        'characters':character,
-    }
-    return render(request,"app/shop-filter.html",context)
+#     context = {
+#         "category":category,
+#         "products":products,
+#         'categories':categories,
+#         'animes':animes,
+#         'characters':character,
+#     }
+#     return render(request,"app/shop-filter.html",context)
 
-def Anime_product_list(request,aid):
-    anime = CategoryAnime.objects.get(aid=aid)
-    categories = Category.objects.filter(delete='False')
-    animes = CategoryAnime.objects.filter(delete='False')
-    character = AnimeCharacter.objects.filter(delete='False')
-
- 
-    product = Product.objects.filter(status='True', anime=anime,delete='False')
-
-    p=Paginator(product,8)
-    page = request.GET.get('page')
-    products=p.get_page(page)
-     
-    context = {
-        "products":products,
-        'categories':categories,
-        'animes':animes,
-        'characters':character, 
-    }
-    return render(request,"app/shop-filter.html",context)
-
-
-def Character_product_list(request,lid):
-    character = AnimeCharacter.objects.get(lid=lid)
-    categories = Category.objects.filter(delete='False')
-    animes = CategoryAnime.objects.filter(delete='False')
-    characters = AnimeCharacter.objects.filter(delete='False')
+# def Anime_product_list(request,aid):
+#     anime = CategoryAnime.objects.get(aid=aid)
+#     categories = Category.objects.filter(delete='False')
+#     animes = CategoryAnime.objects.filter(delete='False')
+#     character = AnimeCharacter.objects.filter(delete='False')
 
  
-    product = Product.objects.filter(status='True', character=character,delete='False')
+#     product = Product.objects.filter(status='True', anime=anime,delete='False')
 
-    p=Paginator(product,8)
-    page = request.GET.get('page')
-    products=p.get_page(page)
+#     p=Paginator(product,8)
+#     page = request.GET.get('page')
+#     products=p.get_page(page)
      
-    context = {
+#     context = {
+#         "products":products,
+#         'categories':categories,
+#         'animes':animes,
+#         'characters':character, 
+#     }
+#     return render(request,"app/shop-filter.html",context)
+
+
+# def Character_product_list(request,lid):
+#     character = AnimeCharacter.objects.get(lid=lid)
+#     categories = Category.objects.filter(delete='False')
+#     animes = CategoryAnime.objects.filter(delete='False')
+#     characters = AnimeCharacter.objects.filter(delete='False')
+
+ 
+#     product = Product.objects.filter(status='True', character=character,delete='False')
+
+#     p=Paginator(product,8)
+#     page = request.GET.get('page')
+#     products=p.get_page(page)
+     
+#     context = {
        
-        "products":products,
-        'categories':categories,
-        'animes':animes,
-        'characters':characters,
-    }
-    return render(request,"app/shop-filter.html",context)
+#         "products":products,
+#         'categories':categories,
+#         'animes':animes,
+#         'characters':characters,
+#     }
+#     return render(request,"app/shop-filter.html",context)
+
+
+
+def shop(request):
+    """Updated shop view to use the same filter functionality"""
+    return filter_view(request)
+
+
+def category_product_list(request, cid):
+    """Redirect to filter view with category pre-selected"""
+    return redirect(f'/filter/?category={cid}')
+
+
+def Anime_product_list(request, aid):
+    """Redirect to filter view with anime pre-selected"""
+    return redirect(f'/filter/?anime={aid}')
+
+
+def Character_product_list(request, lid):
+    """Redirect to filter view with character pre-selected"""
+    return redirect(f'/filter/?character={lid}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def product_detail(request, pid):
     try:
@@ -273,37 +309,127 @@ def search_view(request):
 
 
 
+
 def filter_view(request):
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    size = request.GET.get('size')
-    # Filter products based on price range
+    """
+    Enhanced filter view with parallel filtering support
+    Users can select multiple categories, anime, characters, price ranges, and sizes
+    """
+    # Get all filter parameters
+    categories_selected = request.GET.getlist('category')
+    animes_selected = request.GET.getlist('anime')
+    characters_selected = request.GET.getlist('character')
+    sizes_selected = request.GET.getlist('size')
+    price_range = request.GET.get('price_range', '').strip()
+    sort_by = request.GET.get('sort_by', '')
+
+    # Parse price range
+    min_price = ''
+    max_price = ''
+    if price_range and '-' in price_range:
+        try:
+            parts = price_range.split('-')
+            min_price = parts[0].strip()
+            max_price = parts[1].strip()
+        except:
+            pass
+
+    # Start with all active products
+    products = Product.objects.filter(delete='False', status='True')
+
+    # Apply category filter (OR condition within categories)
+    if categories_selected:
+        products = products.filter(category__cid__in=categories_selected)
+
+    # Apply anime filter (OR condition within anime)
+    if animes_selected:
+        products = products.filter(anime__aid__in=animes_selected)
+
+    # Apply character filter (OR condition within characters)
+    if characters_selected:
+        products = products.filter(character__lid__in=characters_selected)
+
+    # Apply price range filter
     if min_price and max_price:
-        product = Product.objects.filter(price__gte=min_price, price__lte=max_price,delete='False')
+        try:
+            min_price_val = float(min_price)
+            max_price_val = float(max_price)
+            products = products.filter(price__gte=min_price_val, price__lte=max_price_val)
+        except (ValueError, TypeError):
+            # Invalid price values, skip filter
+            min_price = ''
+            max_price = ''
+
+    # Apply size filter (products that have variants with selected sizes)
+    if sizes_selected:
+        # Filter for products that have at least one variant with the selected sizes
+        from django.db.models import Q
+        size_query = Q()
+        for size in sizes_selected:
+            size_query |= Q(variants__size__iexact=size, variants__delete='False')
+        
+        products = products.filter(size_query).distinct()
+
+    # Apply sorting
+    if sort_by == 'price_low_high':
+        products = products.order_by('price')
+    elif sort_by == 'price_high_low':
+        products = products.order_by('-price')
     else:
-        product = Product.objects.filter(delete='False')
+        products = products.order_by('-date')
 
-    # Filter products based on size
-    if size:
-         product = product.filter(variants__size__iexact=size,delete='False')
+    # Remove duplicates
+    products = products.distinct()
 
+    # Get all filter options
     categories = Category.objects.filter(delete='False')
     animes = CategoryAnime.objects.filter(delete='False')
-    character = AnimeCharacter.objects.filter(delete='False')
+    characters = AnimeCharacter.objects.filter(delete='False')
+    
+    # Get offers
+    first_offer_subquery = ProductOffer.objects.filter(
+        delete='False',
+        product=OuterRef('product'), 
+        start_date__lte=current_date,
+        end_date__gte=current_date
+    ).order_by('-discount').values('id')[:1]
 
+    offers = ProductOffer.objects.filter(
+        id__in=Subquery(first_offer_subquery)
+    ).order_by('product')
 
-    p=Paginator(product,8)
+    # Pagination
+    paginator = Paginator(products, 12)
     page = request.GET.get('page')
-    products=p.get_page(page)
+    products_paginated = paginator.get_page(page)
 
-    context ={
-        'products': products,
-        'categories':categories,
-        'animes':animes,
-        'characters':character, 
-        
+    # Get out of stock products
+    out_of_stock_product = out_of_stock_products()
+
+    context = {
+        'products': products_paginated,
+        'productss': products_paginated,  # For pagination template compatibility
+        'categories': categories,
+        'animes': animes,
+        'characters': characters,
+        'offers': offers,
+        'out_of_stock_products': out_of_stock_product,
+        # Selected filters for maintaining state
+        'categories_selected': categories_selected,
+        'animes_selected': animes_selected,
+        'characters_selected': characters_selected,
+        'sizes_selected': sizes_selected,
+        'min_price': min_price,
+        'max_price': max_price,
+        'sort_by': sort_by,
+        # Available sizes
+        'available_sizes': ['S', 'M', 'L', 'XL', 'XXL'],
     }
-    return render(request,'app/shop-filter.html',context)
+    
+    return render(request, 'app/shop-filter.html', context)
+
+
+
 def wishlist(request):
     products = []
 
@@ -386,23 +512,23 @@ def _wishlist_id(request):
     return wishlist
 
 
-def shop(request):
-    product = Product.objects.filter(delete='False').order_by('-date')
-    categories = Category.objects.filter(delete='False')
-    animes = CategoryAnime.objects.filter(delete='False')
-    character = AnimeCharacter.objects.filter(delete='False')
+# def shop(request):
+#     product = Product.objects.filter(delete='False').order_by('-date')
+#     categories = Category.objects.filter(delete='False')
+#     animes = CategoryAnime.objects.filter(delete='False')
+#     character = AnimeCharacter.objects.filter(delete='False')
 
-    p=Paginator(product,8)
-    page = request.GET.get('page')
-    products=p.get_page(page)
+#     p=Paginator(product,8)
+#     page = request.GET.get('page')
+#     products=p.get_page(page)
 
-    context = {
-        'categories':categories,
-        'animes':animes,
-        'characters':character, 
-        'products':products
-    }
-    return render(request,"app/shop-filter.html",context)
+#     context = {
+#         'categories':categories,
+#         'animes':animes,
+#         'characters':character, 
+#         'products':products
+#     }
+#     return render(request,"app/shop-filter.html",context)
 
 def sort_by(request):
     sort_by = request.GET.get('sort_by')
