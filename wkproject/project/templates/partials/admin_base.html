@@ -182,10 +182,12 @@
 <div class="container mt-3">
   {% if messages %}
     {% for message in messages %}
-      {% if message.tags == 'error' %}
+      {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      {% elif message.tags == 'success' %}
+      {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
         <div class="alert alert-success alert-dismissible fade show" role="alert">
+      {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
       {% else %}
         <div class="alert alert-info alert-dismissible fade show" role="alert">
       {% endif %}
@@ -195,6 +197,8 @@
     {% endfor %}
   {% endif %}
 </div>
+
+
 
         {% block body %}
         

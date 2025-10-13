@@ -548,34 +548,41 @@ def is_size_out_of_stock(pid, size):
 def add_category(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
-    if request.method == 'POST':
-        cat_name = request.POST.get('category_name')
-        validation_errors = [] 
-
-        if Category.objects.filter(title=cat_name).exists():
-            messages.error(request, 'Category with this name already exists.')
-
-        p=Paginator(Category.objects.filter(delete='False').order_by('-date'),10)
-        page = request.GET.get('page')
-        categories=p.get_page(page)
-        if not cat_name.strip():
-            validation_errors = ["Name is required."]
-            context = {
-            'messages':validation_errors,
-            'category_image':request.FILES.get('category_image'),
-            'categories':categories
-
-            }
-            return render(request, 'adminside/categories_list.html',context)
-        else:
-            cat_data = Category(title=cat_name, image=request.FILES.get('category_image'))
-            cat_data.save()
-            messages.success(request, 'Category added successfully.')  
-    else:
-        
-        return redirect('adminside:category_list')
     
+    if request.method == 'POST':
+        cat_name = request.POST.get('category_name', '').strip()
+        cat_image = request.FILES.get('category_image')
+        validation_errors = []
+
+        # Load existing categories for re-rendering the page on error
+        p = Paginator(Category.objects.filter(delete='False').order_by('-date'), 10)
+        page = request.GET.get('page')
+        categories = p.get_page(page)
+
+        # 1️⃣ Validate empty category name
+        if not cat_name:
+            validation_errors.append("Category name is required.")
+
+        # 2️⃣ Validate duplicate category name (case-insensitive)
+        elif Category.objects.filter(title__iexact=cat_name, delete='False').exists():
+            validation_errors.append("A category with this name already exists.")
+
+        # If any validation errors, re-render page with error messages
+        if validation_errors:
+            for error in validation_errors:
+                messages.error(request, error)
+            return render(request, 'adminside/categories_list.html', {
+                'categories': categories
+            })
+
+        # 3️⃣ If valid, create new category
+        Category.objects.create(title=cat_name, image=cat_image)
+        messages.success(request, "Category added successfully.")
+        return redirect('adminside:category_list')
+
+    # GET request
     return redirect('adminside:category_list')
+
 
 
 @login_required(login_url='adminside:admin_login')
