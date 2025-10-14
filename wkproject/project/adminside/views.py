@@ -23,6 +23,8 @@ from django.db.models.functions import TruncMonth,TruncYear
 from django.core.exceptions import ObjectDoesNotExist
 from userauth.views import canceladd_stock
 import imghdr
+import base64
+from django.core.files.base import ContentFile
 
 current_date = timezone.now()   
 
@@ -236,6 +238,15 @@ def is_valid_image(file):
     return file_type in valid_extensions
 
 
+
+def decode_cropped_image(data, name):
+    if not data:
+        return None
+    format, imgstr = data.split(';base64,') 
+    ext = format.split('/')[-1] 
+    return ContentFile(base64.b64decode(imgstr), name=f"{name}.{ext}")
+
+
 @login_required(login_url='adminside:admin_login')
 def add_product(request):
     if not request.user.is_superadmin:
@@ -260,7 +271,10 @@ def add_product(request):
         care = request.POST.get('care', '').strip()
         sleeve = request.POST.get('sleeve', '').strip()
         collar = request.POST.get('collar', '').strip()
-        image_file = request.FILES.get('image_field')
+        cropped_main = request.POST.get('cropped_image_main')
+        image_file = decode_cropped_image(cropped_main, product_name) or request.FILES.get('image_field')
+
+
 
         validation_errors = []
 

@@ -100,14 +100,20 @@
                         </div>
                         <div class="mb-4">
                             <label for="image" class="form-label">Product Image</label>
-                            <input type="file" class="form-control" id="image" name="image_field" required>
+                            <input type="file" class="form-control crop-input" data-target="main" id="image" name="image_field" accept="image/*" required>
+                            <div id="cropper-container-main" class="cropper-container" style="display:none; margin-top:10px;">
+                                <img id="image-preview-main" style="max-width:100%;"/>
+                                <button type="button" class="btn btn-success mt-2 crop-button" data-target="main">Crop</button>
+                            </div>
+                            <input type="hidden" name="cropped_image_main" id="cropped_image_main">
                         </div>
+
                         <button type="submit" class="btn btn-primary">Add Product</button>
                     
                 </div>
             </div>
         </div>
-        <div class="col-lg-6">
+             <div class="col-lg-6">
             <div class="card mb-4">
                 <div class="card-header">
                     <h4>Additional Images</h4>
@@ -116,7 +122,12 @@
                     {% for i in additional_image_count %}
                     <div class="mb-4">
                         <label for="product_image{{ i }}" class="form-label">Product Image {{ i }}</label>
-                        <input type="file" class="form-control" id="product_image{{ i }}" name="product_image{{ i }}">
+                        <input type="file" class="form-control crop-input" id="product_image{{ i }}" name="product_image{{ i }}" data-target="additional{{ i }}" accept="image/*">
+                        <div id="cropper-container-additional{{ i }}" class="cropper-container" style="display:none; margin-top:10px;">
+                            <img id="image-preview-additional{{ i }}" style="max-width:100%;"/>
+                            <button type="button" class="btn btn-success mt-2 crop-button" data-target="additional{{ i }}">Crop</button>
+                        </div>
+                        <input type="hidden" name="cropped_image_additional{{ i }}" id="cropped_image_additional{{ i }}">
                     </div>
                     {% endfor %}
                 </div>
@@ -125,4 +136,47 @@
     </form>
     </div>
 </section>
+
+<script>
+let croppers = {};
+
+document.querySelectorAll('.crop-input').forEach(input => {
+    input.addEventListener('change', function(e) {
+        const target = e.target.dataset.target;
+        const preview = document.getElementById(`image-preview-${target}`);
+        const container = document.getElementById(`cropper-container-${target}`);
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            preview.src = event.target.result;
+            container.style.display = 'block';
+            if (croppers[target]) croppers[target].destroy();
+            croppers[target] = new Cropper(preview, {
+                aspectRatio: 1,
+                viewMode: 1
+            });
+        };
+        reader.readAsDataURL(file);
+    });
+});
+
+document.querySelectorAll('.crop-button').forEach(button => {
+    button.addEventListener('click', function(e) {
+        const target = e.target.dataset.target;
+        const cropper = croppers[target];
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
+        canvas.toBlob(function(blob) {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                document.getElementById(`cropped_image_${target}`).value = reader.result;
+            };
+            reader.readAsDataURL(blob);
+        });
+    });
+});
+</script>
+
 {% endblock %}
