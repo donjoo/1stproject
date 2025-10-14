@@ -19,28 +19,36 @@
                             {% csrf_token %}
                             <div class="mb-4">
                               <label>Current Images:</label>
-                              {% if char_image %}
-                                  <img src="{{ char_image.url}}" alt="AnimeCharacter Image" style="max-width: 200px; max-height: 200px;">
+                              {% if characters_image %}
+                                  <img src="{{ characters_image.url}}" alt="AnimeCharacter Image" style="max-width: 200px; max-height: 200px;">
                               {% else %}
                                   <p>No image available</p>
                               {% endif %}
                             </div>
                             <div class="mb-4">  
                               <label for="char_name">Character Name:</label>
-                              <input type="text" name="char_name" value="{{ char_name }}" required>
+                              <input type="text" name="char_name" value="{{ characters_name }}" required>
                           
                             </div>
-                            <div class="card-body">
+                                     <div class="card-body">
                               <div class="input-upload">
-                                <label for="char_image">New Image:</label> 
-                                
-                                <input type="file" name="char_image">
-                              </div>
-                          </div>
+                                            <label for="category_image">New Image:</label>
+                                            <input type="file" class="form-control" id="category_image" name="category_image" accept="image/*">
+                                            </div>
+
+                                            <div id="cropper-container" style="display:none; margin-top:10px;">
+                                            <img id="image-preview" style="max-width:100%; border-radius:6px;" />
+                                            <button type="button" class="btn btn-success mt-2" id="crop-button">Crop</button>
+                                            </div>
+
+                                            <!-- Hidden field to store cropped image -->
+                                            <input type="hidden" name="cropped_image_data" id="cropped_image_data">
+                                        </div>
+                                     </div>
                                    
                             </div>
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Applay Changes</button>
+                                <button type="submit" class="btn btn-primary">Apply Changes</button>
                             </div>
                         </form>
                    </div>
@@ -49,4 +57,47 @@
                 </div> <!-- card body .// -->
             </div> <!-- card .// -->
         </section> <!-- content-main end// -->
+
+
+
+
+<!-- 🧠 Cropping Script -->
+<script>
+let cropper;
+const fileInput = document.getElementById('category_image');
+const imagePreview = document.getElementById('image-preview');
+const cropperContainer = document.getElementById('cropper-container');
+const cropButton = document.getElementById('crop-button');
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    imagePreview.src = event.target.result;
+    cropperContainer.style.display = 'block';
+
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(imagePreview, {
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+cropButton.addEventListener('click', () => {
+  if (!cropper) return;
+  const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
+  canvas.toBlob((blob) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      document.getElementById('cropped_image_data').value = reader.result;
+    };
+    reader.readAsDataURL(blob);
+  });
+});
+</script>
 {% endblock body %}

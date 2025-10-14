@@ -81,12 +81,19 @@
                                 <label for="Category_name" class="form-label">Category Name</label>
                                 <input type="text" placeholder="Type here" class="form-control"  name="category_name"/>
                             </div>
-                            <div class="card-body">
-                              <div class="input-upload">
-                                  <label for="category_image">Image</label>
-                                  <input class="form-control" type="file" required="True" name="category_image">
-                              </div>
-                          </div>
+                              <div class="card-body">
+              <div class="input-upload">
+                <label for="category_image">Image</label>
+                <input class="form-control" type="file" id="category_image" name="category_image" accept="image/*" required>
+              </div>
+
+              <div id="cropper-container" style="display:none; margin-top:10px;">
+                <img id="image-preview" style="max-width:100%;" />
+                <button type="button" class="btn btn-success mt-2" id="crop-button">Crop</button>
+              </div>
+
+              <input type="hidden" name="cropped_image_data" id="cropped_image_data">
+            </div>
                              <div class="d-grid">
                                 <button type="submit"  class="btn btn-primary">Create category</button>
                             </div>
@@ -110,4 +117,45 @@ Page {{categories.number}} of {{categories.paginator.num_pages}}
 <a href="?page={{categories.paginator.num_pages}}">Last  &raquo</a>
 
 {% endif %}
+
+
+
+<!-- 🧠 Cropping Script -->
+<script>
+let cropper;
+const fileInput = document.getElementById('category_image');
+const imagePreview = document.getElementById('image-preview');
+const cropperContainer = document.getElementById('cropper-container');
+const cropButton = document.getElementById('crop-button');
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    imagePreview.src = event.target.result;
+    cropperContainer.style.display = 'block';
+
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(imagePreview, {
+      aspectRatio: 1,
+      viewMode: 1,
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+cropButton.addEventListener('click', () => {
+  if (!cropper) return;
+  const canvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
+  canvas.toBlob((blob) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      document.getElementById('cropped_image_data').value = reader.result;
+    };
+    reader.readAsDataURL(blob);
+  });
+});
+</script>
 {% endblock body %}

@@ -610,7 +610,8 @@ def add_category(request):
     
     if request.method == 'POST':
         cat_name = request.POST.get('category_name', '').strip()
-        cat_image = request.FILES.get('category_image')
+        cropped_data = request.POST.get('cropped_image_data')
+        cat_image = decode_cropped_image(cropped_data, cat_name) or request.FILES.get('category_image')
         validation_errors = []
 
         # Load existing categories for re-rendering the page on error
@@ -664,23 +665,26 @@ def category_edit(request,cid):
         if not request.user.is_superadmin:
             return redirect('adminside:admin_login')
     
-    categories = get_object_or_404(Category,cid=cid)
-
+    category = get_object_or_404(Category, cid=cid)
 
     if request.method == 'POST':
-        cat_name = request.POST.get("category_name")
-        cat_img = request.FILES.get('category_image')
-        categories.title =cat_name
-        if cat_img is not None:
-             categories.image=cat_img 
-        categories.save() 
+        name = request.POST.get('category_name', '').strip()
+        cropped_data = request.POST.get('cropped_image_data')
+        image = decode_cropped_image(cropped_data, name) or request.FILES.get('category_image')
+
+        # Update category fields
+        category.title = name
+        if image:
+            category.image = image
+        category.save()
+
+        messages.success(request, "Category updated successfully.")
         return redirect('adminside:category_list')
 
     context = {
-        "categories_title": categories.title,
-        "categories_image": categories.image,
+        'categories_title': category.title,
+        'categories_image': category.image,
     }
-
     return render(request, 'adminside/categories_edit.html', context)
 
 
@@ -725,6 +729,8 @@ def add_animecat(request):
             return redirect('adminside:admin_login')
     if request.method == 'POST':
         anime_name = request.POST.get('anime_name')
+        cropped_data = request.POST.get('cropped_image_data')
+        cat_image = decode_cropped_image(cropped_data, anime_name) or request.FILES.get('category_image')
         if not anime_name.strip():
             validation_errors = ["Name is required."]
             p=Paginator(CategoryAnime.objects.all().order_by('-id'),10)
@@ -739,7 +745,7 @@ def add_animecat(request):
         if CategoryAnime.objects.filter(title=anime_name).exists():
             messages.error(request, 'Category with this name already exists.')
         else:
-            anime_data = CategoryAnime(title=anime_name, image=request.FILES.get('anime_image'))
+            anime_data = CategoryAnime(title=anime_name, image=cat_image)
             anime_data.save()
             messages.success(request, 'Category added successfully.')       
     else:
@@ -771,21 +777,27 @@ def animecat_edit(request,aid):
     animes = get_object_or_404(CategoryAnime,aid=aid)
 
     if request.method == 'POST':
-        anime_name = request.POST.get("anime_name")
-        anime_img = request.FILES.get('anime_image')
+
+        anime_name = request.POST.get("anime_name",'').strip()
+        # if not anime_name:  # Validate title
+        #     messages.error(request, "Anime name is required.")
+        #     return redirect(request.path)
+        cropped_data = request.POST.get('cropped_image_data')
+        anime_img = decode_cropped_image(cropped_data, anime_name) or request.FILES.get('category_image')
+        
         animes.title =anime_name
         if anime_img is not None:
              animes.image=anime_img 
         animes.save()
 
-        return redirect('adminside:category_list')
+        return redirect('adminside:animecat_list')
 
     context = {
         "categories_title": animes.title,
         "categories_image": animes.image,
     }
 
-    return render(request, 'adminside/categories_edit.html', context)
+    return render(request, 'adminside/animecat_edit.html', context)
 
 
 @login_required(login_url='adminside:admin_login')
@@ -838,6 +850,9 @@ def add_character(request):
         
         anime_name = request.POST.get('anime')
         char_name = request.POST.get('char_name')
+        cropped_data = request.POST.get('cropped_image_data')
+        cat_image = decode_cropped_image(cropped_data, char_name) or request.FILES.get('category_image')
+
         if not char_name.strip():
             validation_errors = ["Name is required."]
             p=Paginator( AnimeCharacter.objects.all().order_by('-id'),10)
@@ -854,7 +869,7 @@ def add_character(request):
         
         else:
             anime_name = get_object_or_404(CategoryAnime, title=anime_name)
-            char_data = AnimeCharacter(name=char_name,animename=anime_name ,image=request.FILES.get('char_image'))
+            char_data = AnimeCharacter(name=char_name,animename=anime_name ,image=cat_image)
             char_data.save()
             messages.success(request, 'Category added successfully.') 
               
@@ -894,8 +909,10 @@ def character_edit(request,lid):
 
 
     if request.method == 'POST':
-        char_img = request.FILES.get('char_image')
+        # char_img = request.FILES.get('char_image')
         char_name = request.POST.get("char_name")
+        cropped_data = request.POST.get('cropped_image_data')
+        char_img = decode_cropped_image(cropped_data, char_name) or request.FILES.get('category_image')
 
 
         characters.name =char_name
@@ -905,7 +922,7 @@ def character_edit(request,lid):
         characters.save()
 
        
-        return redirect('adminside:characters_list')
+        return redirect('adminside:character_list')
 
     
     context = {
