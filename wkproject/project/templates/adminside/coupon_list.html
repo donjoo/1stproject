@@ -20,7 +20,7 @@
                             <thead>
                                 <tr class="main-heading">
                                     <th scope="col" colspan="">Coupon code</th>
-                                    <th scope="col">Discount</th>
+                                    <th scope="col">Discount (%)</th>
                                     <th scope="col">Valid form</th>
                                     <th scope="col">Valid to</th>
                                     <th scope="col">active</th>
@@ -52,9 +52,11 @@
                                                 <div class="dropdown">
                                                  
                                                     <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+
                                     <div class="dropdown-menu">
                                        
                                         <a class="dropdown-item" href="{% url 'adminside:available_coupon' coupon.id %}">{% if not coupon.active %} Active {% else %} Unactive{% endif %}</a>
+                                        <a class="dropdown-item" href="{% url 'adminside:edit_coupon' coupon.id %}">Edit</a>
                                         <a class="dropdown-item text-danger" href="{% url 'adminside:delete_coupon' coupon.id %}">Delete</a>
                                     </div>
                                 </div>

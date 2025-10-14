@@ -1255,6 +1255,33 @@ def coupon_list(request):
     return render(request,'adminside/coupon_list.html',context)
 
 
+
+def edit_coupon(request, coupon_id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
+    coupon = Coupon.objects.filter(id=coupon_id, delete=False).first()
+    if not coupon:
+        messages.error(request, "Coupon not found.")
+        return redirect('adminside:coupon_list')
+
+    if request.method == 'POST':
+        form = CouponForm(request.POST, instance=coupon)
+        if form.is_valid():
+            discount = form.cleaned_data['discount']
+            if 1 <= discount <= 100:
+                form.save()
+                messages.success(request, "Coupon updated successfully!")
+                return redirect('adminside:coupon_list')
+            else:
+                messages.error(request, "Discount must be between 1% and 100%.")
+    else:
+        form = CouponForm(instance=coupon)
+
+    return render(request, 'adminside/edit_coupon.html', {'form': form, 'coupon': coupon})
+
+
+
 @login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True,must_revalidaate=True,no_store=True)
 def delete_coupon(request,id):
