@@ -42,21 +42,30 @@ class ProductVariantForm(forms.Form):
         self.fields['product'].widget.choices = [(product.title, product.title) for product in Product.objects.all()]
 
 
-
 class CouponForm(forms.ModelForm):
     class Meta:
-        model = Coupon 
-        fields = ['code','discount','valid_from','valid_to','active']
+        model = Coupon
+        fields = ['code', 'discount', 'valid_from', 'valid_to', 'active']
         widgets = {
-            'valid_from': forms.DateInput(attrs={'type': 'date','style': 'width: 150px;'}),
-            'valid_to': forms.DateInput(attrs={'type': 'date','style':'width:150px;'})
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter coupon code'}),
+            'discount': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter discount',
+                'min': 1,
+                'max': 100,
+            }),
+            'valid_from': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'valid_to': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
     def clean_discount(self):
         discount = self.cleaned_data.get('discount')
         if discount > 100:
-            raise forms.ValidationError("Discount must be less that or equal to 100")
+            raise forms.ValidationError("Discount must be less than or equal to 100.")
         return discount
-    active = forms.BooleanField(widget=forms.CheckboxInput(attrs={'style': 'width: 20px; height: 20px;'}))
+
+
 class ProductOfferForm(forms.ModelForm):
     class Meta:
         model = ProductOffer

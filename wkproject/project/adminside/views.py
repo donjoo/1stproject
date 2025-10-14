@@ -1231,6 +1231,7 @@ def create_coupon(request):
             discount = form.cleaned_data['discount']
             if 1 <= discount <= 100:
                 form.save()
+                messages.success(request, "Coupon created successfully!")
                 return redirect('adminside:coupon_list')
             else:
                 messages.error(request, "Discount must be between 1% and 100%.")
