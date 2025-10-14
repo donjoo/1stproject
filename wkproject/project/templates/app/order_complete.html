@@ -108,7 +108,8 @@
             <p><strong>Subtotal:</strong>{{subtotal}}</p>
             <p><strong>shipping charge:</strong>{{order.shipping}}</p>
             {% if order.coupon.discount %}
-            <p><strong>Coupon:</strong>-{{order.coupon.discount}}</p>
+            <p><strong>Coupon:</strong><em>- ₹{{coupon_discount|default:"0.00"|floatformat:2 }} 
+                                                    {% if order.coupon.discount %} ({{ order.coupon.discount }}%) {% endif %}</em></p>
             {% endif %}
             {% if order.offer_price %}
             <p><strong>Offer:</strong>-{{order.offer_price}}</p>

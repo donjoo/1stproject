@@ -114,15 +114,18 @@
                                     <td colspan="4">
                                         <article class="float-end">
                                             <dl class="dlist">
-                                                <dt>Subtotal:</dt>
-                                                <dd>{{subtotal}}</dd>
+                                                <dt>Subtotal:  {{subtotal}}</dt>
+                                                <!-- <dd>{{subtotal}}</dd> -->
                                             </dl>
                                             <dl class="dlist">
-                                                <dt>Shipping cost:</dt>
-                                                <dd>+{{order.shipping}}</dd>
+                                                <dt>Shipping cost:  +{{order.shipping}}</dt>
+                                                <!-- <dd>+{{order.shipping}}</dd> -->
                                             </dl>
                                             <dl class="dlist">
-                                                <dt>Coupon:-{{order.coupon.discount}}</dt>
+                                                <dt>Coupon:
+                                                    <em>- ₹{{ coupon_discount|default:"0.00"|floatformat:2 }} 
+                                                    {% if order.coupon.discount %} ({{ order.coupon.discount }}%) {% endif %}</em>
+                                                </dt>
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>Offer:-{{order.offer_price}}</dt>

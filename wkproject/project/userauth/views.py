@@ -27,6 +27,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from app.models import Variants,Stock
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 
 # Create your views here.
 
@@ -666,6 +667,8 @@ def my_order(request,order_id):
 
     order = get_object_or_404(Order, id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
+    coupon = None
+    coupon_discount = Decimal('0.00')
 
     if order.user != request.user:
         messages.error(request, "You are not authorized to view this order.")
@@ -676,10 +679,30 @@ def my_order(request,order_id):
             subtotal += i.product_price * i.quantity
     for item in order_products:
         item.total_price = item.product.price * item.quantity 
+    
+    if order.coupon:
+        try:
+            # coupon = Coupon.objects.get(id=order.coupon_id)
+            coupon = Coupon.objects.get(
+                id=order.coupon_id,
+                active=True,
+                valid_to__gte=timezone.now()
+            )
+            discount_percentage = Decimal(str(coupon.discount))
+            total_decimal = Decimal(str(subtotal))
+            coupon_discount = (discount_percentage / 100) * total_decimal
+
+
+        except Coupon.DoesNotExist:
+            coupon = None
+            coupon_discount = Decimal('0.00')
+    
+    
     context = {
         'order': order,
         'order_products': order_products,
         'subtotal':subtotal,
+        'coupon_discount':coupon_discount,
     }
 
     return render(request, 'userauth/my_order.html',context)

@@ -16,6 +16,7 @@ import secrets
 from cart.views import apply_offer
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
 
 # Create your views here.
 
@@ -197,7 +198,9 @@ def place_order(request,total=0,quantity=0,):
     cart_items = CartItem.objects.filter(user=current_user)
     cart_count = cart_items.count()
     coupon_id = request.session.get('coupon_id')
-  
+    coupon_discount=None
+    coupon_percentage = None
+
     if cart_count <= 0:
         return redirect('app:index')
     
@@ -217,8 +220,13 @@ def place_order(request,total=0,quantity=0,):
                 coupon = Coupon.objects.get(id=coupon_id, valid_to__gte=timezone.now(), active=True)
                 percentage =  (coupon.discount/ 100) * float(total)
                 subtotal = float(total) - percentage
-                
-                coupon_discount = coupon.discount
+                coupon_percentage = coupon.discount
+                discount_percentage = Decimal(str(coupon.discount))
+                total_decimal = Decimal(str(total))
+                discount_amount =  (discount_percentage/ 100) * total_decimal
+                subtotal = total_decimal- discount_amount
+                coupon_discount = discount_amount
+
             except Coupon.DoesNotExist:
                 pass
 
@@ -312,6 +320,7 @@ def place_order(request,total=0,quantity=0,):
                     'grand_total':grand_total,
                     'shipping':shipping,
                     'payment':payement,
+                    'coupon_percentage':coupon_percentage,
                     'coupon_discount':coupon_discount,
                     'offer_price':offer_price,
                         
@@ -415,14 +424,31 @@ def order_complete(request):
         subtotal = 0
         for i in order_products:
             subtotal += i.product_price * i.quantity
+        coupon_discount = Decimal('0.00')
+        if order.coupon:
+            try:
+                # coupon = Coupon.objects.get(id=order.coupon_id)
+                coupon = Coupon.objects.get(
+                    id=order.coupon_id,
+                    active=True,
+                    valid_to__gte=timezone.now()
+                )
+                discount_percentage = Decimal(str(coupon.discount))
+                total_decimal = Decimal(str(subtotal))
+                coupon_discount = (discount_percentage / 100) * total_decimal
 
+
+            except Coupon.DoesNotExist:
+                coupon = None
+                coupon_discount = Decimal('0.00')
         context ={
             'order':order,
             'ordered_products':order_products,
             'order_number':order.order_number,
             'transID': payment.payment_id,
             'payment':payment,
-            'subtotal':subtotal
+            'subtotal':subtotal,
+            'coupon_discount':coupon_discount,
         }
         return render(request,'app/order_complete.html',context)
     

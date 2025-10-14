@@ -345,7 +345,7 @@ def Checkout(request):
     coupon_discount=None
     coupon_form = CouponForm(request.POST or None)
     coupon_id = request.session.get('coupon_id')
-
+    coupon_percentage = None
     try:
         if request.user.is_authenticated:
             cart_items = CartItem.objects.filter(user=request.user, is_active=True)
@@ -371,6 +371,7 @@ def Checkout(request):
                 # import pdb
                 # pdb.set_trace()
                 discount_percentage = Decimal(str(coupon.discount))
+                coupon_percentage = discount_percentage
                 total_decimal = Decimal(str(total))
                 discount_amount =  (discount_percentage/ 100) * total_decimal
                 subtotal = total_decimal- discount_amount
@@ -405,6 +406,7 @@ def Checkout(request):
         'address':address,
         'coupons':coupons,
         'coupon_id':coupon_id,
+        'coupon':coupon_percentage,
         'coupon_discount':coupon_discount,
         'offer_price':offer_price,
     }

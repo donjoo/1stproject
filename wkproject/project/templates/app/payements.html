@@ -99,7 +99,8 @@
                                     {% if coupon_discount > 0 %}
                                     <tr>
                                         <td class="cart_total_label">Coupon</td>
-                                        <td class="cart_total_amount"> <i class="ti-gift mr-5"></i>-₹{{coupon_discount}}</td>
+                                        <td class="cart_total_amount"> <i class="ti-gift mr-5"></i><em>- ₹{{ coupon_discount|default:"0.00"|floatformat:2 }} 
+                                                    {% if coupon_percentage %} ({{ coupon_percentage }}%) {% endif %}</em></td>
                                     </tr>
                                     {% endif %}
                                     {% if offer_price > 0 %}

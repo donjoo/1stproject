@@ -25,6 +25,7 @@ from userauth.views import canceladd_stock
 import imghdr
 import base64
 from django.core.files.base import ContentFile
+from decimal import Decimal
 
 current_date = timezone.now()   
 
@@ -1150,23 +1151,29 @@ def order_detail(request, order_id):
     for item in order_products:
         item.total_price = item.product.price * item.quantity 
     coupon = None
-
+    coupon_discount = Decimal('0.00')
     if order.coupon:
         try:
-            coupon = Coupon.objects.get(id=order.coupon_id)
+            # coupon = Coupon.objects.get(id=order.coupon_id)
+            coupon = Coupon.objects.get(
+                id=order.coupon_id,
+                active=True,
+                valid_to__gte=timezone.now()
+            )
             discount_percentage = Decimal(str(coupon.discount))
-            total_decimal = Decimal(str(total))
-            discount_amount =  (discount_percentage/ 100) * total_decimal
-            coupon_discount = discount_amount #coupon.discount
+            total_decimal = Decimal(str(subtotal))
+            coupon_discount = (discount_percentage / 100) * total_decimal
 
 
         except Coupon.DoesNotExist:
-            pass
+            coupon = None
+            coupon_discount = Decimal('0.00')
     context = {
         'order': order,
         'order_products': order_products,
         'subtotal':subtotal,
         'coupon':coupon,
+        'coupon_discount': coupon_discount,
     }
 
     return render(request, 'adminside/order_detail.html',context)

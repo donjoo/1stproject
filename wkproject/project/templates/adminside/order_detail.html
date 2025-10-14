@@ -140,7 +140,7 @@
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>coupon:</dt>
-                                                <dd>-{{coupon.discount}}</dd>
+                                                <dd>- ₹{{ coupon_discount|floatformat:2 }}   {% if coupon %} ({{ coupon.discount }}%) {% endif %}</dd>
                                             </dl>
                                             <dl class="dlist">
                                                 <dt>Offer:</dt>
