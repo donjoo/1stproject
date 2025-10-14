@@ -3,7 +3,7 @@ from django.http import HttpResponse,JsonResponse
 from django.contrib import messages
 from cart.models import CartItem
 import datetime
-from .models import Order,Payment,OrderProduct
+from .models import Order,Payment,OrderProduct,ProductRating
 from .forms import OrderForm
 from userauth.models import User,Address
 import json
@@ -458,3 +458,28 @@ def order_complete(request):
 
     
 
+
+
+
+
+
+def add_rating(request, order_product_id):
+    if request.method == 'POST':
+        order_product = get_object_or_404(OrderProduct, id=order_product_id, user=request.user)
+        product = order_product.product
+        rating_value = int(request.POST.get('rating', 0))
+        review_text = request.POST.get('review', '')
+
+        # Allow rating only if the order was delivered
+        if order_product.order.status != 'Delivered':
+            messages.warning(request, 'You can rate only after delivery.')
+            return redirect('orders:order_detail', order_product.order.id)
+
+        rating, created = ProductRating.objects.update_or_create(
+            user=request.user,
+            product=product,
+            defaults={'rating': rating_value, 'review': review_text, 'order_product': order_product}
+        )
+
+        messages.success(request, 'Your rating has been submitted!')
+        return redirect('userauth:my_order', order_product.order.id)

@@ -8,7 +8,7 @@ from django.utils.html import mark_safe
 from userauth.models import User
 from django.utils import timezone
 from django.core.validators import MaxValueValidator
-
+from django.db.models import Avg
 # Create your models here.
 STATUS_CHOICE = (
      ("process","Processing"),
@@ -170,6 +170,9 @@ class Product(models.Model):
         new_price = (self.price/self.old_price)*100
         return new_price 
         
+    def average_rating(self):
+        avg = self.ratings.aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 1) if avg else 0
     
 
 

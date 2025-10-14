@@ -677,6 +677,14 @@ def my_order(request,order_id):
     subtotal = 0
     for i in order_products:
             subtotal += i.product_price * i.quantity
+            rating_obj = i.product.ratings.filter(user=request.user).first()
+            if rating_obj:
+                i.user_rating = rating_obj.rating
+                i.user_review = rating_obj.review
+            else:
+                i.user_rating = None
+                i.user_review = ''
+                
     for item in order_products:
         item.total_price = item.product.price * item.quantity 
     

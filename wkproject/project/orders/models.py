@@ -72,3 +72,18 @@ class OrderProduct(models.Model):
     
 
 
+class ProductRating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='ratings')
+    order_product = models.ForeignKey('OrderProduct', on_delete=models.CASCADE, null=True, blank=True)
+    rating = models.PositiveIntegerField(default=0)  # 1 to 5
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')  # One rating per user per product
+
+    def __str__(self):
+        return f"{self.product.title} - {self.rating} stars"
+
+

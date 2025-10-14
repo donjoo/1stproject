@@ -13,4 +13,5 @@ urlpatterns = [
     path('wallet_auth/<order_id>/',views.wallet_auth,name='wallet_auth'),
     path('cod_payment/<order_id>',views.cod_payment,name='cod_payment'),
     path('payment_pending/<order_id>',views.payment_pending,name='payment_pending'),
+    path('add-rating/<int:order_product_id>/', views.add_rating, name='add_rating'),
 ]
