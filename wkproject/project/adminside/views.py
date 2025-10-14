@@ -1154,6 +1154,12 @@ def order_detail(request, order_id):
     if order.coupon:
         try:
             coupon = Coupon.objects.get(id=order.coupon_id)
+            discount_percentage = Decimal(str(coupon.discount))
+            total_decimal = Decimal(str(total))
+            discount_amount =  (discount_percentage/ 100) * total_decimal
+            coupon_discount = discount_amount #coupon.discount
+
+
         except Coupon.DoesNotExist:
             pass
     context = {

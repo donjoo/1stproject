@@ -179,19 +179,21 @@ def add_cart(request,pid):
         else:
             return redirect('cart:cart')
 def get_product_offer(product):
+    """Return the highest valid active product offer discount for a given product."""
     today = timezone.now().date()
-    try:
-        product_offer = ProductOffer.objects.filter(
+    
+    product_offer = (
+        ProductOffer.objects.filter(
             product=product,
-            end_date__gte=today,
+            active=True,        # ✅ Only active offers
+            delete=False,       # ✅ Not deleted
+            start_date__lte=today,  # ✅ Offer already started
+            end_date__gte=today,    # ✅ Offer still valid
         )
-        if product_offer.exists():
-            max_discount = product_offer.aggregate(Max('discount'))['discount__max']
-            return max_discount
-        else:
-            return 0
-    except ProductOffer.DoesNotExist:
-        return 0
+        .aggregate(max_discount=Max('discount'))
+    )
+
+    return product_offer['max_discount'] or 0
 def get_category_offer(category):
        today = timezone.now().date()
        try:
