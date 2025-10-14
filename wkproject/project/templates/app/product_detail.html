@@ -48,10 +48,32 @@
                             <span> Anime: <a href="shop-grid-right.html">{{product.anime}}</a></span>
                         </div>
                     </div>
+<div class="rating">
+    {% for i in "12345"|make_list %}
+        {% if forloop.counter <= avg_rating %}
+            <i class="fi-rs-star text-warning"></i>
+        {% else %}
+            <i class="fi-rs-star text-muted"></i>
+        {% endif %}
+    {% endfor %}
+    <span>({{ avg_rating }} / 5)</span>
+</div>
+
+</div>
                     <div class="clearfix product-price-cover">
                         <div class="product-price primary-color float-left">
-                            <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
-                            <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
+                            <div class="clearfix product-price-cover">
+    <div class="product-price float-left">
+        <span class="current-price">₹{{ product.price }}</span>
+        {% if product.old_price %}
+            <span class="old-price">₹{{ product.old_price }}</span>
+        {% endif %}
+        {% if offer.discount %}
+            <p class="offer-text">Offer: <span>{{ offer.discount }}% off</span></p>
+        {% endif %}
+    </div>
+</div>
+
                             {% if offer.discount %}
                             <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
                             {% endif %}
@@ -341,7 +363,44 @@ $(document).ready(function() {
 .product-action-buttons .btn i {
     font-size: 16px;
 }
+.rating i {
+    font-size: 18px;
+    margin-right: 2px;
+}
+.rating span {
+    font-size: 14px;
+    color: #555;
+}
+.text-warning {
+    color: #ffc107;
+}
+.text-muted {
+    color: #e0e0e0;
+}
 
+.product-price {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.current-price {
+    font-size: 28px;  /* larger font */
+    font-weight: 700; /* bold */
+    color: #ff4d6d;  /* primary color */
+}
+
+.old-price {
+    font-size: 16px;  /* smaller */
+    color: #888;      /* muted */
+    text-decoration: line-through;
+}
+
+.offer-text {
+    font-size: 14px;
+    color: red;
+    margin-top: 5px;
+}
 
 </style>
 

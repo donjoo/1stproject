@@ -40,6 +40,17 @@
                                             </div>
                                            
                                         </div>
+                                        <div class="rating">
+    {% for i in "12345"|make_list %}
+        {% if forloop.counter <= avg_rating %}
+            <i class="fi-rs-star text-warning"></i>
+        {% else %}
+            <i class="fi-rs-star text-muted"></i>
+        {% endif %}
+    {% endfor %}
+    <span>({{ avg_rating }} / 5)</span>
+</div>
+
                                         <div class="clearfix product-price-cover">
                                             <div class="product-price primary-color float-left">
                                                 <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
@@ -169,4 +180,22 @@
     <script src="{% static 'assets/js/main.js' %}" ></script>
     <script src="{% static 'assets/js/shop.js' %}" ></script>
 
+    <style>
+
+
+.rating i {
+    font-size: 18px;
+    margin-right: 2px;
+}
+.rating span {
+    font-size: 14px;
+    color: #555;
+}
+.text-warning {
+    color: #ffc107;
+}
+.text-muted {
+    color: #e0e0e0;
+}
+    </style>
 {% endblock body %}

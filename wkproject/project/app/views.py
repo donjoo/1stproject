@@ -15,7 +15,8 @@ from django.utils import timezone
 from django.http import HttpResponseBadRequest
 from django.db.models import OuterRef, Subquery
 from decimal import Decimal
-
+from django.db.models import Avg, Count
+from orders.models import ProductRating
 # Create your views here.
 current_date = datetime.date.today()
 
@@ -218,6 +219,9 @@ def product_detail(request, pid):
     # Passing pid to is_size_out_of_stock function
     sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
     all_sizes_out_of_stock = all(sizes_out_of_stock.values())
+    avg_rating = ProductRating.objects.filter(product=product).aggregate(avg=Avg('rating'))['avg'] or 0
+    rounded_rating = round(avg_rating)
+
 
     context = {
         "product": product,
@@ -228,6 +232,7 @@ def product_detail(request, pid):
         "sizes_out_of_stock": sizes_out_of_stock,
         "all_sizes_out_of_stock":all_sizes_out_of_stock,
         "in_wishlist": in_wishlist,  # 👈 Add this
+        "avg_rating": rounded_rating,
     }
 
     return render(request, 'app/product_detail.html', context)

@@ -11,7 +11,7 @@ from django.core.paginator import Paginator
 from .forms import CreateProductForm,ProductVariantForm,CouponForm,ProductOfferForm,CategoryOfferForm
 from django.http import Http404
 from django.http import JsonResponse
-from orders.models import Order,OrderProduct,Payment
+from orders.models import Order,OrderProduct,Payment,ProductRating
 from datetime import datetime,date,timedelta
 from django.utils import timezone
 import os
@@ -26,6 +26,8 @@ import imghdr
 import base64
 from django.core.files.base import ContentFile
 from decimal import Decimal
+from django.db.models import Avg, Count
+
 
 current_date = timezone.now()   
 
@@ -575,6 +577,8 @@ def products_details(request, pid):
         all_sizes_out_of_stock = all(sizes_out_of_stock.values())
         offers = ProductOffer.objects.filter(product=product,start_date__lte = current_date,end_date__gte = current_date)
         catoffers = CategoryOffer.objects.filter(category = product.category,start_date__lte = current_date,end_date__gte = current_date)
+        avg_rating = ProductRating.objects.filter(product=product).aggregate(avg=Avg('rating'))['avg'] or 0
+        rounded_rating = round(avg_rating)
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
     context = {
@@ -584,7 +588,9 @@ def products_details(request, pid):
         'product': product,
         'product_images': product_images,
         'sizes_out_of_stock':sizes_out_of_stock,
-        'all_sizes_out_of_stock':all_sizes_out_of_stock
+        'all_sizes_out_of_stock':all_sizes_out_of_stock,
+        "avg_rating": rounded_rating,
+
     }
     return render(request, 'adminside/products_details.html', context)
 
