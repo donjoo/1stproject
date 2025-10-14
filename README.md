@@ -9,7 +9,6 @@ Anime lovers can now wear their favorite characters with pride!
 ## Table of Contents
 
 - [Features](#features)  
-- [Demo](#demo)  
 - [Tech Stack](#tech-stack)  
 - [Installation](#installation)  
 - [Configuration](#configuration)  
@@ -30,15 +29,7 @@ Anime lovers can now wear their favorite characters with pride!
 
 ---
 
-## Demo
 
-You can provide a link to a live demo (if hosted) or screenshots here:  
-
-![Homepage](screenshots/homepage.png)  
-![Product Page](screenshots/product_page.png)  
-![Checkout](screenshots/checkout.png)  
-
----
 
 ## Tech Stack
 
