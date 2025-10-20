@@ -142,6 +142,13 @@
 
 
 
+<style>
+/* Scoped styles for size selection modal only */
+#sizeModal .size-options { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+#sizeModal .size-options label { display:inline-flex; align-items:center; white-space:nowrap; margin:0; }
+#sizeModal .size-options input[type="radio"] { width:16px; height:16px; margin-right:6px; flex-shrink:0; }
+#sizeModal .size-options label.size-out-of-stock { opacity:0.5; cursor:not-allowed; pointer-events:none; }
+</style>
 <div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -176,12 +183,21 @@ document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
                 container.innerHTML = '';
                 data.sizes.forEach(size => {
                     const label = document.createElement('label');
-                    label.classList.add('me-3'); // adds margin-right to separate options
-                    label.style.display = 'inline-flex'; // keeps radio and text inline
-                    label.style.alignItems = 'center'; // vertically center                    // radio inputs need a "name" and "value"
-                    label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}" style="margin-right: 5px;"> ${size.size}`;
+                    label.classList.add('me-3');
+                    
+                    if (size.in_stock) {
+                        // Available size - normal styling
+                        label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}" style="margin-right: 5px;"> ${size.size}`;
+                    } else {
+                        // Out of stock size - disabled styling
+                        label.classList.add('size-out-of-stock');
+                        label.style.opacity = '0.5';
+                        label.style.cursor = 'not-allowed';
+                        label.title = 'This size is currently unavailable';
+                        label.innerHTML = `<input type="radio" name="${pid}" value="${size.size}" style="margin-right: 5px;" disabled> ${size.size} (Out of Stock)`;
+                    }
+                    
                     container.appendChild(label);
-                    container.appendChild(document.createElement('br'));
                 });
 
                 // Show modal
@@ -199,6 +215,12 @@ document.getElementById('sizeForm').addEventListener('submit', function(e){
     const selectedInput = document.querySelector(`input[name="${pid}"]:checked`);
     if(!selectedInput){
         alert("Please select a size.");
+        return;
+    }
+    
+    // Check if the selected size is disabled (out of stock)
+    if(selectedInput.disabled){
+        alert("This size is currently out of stock. Please select a different size.");
         return;
     }
 

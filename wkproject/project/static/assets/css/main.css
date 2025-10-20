@@ -9921,4 +9921,43 @@ span.fi-rs-apps {
 }
 .zoomContainer{ z-index: 9999;}
 .zoomWindow{ z-index: 9999;}
+
+/* Size Selection Modal - Out of Stock Styles */
+.size-out-of-stock {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    color: #999 !important;
+}
+
+.size-out-of-stock input[type="radio"] {
+    cursor: not-allowed !important;
+    opacity: 0.5 !important;
+}
+
+.size-out-of-stock:hover {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+}
+
+/* Tooltip for out of stock sizes */
+.size-out-of-stock[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-top: 25px;
+    margin-left: -10px;
+}
+
+/* Ensure modal body has relative positioning for tooltips */
+.modal-body {
+    position: relative;
+}
+
 /*# sourceMappingURL=main.css.map */

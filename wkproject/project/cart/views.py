@@ -38,11 +38,29 @@ def add_cart(request,pid):
                 key = item
                 value = request.POST[key]
             try:
-                
                 sizess = Variants.objects.get(product=product,size__iexact=value)
+                # Check if the selected size is in stock
+                try:
+                    stock = Stock.objects.get(variant=sizess)
+                    if stock.stock <= 0:
+                        response_data = {
+                            'status': 'error',
+                            'message': f"Size {value} is out of stock."
+                        }
+                        return JsonResponse(response_data)
+                except Stock.DoesNotExist:
+                    response_data = {
+                        'status': 'error',
+                        'message': f"Size {value} is not available."
+                    }
+                    return JsonResponse(response_data)
                 product_size.append(sizess)
-            except:       
-                pass
+            except Variants.DoesNotExist:       
+                response_data = {
+                    'status': 'error',
+                    'message': f"Size {value} is not available for this product."
+                }
+                return JsonResponse(response_data)
         product_size_set = set([sizess.id for sizess in product_size])
         is_cart_item_exists = CartItem.objects.filter(product=product,user=current_user).exists()
         if is_cart_item_exists:        
@@ -112,13 +130,30 @@ def add_cart(request,pid):
                 key = item
                 value = request.POST[key]
         
-
             try:
-                
                 sizess = Variants.objects.get(product=product,size__iexact=value)
+                # Check if the selected size is in stock
+                try:
+                    stock = Stock.objects.get(variant=sizess)
+                    if stock.stock <= 0:
+                        response_data = {
+                            'status': 'error',
+                            'message': f"Size {value} is out of stock."
+                        }
+                        return JsonResponse(response_data)
+                except Stock.DoesNotExist:
+                    response_data = {
+                        'status': 'error',
+                        'message': f"Size {value} is not available."
+                    }
+                    return JsonResponse(response_data)
                 product_size.append(sizess)
-            except:       
-                pass
+            except Variants.DoesNotExist:       
+                response_data = {
+                    'status': 'error',
+                    'message': f"Size {value} is not available for this product."
+                }
+                return JsonResponse(response_data)
 
         
         try:

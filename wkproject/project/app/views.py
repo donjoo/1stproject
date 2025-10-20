@@ -619,5 +619,21 @@ def get_sizes(request, pid):
         product__pid=pid, 
         is_active=True, 
         delete=False
-    ).values('id', 'size')
-    return JsonResponse({'sizes': list(variants)})
+    ).select_related()
+    
+    sizes_data = []
+    for variant in variants:
+        try:
+            stock = Stock.objects.get(variant=variant)
+            stock_count = stock.stock
+        except Stock.DoesNotExist:
+            stock_count = 0
+        
+        sizes_data.append({
+            'id': variant.id,
+            'size': variant.size,
+            'stock': stock_count,
+            'in_stock': stock_count > 0
+        })
+    
+    return JsonResponse({'sizes': sizes_data})
