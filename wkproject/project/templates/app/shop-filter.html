@@ -25,7 +25,13 @@
                     </a>
                     
                     <!-- Filter Form -->
-                    <form method="get" action="{% url 'app:filter_view' %}" id="filterForm">
+                    <form method="get" action="{% url 'app:filter_view' %}" id="filterForm" 
+                          data-has-applied-filters="{% if categories_selected or animes_selected or characters_selected or sizes_selected or min_price or max_price %}true{% else %}false{% endif %}"
+                          data-applied-categories="{% for cat in categories_selected %}{{ cat }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                          data-applied-animes="{% for anime in animes_selected %}{{ anime }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                          data-applied-characters="{% for char in characters_selected %}{{ char }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                          data-applied-sizes="{% for size in sizes_selected %}{{ size }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                          data-applied-prices="{% if min_price and max_price %}{{ min_price }}-{{ max_price }}{% endif %}">
                         <div class="shop-product-fillter-header" id="filterPanel">
                             <div class="row">
                                 <!-- Categories Filter -->
@@ -113,8 +119,8 @@
                                     </div>
                                     <div class="price-filter-options">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="radio" 
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
                                                    name="price_range" 
                                                    value="100-200" 
                                                    id="price1"
@@ -122,8 +128,8 @@
                                             <label class="form-check-label" for="price1">₹100 - ₹200</label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="radio" 
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
                                                    name="price_range" 
                                                    value="200-500" 
                                                    id="price2"
@@ -131,8 +137,8 @@
                                             <label class="form-check-label" for="price2">₹200 - ₹500</label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="radio" 
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
                                                    name="price_range" 
                                                    value="500-1000" 
                                                    id="price3"
@@ -140,8 +146,8 @@
                                             <label class="form-check-label" for="price3">₹500 - ₹1,000</label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="radio" 
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
                                                    name="price_range" 
                                                    value="1000-1500"
                                                    id="price4"
@@ -149,8 +155,8 @@
                                             <label class="form-check-label" for="price4">₹1,000 - ₹1,500</label>
                                         </div>
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" 
-                                                   type="radio" 
+                                            <input class="form-check-input filter-checkbox" 
+                                                   type="checkbox" 
                                                    name="price_range" 
                                                    value="1500-2000" 
                                                    id="price5"
@@ -188,12 +194,14 @@
                                 <!-- Filter Actions -->
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">&nbsp;</h5>
-                                    <button type="submit" class="btn btn-primary btn-block mb-2">
-                                        <i class="fi-rs-filter"></i> Apply Filters
-                                    </button>
-                                    <a href="{% url 'app:filter_view' %}" class="btn btn-secondary btn-block">
-                                        <i class="fi-rs-cross"></i> Clear All
-                                    </a>
+                                    <div class="filter-actions">
+                                        <button type="submit" class="btn btn-primary btn-block mb-2" id="applyFiltersBtn" style="display: none;">
+                                            <i class="fi-rs-filter"></i> Apply Filters
+                                        </button>
+                                        <a href="{% url 'app:filter_view' %}" class="btn btn-secondary btn-block" id="clearAllBtn" style="display: none;">
+                                            <i class="fi-rs-cross"></i> Clear All
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -444,31 +452,146 @@ document.getElementById('sizeForm').addEventListener('submit', function(e){
 
 
 $(document).ready(function(){
-    // Toggle filter panel
-    $("#filterToggle").on("click", function(e){
-        e.preventDefault();
-        $("#filterPanel").slideToggle();
-        $(this).find(".angle-down, .angle-up").toggle();
+    // Get applied filters state from data attribute
+    var hasAppliedFilters = $("#filterForm").data("has-applied-filters");
+    
+    // Flag to prevent multiple simultaneous toggles
+    var isToggling = false;
+    
+    // Function to check if any checkboxes are currently selected
+    function hasSelectedFilters() {
+        return $("input:checked").length > 0;
+    }
 
-        // Save state in localStorage
-        const isVisible = $("#filterPanel").is(":visible");
-        localStorage.setItem("filterPanelOpen", isVisible ? "true" : "false");
+    // Function to check if selected filters are different from applied filters
+    function hasNewFilters() {
+        // Get currently selected values
+        var selectedCategories = [];
+        $("input[name='category']:checked").each(function() {
+            selectedCategories.push($(this).val());
+        });
+        
+        var selectedAnimes = [];
+        $("input[name='anime']:checked").each(function() {
+            selectedAnimes.push($(this).val());
+        });
+        
+        var selectedCharacters = [];
+        $("input[name='character']:checked").each(function() {
+            selectedCharacters.push($(this).val());
+        });
+        
+        var selectedSizes = [];
+        $("input[name='size']:checked").each(function() {
+            selectedSizes.push($(this).val());
+        });
+        
+        var selectedPrices = [];
+        $("input[name='price_range']:checked").each(function() {
+            selectedPrices.push($(this).val());
+        });
+        
+        // Get applied values from data attributes
+        var appliedCategories = $("#filterForm").data("applied-categories") ? $("#filterForm").data("applied-categories").split(",") : [];
+        var appliedAnimes = $("#filterForm").data("applied-animes") ? $("#filterForm").data("applied-animes").split(",") : [];
+        var appliedCharacters = $("#filterForm").data("applied-characters") ? $("#filterForm").data("applied-characters").split(",") : [];
+        var appliedSizes = $("#filterForm").data("applied-sizes") ? $("#filterForm").data("applied-sizes").split(",") : [];
+        var appliedPrices = $("#filterForm").data("applied-prices") ? [$("#filterForm").data("applied-prices")] : [];
+        
+        // Compare arrays
+        function arraysEqual(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            arr1.sort();
+            arr2.sort();
+            for (var i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) return false;
+            }
+            return true;
+        }
+        
+        return !arraysEqual(selectedCategories, appliedCategories) ||
+               !arraysEqual(selectedAnimes, appliedAnimes) ||
+               !arraysEqual(selectedCharacters, appliedCharacters) ||
+               !arraysEqual(selectedSizes, appliedSizes) ||
+               !arraysEqual(selectedPrices, appliedPrices);
+    }
+
+    // Function to show/hide Apply Filters button (only when new filters are selected)
+    function toggleApplyButton() {
+        if (hasNewFilters()) {
+            $("#applyFiltersBtn").fadeIn(300);
+        } else {
+            $("#applyFiltersBtn").fadeOut(300);
+        }
+    }
+
+    // Function to show/hide Clear All button (only when filters are applied to page)
+    function toggleClearButton() {
+        if (hasAppliedFilters) {
+            $("#clearAllBtn").fadeIn(300);
+        } else {
+            $("#clearAllBtn").fadeOut(300);
+        }
+    }
+
+    // Toggle filter panel - use off() to remove any existing handlers first
+    $("#filterToggle").off("click").on("click", function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Prevent multiple simultaneous toggles
+        if (isToggling) {
+            return false;
+        }
+        
+        isToggling = true;
+        
+        // Check current state
+        const isCurrentlyVisible = $("#filterPanel").is(":visible");
+        
+        console.log("Filter toggle clicked. Currently visible:", isCurrentlyVisible);
+        
+        if (isCurrentlyVisible) {
+            // Close the panel
+            $("#filterPanel").slideUp(300, function() {
+                localStorage.setItem("filterPanelOpen", "false");
+                isToggling = false;
+                console.log("Panel closed");
+            });
+            $(".angle-down").show();
+            $(".angle-up").hide();
+        } else {
+            // Open the panel
+            $("#filterPanel").slideDown(300, function() {
+                localStorage.setItem("filterPanelOpen", "true");
+                isToggling = false;
+                console.log("Panel opened");
+            });
+            $(".angle-down").hide();
+            $(".angle-up").show();
+        }
     });
 
-    // Restore state from localStorage
+    // Initialize panel state - only run once on page load
     const panelState = localStorage.getItem("filterPanelOpen");
     if (panelState === "true") {
         $("#filterPanel").show();
         $(".angle-down").hide();
         $(".angle-up").show();
+    } else {
+        $("#filterPanel").hide();
+        $(".angle-down").show();
+        $(".angle-up").hide();
     }
 
-    // If filters are active (checked checkboxes or selected price)
-    if ($("input:checked").length > 0) {
-        $("#filterPanel").show();
-        $(".angle-down").hide();
-        $(".angle-up").show();
-    }
+    // Initial check for button visibility
+    toggleApplyButton();
+    toggleClearButton();
+
+    // Monitor filter changes
+    $("input[type='checkbox']").on("change", function(){
+        toggleApplyButton();
+    });
 
     // Clear individual filter groups
     $(".clear-filter").on("click", function(e){
@@ -579,6 +702,27 @@ $(document).ready(function(){
     .btn-secondary {
         background-color: #6c757d;
         border-color: #6c757d;
+    }
+
+    .filter-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .filter-actions .btn {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-actions .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
 
