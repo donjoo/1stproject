@@ -73,4 +73,7 @@ jobs:
         with:
           app-name: 'Animwear'
           slot-name: 'Production'
+          package: '1stproject/wkproject/project'
+
+
           
