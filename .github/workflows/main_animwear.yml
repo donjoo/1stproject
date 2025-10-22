@@ -6,20 +6,21 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write   # ✅ Required for azure/login federated token
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1️⃣ Checkout repo
       - uses: actions/checkout@v4
 
-      # 2️⃣ Set up Python
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 3️⃣ Install dependencies
       - name: Install dependencies
         working-directory: wkproject/project
         run: |
@@ -28,7 +29,6 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -36,7 +36,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F1EF5B290DDF4BED82CB35C59D1B6AD9 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_140E53876BA043528E2CFE033F4D3E6A }}
 
-      # 5️⃣ Deploy folder directly
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
