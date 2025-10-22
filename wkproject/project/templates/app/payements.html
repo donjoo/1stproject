@@ -150,7 +150,8 @@
      return cookieValue;
  }
  var total = "{{grand_total}}";
- var amount = Math.round(parseFloat(total));
+ // Convert INR to USD (approximate rate: 1 USD = 83 INR)
+ var amount = (parseFloat(total) / 83).toFixed(2);
  var url = "{% url 'orders:payment' %}";
  var csrftoken = getCookie('csrftoken');
  var orderID = "{{order.order_number}}";
@@ -161,10 +162,10 @@
      window.paypal.Buttons({
          createOrder: function(data, actions) {
              return actions.order.create({
-
                  purchase_units: [{
                      amount: {
                          value: amount,
+                         currency_code: "USD"
                      }
                  }]
              });
