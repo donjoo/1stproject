@@ -54,6 +54,12 @@ class Order(models.Model):
         return self.user.username
 
 class OrderProduct(models.Model):
+    ITEM_STATUS_CHOICES = (
+        ('Ordered', 'Ordered'),
+        ('Cancelled', 'Cancelled'),
+        ('Returned', 'Returned'),
+    )
+    
     order = models.ForeignKey(Order,on_delete=models.CASCADE)
     payment = models.ForeignKey(Payment,on_delete=models.SET_NULL,blank=True,null=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -64,6 +70,7 @@ class OrderProduct(models.Model):
     quantity = models.IntegerField()
     product_price = models.FloatField()
     ordered = models.BooleanField(default=False)
+    item_status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default='Ordered')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

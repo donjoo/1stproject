@@ -102,10 +102,12 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th width="40%">Product</th>
-                                    <th width="20%">Unit Price</th>
-                                    <th width="20%">Quantity</th>
-                                    <th width="20%" class="text-end">Total</th>
+                                    <th width="30%">Product</th>
+                                    <th width="15%">Unit Price</th>
+                                    <th width="10%">Quantity</th>
+                                    <th width="15%" class="text-end">Total</th>
+                                    <th width="15%">Item Status</th>
+                                    <th width="15%">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -125,10 +127,46 @@
                                             <td class="price" data-title="Price"><span><span>₹</span>{{ item.product.price|floatformat:2 }}</span></td>
                                             <td>{{item.quantity}}</td>
                                             <td>{{item.total_price}}</td>
+                                            
+                                            <!-- Item Status -->
+                                            <td>
+                                                {% if item.item_status == 'Ordered' %}
+                                                    <span class="badge bg-success">{{ item.item_status }}</span>
+                                                {% elif item.item_status == 'Cancelled' %}
+                                                    <span class="badge bg-danger">{{ item.item_status }}</span>
+                                                {% elif item.item_status == 'Returned' %}
+                                                    <span class="badge bg-warning">{{ item.item_status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            
+                                            <!-- Admin Actions -->
+                                            <td>
+                                                {% if item.item_status == 'Ordered' %}
+                                                    <form method="post" action="{% url 'orders:cancel_order_item' item.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger btn-sm" 
+                                                                onclick="return confirm('Are you sure you want to cancel this item?')">
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                    
+                                                    {% if order.status == 'Delivered' %}
+                                                        <form method="post" action="{% url 'orders:return_order_item' item.id %}" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-warning btn-sm" 
+                                                                    onclick="return confirm('Are you sure you want to return this item?')">
+                                                                Return
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <small class="text-muted">No actions available</small>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="6">
                                         <article class="float-end">
                                             <dl class="dlist">
                                                 <dt>Subtotal:</dt>

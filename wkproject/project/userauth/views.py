@@ -708,11 +708,17 @@ def my_order(request,order_id):
             coupon_discount = Decimal('0.00')
     
     
+    # Check if there are any items that can be cancelled or returned
+    has_cancellable_items = any(item.item_status == 'Ordered' for item in order_products)
+    has_returnable_items = any(item.item_status == 'Ordered' for item in order_products)
+    
     context = {
         'order': order,
         'order_products': order_products,
         'subtotal':subtotal,
         'coupon_discount':coupon_discount,
+        'has_cancellable_items': has_cancellable_items,
+        'has_returnable_items': has_returnable_items,
     }
 
     return render(request, 'userauth/my_order.html',context)

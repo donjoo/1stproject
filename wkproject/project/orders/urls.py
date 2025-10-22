@@ -14,4 +14,6 @@ urlpatterns = [
     path('cod_payment/<order_id>',views.cod_payment,name='cod_payment'),
     path('payment_pending/<order_id>',views.payment_pending,name='payment_pending'),
     path('add-rating/<int:order_product_id>/', views.add_rating, name='add_rating'),
+    path('cancel-item/<int:order_product_id>/', views.cancel_order_item, name='cancel_order_item'),
+    path('return-item/<int:order_product_id>/', views.return_order_item, name='return_order_item'),
 ]

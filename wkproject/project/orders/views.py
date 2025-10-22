@@ -511,3 +511,125 @@ def add_rating(request, order_product_id):
 
         messages.success(request, 'Your rating has been submitted!')
         return redirect('userauth:my_order', order_product.order.id)
+
+
+@login_required(login_url='userauth:login')
+def cancel_order_item(request, order_product_id):
+    """Cancel a specific product in an order"""
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+    
+    if request.method == "POST":
+        order_product = get_object_or_404(OrderProduct, id=order_product_id, user=request.user)
+        
+        # Check if item can be cancelled
+        if order_product.item_status != 'Ordered':
+            messages.warning(request, f'This item is already {order_product.item_status.lower()}.')
+            return redirect('userauth:my_order', order_product.order.id)
+        
+        # Check if order is in a cancellable state
+        if order_product.order.status in ['Delivered', 'Cancelled', 'Returned']:
+            messages.warning(request, 'This order cannot be cancelled.')
+            return redirect('userauth:my_order', order_product.order.id)
+        
+        # Update item status
+        order_product.item_status = 'Cancelled'
+        order_product.save()
+        
+        # Add stock back for this specific item
+        canceladd_stock_for_item(request, order_product)
+        
+        # Process refund for this specific item
+        if order_product.order.payment:
+            if (order_product.order.payment.payment_method == "Paypal" or 
+                order_product.order.payment.payment_method == "Wallet"):
+                
+                item_total = order_product.product_price * order_product.quantity
+                user = request.user
+                Transaction.objects.create(
+                    user=user,
+                    description=f"Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                    amount=item_total,
+                    transaction_type="Credit",
+                )
+        
+        # Check if all items are cancelled, then cancel the entire order
+        remaining_items = OrderProduct.objects.filter(
+            order=order_product.order, 
+            item_status='Ordered'
+        )
+        if not remaining_items.exists():
+            order_product.order.status = 'Cancelled'
+            order_product.order.save()
+            messages.success(request, 'Item cancelled successfully. Order has been cancelled as all items were cancelled.')
+        else:
+            messages.success(request, 'Item cancelled successfully.')
+        
+        return redirect('userauth:my_order', order_product.order.id)
+
+
+@login_required(login_url='userauth:login')
+def return_order_item(request, order_product_id):
+    """Return a specific product in an order"""
+    if not request.user.is_active:
+        messages.error(request, "Your account is blocked.")
+        return redirect('userauth:login')
+    
+    if request.method == "POST":
+        order_product = get_object_or_404(OrderProduct, id=order_product_id, user=request.user)
+        
+        # Check if item can be returned
+        if order_product.item_status != 'Ordered':
+            messages.warning(request, f'This item is already {order_product.item_status.lower()}.')
+            return redirect('userauth:my_order', order_product.order.id)
+        
+        # Check if order is delivered
+        if order_product.order.status != 'Delivered':
+            messages.warning(request, 'Items can only be returned after delivery.')
+            return redirect('userauth:my_order', order_product.order.id)
+        
+        # Update item status
+        order_product.item_status = 'Returned'
+        order_product.save()
+        
+        # Add stock back for this specific item
+        canceladd_stock_for_item(request, order_product)
+        
+        # Process refund for this specific item
+        if order_product.order.payment:
+            item_total = order_product.product_price * order_product.quantity
+            user = request.user
+            Transaction.objects.create(
+                user=user,
+                description=f"Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                amount=item_total,
+                transaction_type="Credit",
+            )
+        
+        # Check if all items are returned, then mark the entire order as returned
+        remaining_items = OrderProduct.objects.filter(
+            order=order_product.order, 
+            item_status='Ordered'
+        )
+        if not remaining_items.exists():
+            order_product.order.status = 'Returned'
+            order_product.order.save()
+            messages.success(request, 'Item returned successfully. Order has been marked as returned as all items were returned.')
+        else:
+            messages.success(request, 'Item returned successfully.')
+        
+        return redirect('userauth:my_order', order_product.order.id)
+
+
+def canceladd_stock_for_item(request, order_product):
+    """Add stock back for a specific cancelled/returned item"""
+    try:
+        for variant in order_product.variations.all():
+            stock = Stock.objects.get(variant=variant)
+            stock.stock += order_product.quantity
+            stock.save()
+    except Stock.DoesNotExist:
+        logger.error(f"Stock not found for variant {variant} in order product {order_product.id}")
+    except Exception as e:
+        logger.error(f"Error adding stock back for order product {order_product.id}: {e}")
