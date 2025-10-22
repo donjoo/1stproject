@@ -17,6 +17,10 @@ from cart.views import apply_offer
 from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -42,15 +46,19 @@ def cod_payment(request,order_id):
     if 'coupon_id' in request.session:
        del request.session['coupon_id']
 
-
-    email_subject = 'Thank you for your order'
-    message = render_to_string('app/order_recieved_email.html',{
-        'user':user,
-        'order':order
-    })
-    to_email = request.user.email
-    send_email = EmailMessage(email_subject,message,to=[to_email])
-    send_email.send()
+    # Try to send email, but don't let it fail the payment
+    try:
+        email_subject = 'Thank you for your order'
+        message = render_to_string('app/order_recieved_email.html',{
+            'user':user,
+            'order':order
+        })
+        to_email = request.user.email
+        send_email = EmailMessage(email_subject,message,to=[to_email])
+        send_email.send()
+        except Exception as email_error:
+            # Log the email error but don't fail the payment
+            logger.error(f"Email sending failed for COD order {order.order_number}: {email_error}")
 
     ordered_products = OrderProduct.objects.filter(order=order)
 
@@ -118,14 +126,19 @@ def wallet_payment(request, order_id):
         del request.session['coupon_id']
     
 
-    email_subject = 'Thank you for your order'
-    message = render_to_string('app/order_recieved_email.html',{
-        'user':user,
-        'order':order
-    })
-    to_email = request.user.email
-    send_email = EmailMessage(email_subject,message,to=[to_email])
-    send_email.send()
+    # Try to send email, but don't let it fail the payment
+    try:
+        email_subject = 'Thank you for your order'
+        message = render_to_string('app/order_recieved_email.html',{
+            'user':user,
+            'order':order
+        })
+        to_email = request.user.email
+        send_email = EmailMessage(email_subject,message,to=[to_email])
+        send_email.send()
+    except Exception as email_error:
+        # Log the email error but don't fail the payment
+        logger.error(f"Email sending failed for wallet order {order.order_number}: {email_error}")
 
     ordered_products = OrderProduct.objects.filter(order=order)
 
@@ -147,38 +160,53 @@ def wallet_payment(request, order_id):
 
 @login_required(login_url='userauth:login')
 def payment(request):
-    user = request.user
-    body = json.loads(request.body)
-    order_id = body['orderID']
-    order = Order.objects.get(user=request.user,is_ordered=False,order_number=order_id)
+    try:
+        user = request.user
+        body = json.loads(request.body)
+        order_id = body['orderID']
+        order = Order.objects.get(user=request.user,is_ordered=False,order_number=order_id)
 
-    order.payment.payment_id = body['transID']
-    order.payment.amount_paid = order.order_total
-    order.payment.status = body['status']
-    order.payment.save()
+        order.payment.payment_id = body['transID']
+        order.payment.amount_paid = order.order_total
+        order.payment.status = body['status']
+        order.payment.save()
 
-    order.is_ordered =True
-    order.save()
+        order.is_ordered =True
+        order.save()
 
-    CartItem.objects.filter(user=request.user).delete()
-    if 'coupon_id' in request.session:
-       del request.session['coupon_id']
+        CartItem.objects.filter(user=request.user).delete()
+        if 'coupon_id' in request.session:
+           del request.session['coupon_id']
 
-    email_subject = 'Thank you for your order'
-    message = render_to_string('app/order_recieved_email.html',{
-        'user':user,
-        'order':order
-    })
-    to_email = request.user.email
-    send_email = EmailMessage(email_subject,message,to=[to_email])
-    send_email.send()
+        # Try to send email, but don't let it fail the payment
+        try:
+            email_subject = 'Thank you for your order'
+            message = render_to_string('app/order_recieved_email.html',{
+                'user':user,
+                'order':order
+            })
+            to_email = request.user.email
+            send_email = EmailMessage(email_subject,message,to=[to_email])
+            send_email.send()
+        except Exception as email_error:
+            # Log the email error but don't fail the payment
+            logger.error(f"Email sending failed for order {order.order_number}: {email_error}")
 
-    data = {
-        'order_number': order.order_number,
-        'transID': order.payment.payment_id,
-    }
+        data = {
+            'order_number': order.order_number,
+            'transID': order.payment.payment_id,
+        }
 
-    return JsonResponse(data)
+        return JsonResponse(data)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    except Order.DoesNotExist:
+        return JsonResponse({'error': 'Order not found'}, status=404)
+    except Exception as e:
+        # Log the error for debugging
+        logger.error(f"Payment processing error: {e}")
+        return JsonResponse({'error': 'Payment processing failed'}, status=500)
 
 
 def payment_type(request,payement_option):
@@ -265,7 +293,7 @@ def place_order(request,total=0,quantity=0,):
                 data.order_note = form.cleaned_data['order_note']
                 data.order_total = round(grand_total,2)
                 data.shipping = shipping
-                data.created_at = datetime.datetime.now()
+                data.created_at = timezone.now()
                 if offer_price:
                   data.offer_price=offer_price
                     
