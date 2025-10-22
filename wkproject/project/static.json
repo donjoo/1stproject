@@ -1,0 +1,21 @@
+{
+    "routes": {
+      "/media/*": {
+        "headers": {
+          "Cache-Control": "max-age=86400"
+        },
+        "serve": {
+          "path": "/home/site/wwwroot/media"
+        }
+      },
+      "/static/*": {
+        "headers": {
+          "Cache-Control": "max-age=86400"
+        },
+        "serve": {
+          "path": "/home/site/wwwroot/staticfiles"
+        }
+      }
+    }
+  }
+  
