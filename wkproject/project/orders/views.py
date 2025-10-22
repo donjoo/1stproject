@@ -56,7 +56,7 @@ def cod_payment(request,order_id):
         to_email = request.user.email
         send_email = EmailMessage(email_subject,message,to=[to_email])
         send_email.send()
-        except Exception as email_error:
+    except Exception as email_error:
             # Log the email error but don't fail the payment
             logger.error(f"Email sending failed for COD order {order.order_number}: {email_error}")
 
