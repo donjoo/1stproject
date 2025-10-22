@@ -26,9 +26,8 @@ from orders.models import Order
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from app.models import Variants,Stock
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta,datetime
 from decimal import Decimal
-
 # Create your views here.
 
 @never_cache
@@ -122,8 +121,11 @@ def otp_verification(request):
             messages.error(request, "OTP session expired. Please request a new one.")
             return redirect('userauth:resend_otp')
 
-        otp_expiry = timezone.strptime(otp_expiry_str, '%Y-%m-%d %H:%M:%S')
-
+        # otp_expiry = timezone.strptime(otp_expiry_str, '%Y-%m-%d %H:%M:%S')
+        # Convert string to datetime and make it timezone-aware
+        otp_expiry = datetime.strptime(otp_expiry_str, '%Y-%m-%d %H:%M:%S')
+        otp_expiry = timezone.make_aware(otp_expiry)
+        
         if timezone.now() > otp_expiry:
             messages.error(request, "OTP has expired. Please request a new one.")
             return redirect('userauth:resend_otp')
