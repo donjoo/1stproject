@@ -48,6 +48,8 @@ urlpatterns = [
     path('order_list/', views.order_list, name='order_list'),
     path('orders/<int:order_id>/', views.order_detail, name='order_detail'),
     path('orders/<int:order_id>/update_status/', views.update_order_status, name='update_order_status'),
+    path('admin-cancel-item/<int:order_product_id>/', views.admin_cancel_order_item, name='admin_cancel_order_item'),
+    path('admin-return-item/<int:order_product_id>/', views.admin_return_order_item, name='admin_return_order_item'),
 
     path('create_coupon/',views.create_coupon,name='create_coupon'),
     path('coupon_list/',views.coupon_list,name='coupon_list'),

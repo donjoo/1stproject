@@ -1,6 +1,18 @@
 {% extends "partials/admin_base.html" %}
 {% block body %}
 
+<style>
+.btn-sm {
+    margin: 2px;
+    padding: 6px 12px;
+}
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+</style>
+
 <section class="content-main">
     <div class="content-header">
         <div>
@@ -141,27 +153,31 @@
                                             
                                             <!-- Admin Actions -->
                                             <td>
-                                                {% if item.item_status == 'Ordered' %}
-                                                    <form method="post" action="{% url 'orders:cancel_order_item' item.id %}" style="display: inline;">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-danger btn-sm" 
-                                                                onclick="return confirm('Are you sure you want to cancel this item?')">
-                                                            Cancel
-                                                        </button>
-                                                    </form>
-                                                    
-                                                    {% if order.status == 'Delivered' %}
-                                                        <form method="post" action="{% url 'orders:return_order_item' item.id %}" style="display: inline;">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-warning btn-sm" 
-                                                                    onclick="return confirm('Are you sure you want to return this item?')">
-                                                                Return
-                                                            </button>
-                                                        </form>
+                                                <div class="action-buttons">
+                                                    {% if item.item_status == 'Ordered' %}
+                                                        {% if order.status == 'Delivered' %}
+                                                            <!-- Only Return button for delivered orders -->
+                                                            <form method="post" action="{% url 'adminside:admin_return_order_item' item.id %}" style="display: inline;">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-warning btn-sm" 
+                                                                        onclick="return confirm('Are you sure you want to return this item?')">
+                                                                    Return
+                                                                </button>
+                                                            </form>
+                                                        {% else %}
+                                                            <!-- Only Cancel button for non-delivered orders -->
+                                                            <form method="post" action="{% url 'adminside:admin_cancel_order_item' item.id %}" style="display: inline;">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                                        onclick="return confirm('Are you sure you want to cancel this item?')">
+                                                                    Cancel
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <small class="text-muted">No actions available</small>
                                                     {% endif %}
-                                                {% else %}
-                                                    <small class="text-muted">No actions available</small>
-                                                {% endif %}
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}

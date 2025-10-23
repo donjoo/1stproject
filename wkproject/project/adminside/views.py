@@ -18,6 +18,10 @@ import os
 from django.conf import settings
 from django.db.models import Sum
 from django.utils.timezone import now
+import logging
+
+# Set up logging
+logger = logging.getLogger(__name__)
 from django.db.models import Count
 from django.db.models.functions import TruncMonth,TruncYear
 from django.core.exceptions import ObjectDoesNotExist
@@ -1242,6 +1246,154 @@ def admin_cancel_order(request, order_id):
         messages.error(request, 'Order not found or has already been cancelled.')
     except Exception as e:
         messages.error(request, 'An error occurred while cancelling the order: {}'.format(str(e)))
+
+
+@login_required(login_url='adminside:admin_login')
+def admin_cancel_order_item(request, order_product_id):
+    """Admin function to cancel a specific product in an order"""
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+        return redirect("adminside:admin_login")
+    
+    if request.method == "POST":
+        try:
+            order_product = get_object_or_404(OrderProduct, id=order_product_id)
+            
+            # Check if item can be cancelled
+            if order_product.item_status != 'Ordered':
+                messages.warning(request, f'This item is already {order_product.item_status.lower()}.')
+                return redirect('adminside:order_detail', order_product.order.id)
+            
+            # Check if order is in a cancellable state
+            if order_product.order.status in ['Delivered', 'Cancelled', 'Returned']:
+                messages.warning(request, 'This order cannot be cancelled.')
+                return redirect('adminside:order_detail', order_product.order.id)
+            
+            # Update item status
+            order_product.item_status = 'Cancelled'
+            order_product.save()
+            
+            # Add stock back for this specific item
+            canceladd_stock_for_item(request, order_product)
+            
+            # Process refund for this specific item (only if not already refunded)
+            if order_product.order.payment and not order_product.refunded:
+                if (order_product.order.payment.payment_method == "Paypal" or 
+                    order_product.order.payment.payment_method == "Wallet"):
+                    
+                    # Import the refund function from orders views
+                    from orders.views import calculate_proportional_refund
+                    refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+                    
+                    if refund_amount > 0:
+                        Transaction.objects.create(
+                            user=order_product.order.user,
+                            description=f"Admin Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                            amount=refund_amount,
+                            transaction_type="Credit",
+                        )
+                        
+                        # Mark as refunded to prevent duplicate refunds
+                        order_product.refunded = True
+                        order_product.save()
+            
+            # Check if all items are cancelled, then cancel the entire order
+            remaining_items = OrderProduct.objects.filter(
+                order=order_product.order, 
+                item_status='Ordered'
+            )
+            if not remaining_items.exists():
+                order_product.order.status = 'Cancelled'
+                order_product.order.save()
+                messages.success(request, 'Item cancelled successfully. Order has been cancelled as all items were cancelled.')
+            else:
+                messages.success(request, 'Item cancelled successfully.')
+            
+            return redirect('adminside:order_detail', order_product.order.id)
+            
+        except Exception as e:
+            messages.error(request, f'An error occurred while cancelling the item: {str(e)}')
+            return redirect('adminside:order_detail', order_product.order.id)
+    
+    return redirect('adminside:order_list')
+
+
+@login_required(login_url='adminside:admin_login')
+def admin_return_order_item(request, order_product_id):
+    """Admin function to return a specific product in an order"""
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+        return redirect("adminside:admin_login")
+    
+    if request.method == "POST":
+        try:
+            order_product = get_object_or_404(OrderProduct, id=order_product_id)
+            
+            # Check if item can be returned
+            if order_product.item_status != 'Ordered':
+                messages.warning(request, f'This item is already {order_product.item_status.lower()}.')
+                return redirect('adminside:order_detail', order_product.order.id)
+            
+            # Check if order is delivered
+            if order_product.order.status != 'Delivered':
+                messages.warning(request, 'Items can only be returned after delivery.')
+                return redirect('adminside:order_detail', order_product.order.id)
+            
+            # Update item status
+            order_product.item_status = 'Returned'
+            order_product.save()
+            
+            # Add stock back for this specific item
+            canceladd_stock_for_item(request, order_product)
+            
+            # Process refund for this specific item (only if not already refunded)
+            if order_product.order.payment and not order_product.refunded:
+                # Import the refund function from orders views
+                from orders.views import calculate_proportional_refund
+                refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+                
+                if refund_amount > 0:
+                    Transaction.objects.create(
+                        user=order_product.order.user,
+                        description=f"Admin Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                        amount=refund_amount,
+                        transaction_type="Credit",
+                    )
+                    
+                    # Mark as refunded to prevent duplicate refunds
+                    order_product.refunded = True
+                    order_product.save()
+            
+            # Check if all items are returned, then mark the entire order as returned
+            remaining_items = OrderProduct.objects.filter(
+                order=order_product.order, 
+                item_status='Ordered'
+            )
+            if not remaining_items.exists():
+                order_product.order.status = 'Returned'
+                order_product.order.save()
+                messages.success(request, 'Item returned successfully. Order has been marked as returned as all items were returned.')
+            else:
+                messages.success(request, 'Item returned successfully.')
+            
+            return redirect('adminside:order_detail', order_product.order.id)
+            
+        except Exception as e:
+            messages.error(request, f'An error occurred while returning the item: {str(e)}')
+            return redirect('adminside:order_detail', order_product.order.id)
+    
+    return redirect('adminside:order_list')
+
+
+def canceladd_stock_for_item(request, order_product):
+    """Add stock back for a specific cancelled/returned item"""
+    try:
+        for variant in order_product.variations.all():
+            stock = Stock.objects.get(variant=variant)
+            stock.stock += order_product.quantity
+            stock.save()
+    except Stock.DoesNotExist:
+        logger.error(f"Stock not found for variant {variant} in order product {order_product.id}")
+    except Exception as e:
+        logger.error(f"Error adding stock back for order product {order_product.id}: {e}")
 
 
                 # COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT# COUPON_MANAGEMENT
