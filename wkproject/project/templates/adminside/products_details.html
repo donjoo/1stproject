@@ -80,11 +80,11 @@
                                             <div class="row">                                         
                                                     <h6>Offers: </h6>
                                                         {% for offer in offers  %}
-                                                        <p>Offer:<span style="color: red;">{{ offer.discount }} off</span></p>
+                                                        <p>Offer:<span style="color: red;">₹{{ offer.discount }} off</span></p>
                                               {% endfor %}
                                               <h6>Category Offers: </h6>
                                               {% for off in catoffers  %}
-                                              <p>Offer:<span style="color: red;">{{ off.discount }} off</span></p>
+                                              <p>Offer:<span style="color: red;">₹{{ off.discount }} off</span></p>
                                               {% endfor %}  
                                             </div>                                      
                                         </div>                            

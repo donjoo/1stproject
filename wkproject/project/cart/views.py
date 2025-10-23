@@ -245,32 +245,42 @@ def get_category_offer(category):
            return 0
 
 def apply_offer(cart_items, grand_total):
-    applied_offer = None
+    """
+    Apply product and category offers per unit/product.
+    Returns updated grand_total and total applied offer amount.
+    """
+    applied_offer = Decimal('0.00')
     has_offer = False
     
     for cart_item in cart_items:
         product = cart_item.product
         category = product.category
+        quantity = cart_item.quantity
         
-        quantity = (cart_item.quantity-1)
+        # Get offers for this product
         product_offer = get_product_offer(product)
         category_offer = get_category_offer(category)
         
+        # Choose the best offer (highest discount)
         if product_offer and category_offer:
-            offer = max(product_offer, category_offer)
+            offer_per_unit = max(product_offer, category_offer)
         elif product_offer:
-            offer = product_offer
+            offer_per_unit = product_offer
         elif category_offer:    
-            offer = category_offer
+            offer_per_unit = category_offer
         else:
-            offer = 0
-        offer += offer*quantity
-        offer = Decimal(offer)
-        if offer > Decimal(0):
-            grand_total = Decimal(grand_total)
-            grand_total -= offer
-            applied_offer = offer
+            offer_per_unit = Decimal('0.00')
+        
+        # Calculate total discount for this cart item (per unit * quantity)
+        if offer_per_unit > Decimal('0.00'):
+            item_discount = offer_per_unit * quantity
+            applied_offer += item_discount
             has_offer = True
+    
+    # Apply total discount to grand total
+    if has_offer:
+        grand_total = Decimal(str(grand_total)) - applied_offer
+    
     return grand_total, applied_offer
 
 

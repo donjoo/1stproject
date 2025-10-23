@@ -69,13 +69,13 @@
             <span class="old-price">₹{{ product.old_price }}</span>
         {% endif %}
         {% if offer.discount %}
-            <p class="offer-text">Offer: <span>{{ offer.discount }}% off</span></p>
+            <p class="offer-text">Offer: <span>₹{{ offer.discount }} off</span></p>
         {% endif %}
     </div>
 </div>
 
                             {% if offer.discount %}
-                            <p>Offer <span style="color: red;">{{ offer.discount }} off</span></p>
+                            <p>Offer <span style="color: red;">₹{{ offer.discount }} off</span></p>
                             {% endif %}
                         </div>
                     </div>
