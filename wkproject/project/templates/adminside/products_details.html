@@ -6,96 +6,98 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6 col-sm-12 col-xs-12">
-                       <div class="detail-gallery">
-                                        <span class="zoom-icon"><i class="fi-rs-search"></i></span>
-                                        <!-- MAIN SLIDES -->
-                                        <div class="product-image-slider">
-                                            <figure class="border-radius-10">
-                                                <img src="{{product.image.url}}" alt="product image">
-                                            </figure>
-                                            {% for p in p_image %}
-                                            <figure class="border-radius-10">
-                                                <img src="{{ p.Images.url }}" alt="product image">
-                                            </figure>
-                                            {% endfor %}
-                                            
-                                        </div>
-                                    </div>                  
-                                   <div class="slider-nav-thumbnails pl-15 pr-15">
-                                            <div><img src="{{ product.image.url }}" alt="product image"></div>
-                                            {% for p in p_image %}
-                                            <div><img src="{{ p.Images.url }}" alt="product image"></div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 col-sm-12 col-xs-12">
-                                        <div class="detail-info">
-                                        <h2 class="title-detail">{{product.title}}</h2>
-                                        <div class="product-detail-rating">
-                                            <div class="pro-details-brand">
-                                                <span> Anime: <a href="shop-grid-right.html">{{product.anime}}</a></span><br>
-                                                {% if product.character %}
-                                                <span> Character: <a href="shop-grid-right.html">{{product.character}}</a></span>
-                                                {% endif %}
-                                            </div>
-                                           
-                                        </div>
-                                        <div class="rating">
-    {% for i in "12345"|make_list %}
-        {% if forloop.counter <= avg_rating %}
-            <i class="fi-rs-star text-warning"></i>
-        {% else %}
-            <i class="fi-rs-star text-muted"></i>
-        {% endif %}
-    {% endfor %}
-    <span>({{ avg_rating }} / 5)</span>
-</div>
+                <div class="detail-gallery">
+                    <span class="zoom-icon"><i class="fi-rs-search"></i></span>
 
-                                        <div class="clearfix product-price-cover">
-                                            <div class="product-price primary-color float-left">
-                                                <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
-                                                <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
-                                            </div>
-                                        </div>
-                                        <div class="bt-1 border-color-1 mt-15 mb-15"></div>
-                                        
-                                        <div class="product_sort_info font-xs mb-30">
-                                           
-                                        </div>
-                                       
-                                        <div class="attr-detail attr-size">
-                                            <div class="row">
-                                            
-                                                    <h6>Sizes: </h6>
-                                                        {% for size, status in sizes_out_of_stock.items %}
-                                                        {% if status %}
-                                                            <p value="{{ size }}" disabled>{{ size }} (Out of stock)</p>
-                                                        {% else %}
-                                                            <p value="{{ size }}">{{ size }}</p>
-                                                        {% endif %}
-                                                    {% endfor %}                                                                                       
-                                            </div>                                            
-                                        </div>
-                                        <div class="attr-detail attr-size">          
-                                            <div class="row">                                         
-                                                    <h6>Offers: </h6>
-                                                        {% for offer in offers  %}
-                                                        <p>Offer:<span style="color: red;">₹{{ offer.discount }} off</span></p>
-                                              {% endfor %}
-                                              <h6>Category Offers: </h6>
-                                              {% for off in catoffers  %}
-                                              <p>Offer:<span style="color: red;">₹{{ off.discount }} off</span></p>
-                                              {% endfor %}  
-                                            </div>                                      
-                                        </div>                            
-                                        </div>
-                                        <div class="bt-1 border-color-1 mt-30 mb-30"></div>                                                                          
-                                    </div>
-                               
-                                    <!-- Detail Info -->
-                                </div>
-                             </div>
-                        </div> 
+                    <!-- MAIN SLIDES -->
+                    <div class="product-image-slider">
+                        <figure class="border-radius-10">
+                            <img src="{{product.image.url}}" alt="product image" loading="lazy">
+                        </figure>
+                        {% for p in p_image %}
+                        {% if p.Images %}
+                        <figure class="border-radius-10">
+                            <img src="{{ p.Images.url }}" alt="product image" loading="lazy">
+                        </figure>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- THUMBNAILS -->
+                    <div class="slider-nav-thumbnails pl-15 pr-15">
+                        <div><img src="{{ product.image.url }}" alt="product image"></div>
+                        {% for p in p_image %}
+                        {% if p.Images %}
+                          <div><img src="{{ p.Images.url }}" alt="product image"></div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-sm-12 col-xs-12">
+                <div class="detail-info">
+                    <h2 class="title-detail">{{product.title}}</h2>
+                    <div class="product-detail-rating">
+                        <div class="pro-details-brand">
+                            <span> Anime: <a href="shop-grid-right.html">{{product.anime}}</a></span>
+                        </div>
+                    </div>
+                    <div class="rating">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= avg_rating %}
+                                <i class="fi-rs-star text-warning"></i>
+                            {% else %}
+                                <i class="fi-rs-star text-muted"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <span>({{ avg_rating }} / 5)</span>
+                    </div>
+
+                    <div class="clearfix product-price-cover">
+                        <div class="product-price primary-color float-left">
+                            <ins> <span>₹</span><span class="current-price current-product-price-{{ product.id }} text-brand">{{product.price}}</span></ins>
+                            <ins> <span class="old-price font-md ml-15"><span>₹</span>{{product.old_price}}</span></ins>
+                        </div>
+                    </div>
+                    <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                    
+                    <div class="product_sort_info font-xs mb-30">
+                       
+                    </div>
+                   
+                    <div class="attr-detail attr-size">
+                        <div class="row">
+                        
+                                <h6>Sizes: </h6>
+                                    {% for size, status in sizes_out_of_stock.items %}
+                                    {% if status %}
+                                        <p value="{{ size }}" disabled>{{ size }} (Out of stock)</p>
+                                    {% else %}
+                                        <p value="{{ size }}">{{ size }}</p>
+                                    {% endif %}
+                                {% endfor %}                                                                                       
+                        </div>                                            
+                    </div>
+                    <div class="attr-detail attr-size">          
+                        <div class="row">                                         
+                                <h6>Offers: </h6>
+                                    {% for offer in offers  %}
+                                    <p>Offer:<span style="color: red;">₹{{ offer.discount }} off</span></p>
+                          {% endfor %}
+                          <h6>Category Offers: </h6>
+                          {% for off in catoffers  %}
+                          <p>Offer:<span style="color: red;">₹{{ off.discount }} off</span></p>
+                          {% endfor %}  
+                        </div>                                      
+                    </div>                            
+                    </div>
+                    <div class="bt-1 border-color-1 mt-30 mb-30"></div>                                                                          
+                </div>
+           
+                <!-- Detail Info -->
+            </div>
+        </div> 
                     </div>
                     <div class="row">
                         <div class="col-lg-10 m-auto entry-main-content">
@@ -180,8 +182,54 @@
     <script src="{% static 'assets/js/main.js' %}" ></script>
     <script src="{% static 'assets/js/shop.js' %}" ></script>
 
-    <style>
+    <script>
+    $(document).ready(function() {
+        // Slick slider for main images
+        if ($('.product-image-slider').length) {
+            $('.product-image-slider').slick({
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                arrows: true,
+                fade: true,
+                asNavFor: '.slider-nav-thumbnails'
+            });
 
+            $('.slider-nav-thumbnails').slick({
+                slidesToShow: 4,
+                slidesToScroll: 1,
+                asNavFor: '.product-image-slider',
+                focusOnSelect: true,
+                arrows: false
+            });
+        }
+    });
+    </script>
+
+    <style>
+.product-image-slider figure {
+    width: 100%;
+    height: 400px; /* fixed height for the main image container */
+    position: relative;
+    background-color: #fff; /* white space */
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.product-image-slider figure img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.slider-nav-thumbnails img {
+    height: 80px;
+    width: auto;
+    cursor: pointer;
+}
 
 .rating i {
     font-size: 18px;
