@@ -47,11 +47,18 @@ def calculate_proportional_refund(order, order_products_to_refund):
     
     return max(0, refund_amount)  # Ensure non-negative refund
 
-def process_refund_for_items(order, order_products, refund_type="Cancelled"):
+def process_refund_for_items(order, order_products, refund_type="Cancelled", single_transaction=False):
     """
     Process refund for specific order products, preventing duplicate refunds.
+    
+    Args:
+        order: The order object
+        order_products: List of order products to refund
+        refund_type: Type of refund (e.g., "Cancelled", "Returned")
+        single_transaction: If True, creates one consolidated transaction instead of individual ones
     """
     refunded_amount = 0
+    refunded_items = []
     
     for order_product in order_products:
         # Skip if already refunded
@@ -62,19 +69,34 @@ def process_refund_for_items(order, order_products, refund_type="Cancelled"):
         item_refund_amount = calculate_proportional_refund(order, [order_product])
         
         if item_refund_amount > 0:
-            # Create transaction
+            refunded_amount += item_refund_amount
+            refunded_items.append(order_product)
+    
+    # Create transaction(s) based on mode
+    if refunded_amount > 0:
+        if single_transaction:
+            # Create one consolidated transaction for entire order refund
             Transaction.objects.create(
                 user=order.user,
-                description=f"{refund_type} Item: {order_product.product.title} from Order {order.order_number}",
-                amount=item_refund_amount,
+                description=f"Order {refund_type}: Order #{order.order_number}",
+                amount=refunded_amount,
                 transaction_type="Credit",
             )
-            
-            # Mark as refunded
+        else:
+            # Create individual transactions for each item (existing behavior)
+            for order_product in refunded_items:
+                item_refund_amount = calculate_proportional_refund(order, [order_product])
+                Transaction.objects.create(
+                    user=order.user,
+                    description=f"{refund_type} Item: {order_product.product.title} from Order {order.order_number}",
+                    amount=item_refund_amount,
+                    transaction_type="Credit",
+                )
+        
+        # Mark all items as refunded
+        for order_product in refunded_items:
             order_product.refunded = True
             order_product.save()
-            
-            refunded_amount += item_refund_amount
     
     return refunded_amount
 

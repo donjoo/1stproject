@@ -753,7 +753,7 @@ def cancel_order(request, order_id,):
                 if non_refunded_items.exists():
                     # Import the refund function from orders views
                     from orders.views import process_refund_for_items
-                    refunded_amount = process_refund_for_items(data, non_refunded_items, "Cancelled")
+                    refunded_amount = process_refund_for_items(data, non_refunded_items, "Cancelled", single_transaction=True)
                     
                     if refunded_amount > 0:
                         messages.success(request, f'Order has been cancelled successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
@@ -804,7 +804,7 @@ def return_order(request, order_id):
                     if non_refunded_items.exists():
                         # Import the refund function from orders views
                         from orders.views import process_refund_for_items
-                        refunded_amount = process_refund_for_items(data, non_refunded_items, "Returned")
+                        refunded_amount = process_refund_for_items(data, non_refunded_items, "Returned", single_transaction=True)
                         
                         if refunded_amount > 0:
                             messages.success(request, f'Order has been returned successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
