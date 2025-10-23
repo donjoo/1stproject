@@ -791,22 +791,29 @@ def return_order(request, order_id):
             data.status = "Returned"
             data.save()
             canceladd_stock(request,data)
-            messages.success(request, 'Order has been returned successfully.')
+            
+            # Process refund for all non-refunded items only
             if data.payment:
-                # if (
-                #     data.payment.payment_method == "Paypal"
-                #     or data.payment.payment_method == "Wallet"
-                # ):
+                if (
+                    data.payment.payment_method == "Paypal"
+                    or data.payment.payment_method == "Wallet"
+                ):
+                    # Get all order products that haven't been refunded yet
+                    non_refunded_items = OrderProduct.objects.filter(order=data, refunded=False)
                     
-                    amount = data.order_total
-                    user = request.user
-
-                    Transaction.objects.create(
-                        user=user,
-                        description="Cancelled Order " + str(order_id),
-                        amount=amount,
-                         transaction_type="Credit",
-                    )
+                    if non_refunded_items.exists():
+                        # Import the refund function from orders views
+                        from orders.views import process_refund_for_items
+                        refunded_amount = process_refund_for_items(data, non_refunded_items, "Returned")
+                        
+                        if refunded_amount > 0:
+                            messages.success(request, f'Order has been returned successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
+                        else:
+                            messages.success(request, 'Order has been returned successfully.')
+                    else:
+                        messages.success(request, 'Order has been returned successfully.')
+            else:
+                messages.success(request, 'Order has been returned successfully.')
 
             return redirect("userauth:my_order",order_id)
 

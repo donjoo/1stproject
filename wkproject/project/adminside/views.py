@@ -1318,6 +1318,52 @@ def admin_cancel_order_item(request, order_product_id):
 
 
 @login_required(login_url='adminside:admin_login')
+def admin_return_order(request, order_id):
+    """Admin function to return an entire order"""
+    if not request.user.is_authenticated or not request.user.is_superadmin:
+        return redirect("adminside:admin_login")
+    
+    try:
+        order = Order.objects.get(id=order_id)
+        order.status = "Returned"
+        order.save()
+        canceladd_stock(request, order)
+        
+        # Process refund for all non-refunded items only
+        if order.payment:
+            if (
+                order.payment.payment_method == "Paypal"
+                or order.payment.payment_method == "Wallet"
+            ):
+                if not order.payment.status == "Payment pending":
+                    # Get all order products that haven't been refunded yet
+                    non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
+                    
+                    if non_refunded_items.exists():
+                        # Import the refund function from orders views
+                        from orders.views import process_refund_for_items
+                        refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Returned")
+                        
+                        if refunded_amount > 0:
+                            messages.success(request, f'Order has been returned successfully. Refund of ₹{refunded_amount:.2f} has been credited to user wallet.')
+                        else:
+                            messages.success(request, 'Order has been returned successfully.')
+                    else:
+                        messages.success(request, 'Order has been returned successfully.')
+                else:
+                    messages.error(request, "Payment was not done")
+        else:
+            messages.success(request, 'Order has been returned successfully.')
+            
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found or has already been returned.')
+    except Exception as e:
+        messages.error(request, f'An error occurred while returning the order: {str(e)}')
+    
+    return redirect('adminside:order_detail', order_id=order_id)
+
+
+@login_required(login_url='adminside:admin_login')
 def admin_return_order_item(request, order_product_id):
     """Admin function to return a specific product in an order"""
     if not request.user.is_authenticated or not request.user.is_superadmin:
