@@ -205,6 +205,20 @@
                                                     <span class="badge rounded-pill alert-success text-success">{{order.payment.status}}</span>
                                                 </dd>
                                             </dl>
+                                            {% if order.status == 'Cancelled' or order.status == 'Returned' %}
+                                            <dl class="dlist">
+                                                <dt class="text-muted">Refund Status:</dt>
+                                                <dd>
+                                                    {% if order.refund_status == 'none' %}
+                                                        <span class="badge rounded-pill alert-secondary text-secondary">No Refund</span>
+                                                    {% elif order.refund_status == 'partial' %}
+                                                        <span class="badge rounded-pill alert-warning text-warning">Partial Refund (₹{{order.refund_amount}})</span>
+                                                    {% elif order.refund_status == 'full' %}
+                                                        <span class="badge rounded-pill alert-info text-info">Full Refund (₹{{order.refund_amount}})</span>
+                                                    {% endif %}
+                                                </dd>
+                                            </dl>
+                                            {% endif %}
                                         </article>
                                     </td>
                                 </tr>

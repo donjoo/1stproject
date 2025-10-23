@@ -45,6 +45,12 @@ class Order(models.Model):
     status = models.CharField(max_length=100,choices=STATUS,default='New')
     ip = models.CharField(blank=True,max_length=20)
     is_ordered = models.BooleanField(default=False)
+    refund_status = models.CharField(max_length=20, choices=[
+        ('none', 'No Refund'),
+        ('partial', 'Partial Refund'),
+        ('full', 'Full Refund'),
+    ], default='none')
+    refund_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     created_at = models.DateTimeField()
     updated_at = models.DateTimeField(auto_now=True)
 

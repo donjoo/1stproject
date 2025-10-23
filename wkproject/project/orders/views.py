@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def calculate_proportional_refund(order, order_products_to_refund):
     """
-    Calculate proportional refund amount considering coupons and discounts.
+    Calculate proportional refund amount considering coupons and offer discounts.
     Returns the refund amount excluding shipping charges.
     """
     # Get all order products
@@ -34,18 +34,26 @@ def calculate_proportional_refund(order, order_products_to_refund):
     # Calculate items to refund
     items_to_refund_price = sum(item.product_price * item.quantity for item in order_products_to_refund)
     
-    # Calculate proportional discount
+    # Convert to Decimal for consistent calculations
+    total_products_price = Decimal(str(total_products_price))
+    items_to_refund_price = Decimal(str(items_to_refund_price))
+    
+    # Calculate proportional coupon discount
+    coupon_discount = Decimal('0.00')
     if order.coupon and total_products_price > 0:
-        # Calculate the discount percentage applied to products
-        discount_percentage = order.coupon.discount / 100
-        proportional_discount = (items_to_refund_price / total_products_price) * (total_products_price * discount_percentage)
-    else:
-        proportional_discount = 0
+        discount_percentage = Decimal(str(order.coupon.discount)) / Decimal('100')
+        coupon_discount = (items_to_refund_price / total_products_price) * (total_products_price * discount_percentage)
+    
+    # Calculate proportional offer discount
+    offer_discount = Decimal('0.00')
+    if order.offer_price and order.offer_price > 0 and total_products_price > 0:
+        offer_discount = (items_to_refund_price / total_products_price) * Decimal(str(order.offer_price))
     
     # Calculate final refund amount (excluding shipping)
-    refund_amount = items_to_refund_price - proportional_discount
+    total_discount = coupon_discount + offer_discount
+    refund_amount = items_to_refund_price - total_discount
     
-    return max(0, refund_amount)  # Ensure non-negative refund
+    return max(Decimal('0'), refund_amount)  # Ensure non-negative refund
 
 def process_refund_for_items(order, order_products, refund_type="Cancelled", single_transaction=False):
     """
@@ -97,6 +105,20 @@ def process_refund_for_items(order, order_products, refund_type="Cancelled", sin
         for order_product in refunded_items:
             order_product.refunded = True
             order_product.save()
+        
+        # Update order refund status
+        order.refund_amount += Decimal(str(refunded_amount))
+        
+        # Check if this is a full or partial refund
+        total_order_products = OrderProduct.objects.filter(order=order)
+        refunded_products = OrderProduct.objects.filter(order=order, refunded=True)
+        
+        if refunded_products.count() == total_order_products.count():
+            order.refund_status = 'full'
+        else:
+            order.refund_status = 'partial'
+        
+        order.save()
     
     return refunded_amount
 
@@ -109,131 +131,186 @@ def generate_transaction_id():
    return trans_id
 
 def cod_payment(request,order_id):
-    order = Order.objects.get(id=order_id)
-    user = User.objects.get(id=request.user.id)
-    
-    order.payment.payment_id =  generate_transaction_id()
-    order.payment.amount_paid = order.order_total
-    order.payment.status ='on Delivery'
-    order.payment.save() 
-
-    order.is_ordered =True
-    order.save()
-         
-    CartItem.objects.filter(user=request.user).delete()
-    if 'coupon_id' in request.session:
-       del request.session['coupon_id']
-
-    # Try to send email, but don't let it fail the payment
     try:
-        email_subject = 'Thank you for your order'
-        message = render_to_string('app/order_recieved_email.html',{
-            'user':user,
-            'order':order
-        })
-        to_email = request.user.email
-        send_email = EmailMessage(email_subject,message,to=[to_email])
-        send_email.send()
-    except Exception as email_error:
-            # Log the email error but don't fail the payment
-            logger.error(f"Email sending failed for COD order {order.order_number}: {email_error}")
+        order = Order.objects.get(id=order_id)
+        user = User.objects.get(id=request.user.id)
+        
+        # Check if order is already processed
+        if order.is_ordered:
+            messages.warning(request, 'This order has already been processed.')
+            return redirect('userauth:my_order', order.id)
+        
+        # Update payment details for COD
+        order.payment.payment_id = generate_transaction_id()
+        order.payment.amount_paid = order.order_total
+        order.payment.status = 'on Delivery'
+        order.payment.save() 
 
-    ordered_products = OrderProduct.objects.filter(order=order)
+        # Mark order as ordered
+        order.is_ordered = True
+        order.save()
+             
+        # Clear cart and session
+        CartItem.objects.filter(user=request.user).delete()
+        if 'coupon_id' in request.session:
+           del request.session['coupon_id']
 
-    subtotal = 0
-    for item in ordered_products:
-        subtotal += item.product_price * item.quantity
+        # Try to send email, but don't let it fail the payment
+        try:
+            email_subject = 'Thank you for your order'
+            message = render_to_string('app/order_recieved_email.html',{
+                'user':user,
+                'order':order
+            })
+            to_email = request.user.email
+            send_email = EmailMessage(email_subject,message,to=[to_email])
+            send_email.send()
+        except Exception as email_error:
+                # Log the email error but don't fail the payment
+                logger.error(f"Email sending failed for COD order {order.order_number}: {email_error}")
 
-    data = {
-        'order_number': order.order_number,
-        'transID': order.payment.payment_id, 
-        'order':order, 
-        'ordered_products':ordered_products,
-        'payment':order.payment,
-        'subtotal':subtotal,
-    }
+        ordered_products = OrderProduct.objects.filter(order=order)
+
+        subtotal = 0
+        for item in ordered_products:
+            subtotal += item.product_price * item.quantity
+
+        data = {
+            'order_number': order.order_number,
+            'transID': order.payment.payment_id, 
+            'order':order, 
+            'ordered_products':ordered_products,
+            'payment':order.payment,
+            'subtotal':subtotal,
+        }
+        
+        messages.success(request, 'Order confirmed successfully! You will pay on delivery.')
+        return render(request, "app/order_complete.html",data)
     
-
-    return render(request, "app/order_complete.html",data)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('app:index')
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('app:index')
+    except Exception as e:
+        logger.error(f"COD payment error: {e}")
+        messages.error(request, 'Order confirmation failed. Please try again or contact support.')
+        return redirect('app:index')
 
 
     
 def wallet_auth(request,order_id):
-    order = Order.objects.get(id=order_id)
-    amount = order.order_total
+    try:
+        order = Order.objects.get(id=order_id)
+        amount = order.order_total
 
-    if request.method == "POST": 
-        password = request.POST.get('password')
-        if not request.user.check_password(password):
-            messages.error(request, 'Your old password is incorrect.')
-            return redirect('orders:wallet_auth',order_id)
-        else:
-            return redirect('orders:wallet_payment', order_id=order_id)
-        
-    context = {
-        'amount':amount,
-
-    }
-    return render(request,'app/walletpay.html',context)
+        if request.method == "POST": 
+            password = request.POST.get('password')
+            if not password:
+                messages.error(request, 'Password is required.')
+                return redirect('orders:wallet_auth',order_id)
+            
+            if not request.user.check_password(password):
+                messages.error(request, 'Incorrect password. Please try again.')
+                return redirect('orders:wallet_auth',order_id)
+            else:
+                return redirect('orders:wallet_payment', order_id=order_id)
+            
+        context = {
+            'amount':amount,
+        }
+        return render(request,'app/walletpay.html',context)
+    
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('app:index')
+    except Exception as e:
+        logger.error(f"Wallet authentication error: {e}")
+        messages.error(request, 'An error occurred during authentication. Please try again.')
+        return redirect('app:index')
 
 def wallet_payment(request, order_id):
-    order = Order.objects.get(id=order_id)
-    user = User.objects.get(id=request.user.id)
-
-    Transaction.objects.create(
-        user=user,
-        description="Placed Order  " + order_id,
-        amount=order.order_total,
-        transaction_type="Debit",
-    )
-
-
-
-    order.payment.payment_id =  generate_transaction_id()
-    order.payment.amount_paid = order.order_total
-    order.payment.status ='Completed'
-    order.payment.save()
-
-
-    order.is_ordered =True
-    order.save()
-
-    CartItem.objects.filter(user=request.user).delete()
-    if 'coupon_id' in request.session:
-        coupon_id = request.session['coupon_id']
-        del request.session['coupon_id']
-    
-
-    # Try to send email, but don't let it fail the payment
     try:
-        email_subject = 'Thank you for your order'
-        message = render_to_string('app/order_recieved_email.html',{
-            'user':user,
-            'order':order
-        })
-        to_email = request.user.email
-        send_email = EmailMessage(email_subject,message,to=[to_email])
-        send_email.send()
-    except Exception as email_error:
-        # Log the email error but don't fail the payment
-        logger.error(f"Email sending failed for wallet order {order.order_number}: {email_error}")
+        order = Order.objects.get(id=order_id)
+        user = User.objects.get(id=request.user.id)
+        
+        # Check if order is already processed
+        if order.is_ordered:
+            messages.warning(request, 'This order has already been processed.')
+            return redirect('userauth:my_order', order.id)
+        
+        # Check wallet balance
+        wallet_balance = wallet_balence(request, user.id)
+        if order.order_total > wallet_balance:
+            messages.error(request, 'Insufficient wallet balance. Please add funds to your wallet.')
+            return redirect('orders:wallet_auth', order_id)
 
-    ordered_products = OrderProduct.objects.filter(order=order)
+        # Create debit transaction
+        Transaction.objects.create(
+            user=user,
+            description=f"Placed Order {order.order_number}",
+            amount=order.order_total,
+            transaction_type="Debit",
+        )
 
-    subtotal = 0
-    for item in ordered_products:
-        subtotal += item.product_price * item.quantity
+        # Update payment details
+        order.payment.payment_id = generate_transaction_id()
+        order.payment.amount_paid = order.order_total
+        order.payment.status = 'Completed'
+        order.payment.save()
 
-    data = {
-        'order_number': order.order_number,
-        'transID': order.payment.payment_id, 
-        'order':order, 
-        'ordered_products':ordered_products,
-        'payment':order.payment,
-        'subtotal':subtotal
-    }
+        # Mark order as ordered
+        order.is_ordered = True
+        order.save()
 
-    return render(request, "app/order_complete.html",data)
+        # Clear cart and session
+        CartItem.objects.filter(user=request.user).delete()
+        if 'coupon_id' in request.session:
+            del request.session['coupon_id']
+        
+        # Try to send email, but don't let it fail the payment
+        try:
+            email_subject = 'Thank you for your order'
+            message = render_to_string('app/order_recieved_email.html',{
+                'user':user,
+                'order':order
+            })
+            to_email = request.user.email
+            send_email = EmailMessage(email_subject,message,to=[to_email])
+            send_email.send()
+        except Exception as email_error:
+            # Log the email error but don't fail the payment
+            logger.error(f"Email sending failed for wallet order {order.order_number}: {email_error}")
+
+        ordered_products = OrderProduct.objects.filter(order=order)
+
+        subtotal = 0
+        for item in ordered_products:
+            subtotal += item.product_price * item.quantity
+
+        data = {
+            'order_number': order.order_number,
+            'transID': order.payment.payment_id, 
+            'order':order, 
+            'ordered_products':ordered_products,
+            'payment':order.payment,
+            'subtotal':subtotal
+        }
+
+        messages.success(request, 'Payment completed successfully!')
+        return render(request, "app/order_complete.html",data)
+    
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('app:index')
+    except User.DoesNotExist:
+        messages.error(request, 'User not found.')
+        return redirect('app:index')
+    except Exception as e:
+        logger.error(f"Wallet payment error: {e}")
+        messages.error(request, 'Payment failed. Please try again or contact support.')
+        return redirect('orders:wallet_auth', order_id)
 
 
 @login_required(login_url='userauth:login')

@@ -1218,34 +1218,46 @@ def admin_cancel_order(request, order_id):
         return redirect("adminside:admin_login")
     try:
         order = Order.objects.get(id=order_id)
-        canceladd_stock(request,order)
-        messages.success(request, 'Order has been cancelled successfully.')
-        if order.payment:
-            if (
-                order.payment.payment_method == "Paypal"
-                or order.payment.payment_method == "wallet payment"
-            ):
-                if not order.payment.status == "Payment pending":
-                    # Get all order products that haven't been refunded yet
-                    non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
+        
+        # Check if order is already cancelled
+        if order.status == "Cancelled":
+            messages.warning(request, 'Order is already cancelled.')
+            return redirect('adminside:order_detail', order_id=order_id)
+        
+        # Restore stock
+        canceladd_stock(request, order)
+        
+        # Process refunds for prepaid orders
+        refund_message = ""
+        if order.payment and order.payment.payment_method in ["Paypal", "Wallet"]:
+            if order.payment.status != "Payment pending":
+                # Get all order products that haven't been refunded yet
+                non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
+                
+                if non_refunded_items.exists():
+                    # Import the refund function from orders views
+                    from orders.views import process_refund_for_items
+                    refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Cancelled", single_transaction=True)
                     
-                    if non_refunded_items.exists():
-                        # Import the refund function from orders views
-                        from orders.views import process_refund_for_items
-                        refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Cancelled", single_transaction=True)
-                        
-                        if refunded_amount > 0:
-                            messages.success(request, f'Order has been cancelled successfully. Refund of ₹{refunded_amount:.2f} has been credited to user wallet.')
-                        else:
-                            messages.success(request, 'Order has been cancelled successfully.')
+                    if refunded_amount > 0:
+                        refund_message = f" Refund of ₹{refunded_amount:.2f} has been credited to user wallet."
                     else:
-                        messages.success(request, 'Order has been cancelled successfully.')
+                        refund_message = " No refund was processed."
                 else:
-                    messages.error(request,"payment was not done")
-    except ObjectDoesNotExist:
-        messages.error(request, 'Order not found or has already been cancelled.')
+                    refund_message = " All items were already refunded."
+            else:
+                refund_message = " No refund processed as payment was pending."
+        else:
+            # For COD orders, no refund needed
+            refund_message = " No refund needed for COD orders."
+        
+        messages.success(request, f'Order has been cancelled successfully.{refund_message}')
+        
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
     except Exception as e:
-        messages.error(request, 'An error occurred while cancelling the order: {}'.format(str(e)))
+        logger.error(f"Admin cancel order error: {e}")
+        messages.error(request, f'An error occurred while cancelling the order: {str(e)}')
 
 
 @login_required(login_url='adminside:admin_login')
