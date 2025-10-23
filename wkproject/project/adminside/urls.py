@@ -67,6 +67,7 @@ urlpatterns = [
     path('block_category_offer/<id>/',views.block_category_offer,name='block_category_offer'),
 
     path('sales_report/',views.sales_report,name='sales_report'),
+    path('delete_rating/<int:rating_id>/', views.delete_rating, name='delete_rating'),
  
        
 

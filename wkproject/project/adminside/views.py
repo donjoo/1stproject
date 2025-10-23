@@ -587,6 +587,26 @@ def products_details(request, pid):
         catoffers = CategoryOffer.objects.filter(category = product.category,start_date__lte = current_date,end_date__gte = current_date)
         avg_rating = ProductRating.objects.filter(product=product).aggregate(avg=Avg('rating'))['avg'] or 0
         rounded_rating = round(avg_rating)
+        
+        # Get ratings and reviews with pagination
+        ratings = ProductRating.objects.filter(product=product).order_by('-created_at')
+        paginator = Paginator(ratings, 10)  # 10 reviews per page
+        page = request.GET.get('page')
+        ratings_page = paginator.get_page(page)
+        
+        # Calculate star count breakdown
+        star_counts = {}
+        star_percentages = {}
+        total_reviews = ProductRating.objects.filter(product=product).count()
+        
+        for i in range(1, 6):
+            count = ProductRating.objects.filter(product=product, rating=i).count()
+            star_counts[i] = count
+            if total_reviews > 0:
+                star_percentages[i] = round((count / total_reviews) * 100)
+            else:
+                star_percentages[i] = 0
+        
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
     context = {
@@ -598,9 +618,26 @@ def products_details(request, pid):
         'sizes_out_of_stock':sizes_out_of_stock,
         'all_sizes_out_of_stock':all_sizes_out_of_stock,
         "avg_rating": rounded_rating,
-
+        "ratings": ratings_page,
+        "star_counts": star_counts,
+        "star_percentages": star_percentages,
     }
     return render(request, 'adminside/products_details.html', context)
+
+@login_required(login_url='adminside:admin_login')
+def delete_rating(request, rating_id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
+    try:
+        rating = ProductRating.objects.get(id=rating_id)
+        product_pid = rating.product.pid
+        rating.delete()
+        messages.success(request, 'Rating and review deleted successfully.')
+        return redirect('adminside:products_details', pid=product_pid)
+    except ProductRating.DoesNotExist:
+        messages.error(request, 'Rating not found.')
+        return redirect('adminside:admin_index')
 
 def is_size_out_of_stock(pid, size):
     try:
@@ -1164,6 +1201,10 @@ def order_detail(request, order_id):
             subtotal += i.product_price * i.quantity
     for item in order_products:
         item.total_price = item.product.price * item.quantity 
+        # Get ratings for each product - ONLY from the customer who placed this order
+        item.ratings = ProductRating.objects.filter(product=item.product, user=order.user).order_by('-created_at')
+        item.avg_rating = ProductRating.objects.filter(product=item.product, user=order.user).aggregate(avg=Avg('rating'))['avg'] or 0
+    
     coupon = None
     coupon_discount = Decimal('0.00')
     if order.coupon:

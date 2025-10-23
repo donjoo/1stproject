@@ -1,6 +1,7 @@
 
 {% extends "partials/admin_base.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block body %}
 <section class="mt-50 mb-50">
     <div class="container">
@@ -151,8 +152,120 @@
                                 </tbody>
                             </table>
                             
-                          
-                            <!--comment form-->
+                            <!-- RATINGS AND REVIEWS SECTION -->
+                            <h2 class="section-title style-1 mb-30">Product Ratings & Reviews</h2>
+                            
+                            <!-- Rating Summary -->
+                            <div class="rating-summary mb-40">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="overall-rating text-center">
+                                            <div class="rating-number">{{ avg_rating|floatformat:1 }}</div>
+                                            <div class="rating-stars">
+                                                {% for i in "12345"|make_list %}
+                                                    {% if forloop.counter <= avg_rating %}
+                                                        <i class="fi-rs-star text-warning"></i>
+                                                    {% else %}
+                                                        <i class="fi-rs-star text-muted"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <div class="rating-count">{{ ratings.paginator.count }} review{{ ratings.paginator.count|pluralize }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="rating-breakdown">
+                                            {% for i in "54321"|make_list %}
+                                                {% with star_num=i|add:0 %}
+                                                    {% with count=star_counts|lookup:star_num %}
+                                                        {% with percentage=star_percentages|lookup:star_num %}
+                                                            <div class="rating-bar">
+                                                                <span class="rating-label">{{ i }} star{{ i|pluralize }}</span>
+                                                                <div class="progress">
+                                                                    <div class="progress-bar" style="width: {{ percentage }}%"></div>
+                                                                </div>
+                                                                <span class="rating-count">{{ count }}</span>
+                                                            </div>
+                                                        {% endwith %}
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reviews List -->
+                            <div class="reviews-section">
+                                <h4>Customer Reviews</h4>
+                                {% if ratings %}
+                                    {% for rating in ratings %}
+                                        <div class="review-item mb-30">
+                                            <div class="review-header">
+                                                <div class="reviewer-info">
+                                                    <strong>{{ rating.user.username }}</strong>
+                                                    <div class="rating-stars">
+                                                        {% for i in "12345"|make_list %}
+                                                            {% if forloop.counter <= rating.rating %}
+                                                                <i class="fi-rs-star text-warning"></i>
+                                                            {% else %}
+                                                                <i class="fi-rs-star text-muted"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="review-date">
+                                                    <small class="text-muted">{{ rating.created_at|date:"M d, Y" }}</small>
+                                                </div>
+                                            </div>
+                                            {% if rating.review %}
+                                                <div class="review-content">
+                                                    <p>{{ rating.review }}</p>
+                                                </div>
+                                            {% endif %}
+                                            <div class="review-actions mt-2">
+                                                <form method="post" action="{% url 'adminside:delete_rating' rating.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this rating and review?')">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete Rating</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+
+                                    <!-- Pagination -->
+                                    {% if ratings.has_other_pages %}
+                                        <nav aria-label="Reviews pagination">
+                                            <ul class="pagination justify-content-center">
+                                                {% if ratings.has_previous %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page=1">First</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ ratings.previous_page_number }}">Previous</a>
+                                                    </li>
+                                                {% endif %}
+                                                
+                                                <li class="page-item active">
+                                                    <span class="page-link">
+                                                        Page {{ ratings.number }} of {{ ratings.paginator.num_pages }}
+                                                    </span>
+                                                </li>
+                                                
+                                                {% if ratings.has_next %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ ratings.next_page_number }}">Next</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ ratings.paginator.num_pages }}">Last</a>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+                                    {% endif %}
+                                {% else %}
+                                    <p class="text-muted">No reviews yet for this product.</p>
+                                {% endif %}
+                            </div>
                             
                         </div>
                     </div>
@@ -244,6 +357,117 @@
 }
 .text-muted {
     color: #e0e0e0;
+}
+
+/* Ratings and Reviews Styles */
+.rating-summary {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.overall-rating {
+    padding: 20px;
+}
+
+.rating-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 10px;
+}
+
+.rating-stars i {
+    font-size: 18px;
+}
+
+.rating-breakdown {
+    padding: 20px 0;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.rating-label {
+    width: 80px;
+    font-size: 14px;
+}
+
+.progress {
+    flex: 1;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background-color: #007bff;
+    border-radius: 4px;
+}
+
+.reviews-section {
+    margin-top: 30px;
+}
+
+.review-item {
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.reviewer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.review-content {
+    margin-top: 10px;
+}
+
+.review-content p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.pagination {
+    margin-top: 30px;
+}
+
+.page-link {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.page-link:hover {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
 }
     </style>
 {% endblock body %}

@@ -74,9 +74,6 @@
     </div>
 </div>
 
-                            {% if offer.discount %}
-                            <p>Offer <span style="color: red;">₹{{ offer.discount }} off</span></p>
-                            {% endif %}
                         </div>
                     </div>
                     <div class="bt-1 border-color-1 mt-15 mb-15"></div>
@@ -185,6 +182,179 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- RATINGS AND REVIEWS SECTION -->
+        <div class="row">
+            <div class="col-lg-10 m-auto">
+                <h2 class="section-title style-1 mb-30">Ratings & Reviews</h2>
+                
+                <!-- Rating Summary -->
+                <div class="rating-summary mb-40">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="overall-rating text-center">
+                                <div class="rating-number">{{ avg_rating|floatformat:1 }}</div>
+                                <div class="rating-stars">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= avg_rating %}
+                                            <i class="fi-rs-star text-warning"></i>
+                                        {% else %}
+                                            <i class="fi-rs-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="rating-count">{{ ratings.paginator.count }} review{{ ratings.paginator.count|pluralize }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="rating-breakdown">
+                                {% for i in "54321"|make_list %}
+                                    {% with star_num=i|add:0 %}
+                                        {% with count=star_counts|lookup:star_num %}
+                                            {% with percentage=star_percentages|lookup:star_num %}
+                                                <div class="rating-bar">
+                                                    <span class="rating-label">{{ i }} star{{ i|pluralize }}</span>
+                                                    <div class="progress">
+                                                        <div class="progress-bar" style="width: {{ percentage }}%"></div>
+                                                    </div>
+                                                    <span class="rating-count">{{ count }}</span>
+                                                </div>
+                                            {% endwith %}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rating Form -->
+                {% if user.is_authenticated %}
+                    {% if not user_rating %}
+                        {% if can_rate %}
+                            <div class="rating-form mb-40">
+                                <h4>Rate this product</h4>
+                                <form method="post" action="{% url 'app:product_detail' product.pid %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="rating_form" value="true">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="{{ form.rating.id_for_label }}">Rating</label>
+                                                {{ form.rating }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="{{ form.review.id_for_label }}">Review</label>
+                                                {{ form.review }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <button type="submit" class="btn btn-primary">Submit Rating</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="rating-restriction mb-40">
+                                <div class="alert alert-info">
+                                    <h4>Rate this product</h4>
+                                    <p>You can only rate products you have purchased and received. Please complete your purchase and wait for delivery to rate this product.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="user-rating mb-40">
+                            <h4>Your Rating</h4>
+                            <div class="user-rating-display">
+                                <div class="rating-stars">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= user_rating.rating %}
+                                            <i class="fi-rs-star text-warning"></i>
+                                        {% else %}
+                                            <i class="fi-rs-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p class="user-review">{{ user_rating.review }}</p>
+                                <small class="text-muted">Rated on {{ user_rating.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="login-prompt mb-40">
+                        <p>Please <a href="{% url 'userauth:login' %}">login</a> to rate this product.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Reviews List -->
+                <div class="reviews-section">
+                    <h4>Customer Reviews</h4>
+                    {% if ratings %}
+                        {% for rating in ratings %}
+                            <div class="review-item mb-30">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <strong>{{ rating.user.username }}</strong>
+                                        <div class="rating-stars">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= rating.rating %}
+                                                    <i class="fi-rs-star text-warning"></i>
+                                                {% else %}
+                                                    <i class="fi-rs-star text-muted"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="review-date">
+                                        <small class="text-muted">{{ rating.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                                {% if rating.review %}
+                                    <div class="review-content">
+                                        <p>{{ rating.review }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <!-- Pagination -->
+                        {% if ratings.has_other_pages %}
+                            <nav aria-label="Reviews pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if ratings.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">First</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ ratings.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            Page {{ ratings.number }} of {{ ratings.paginator.num_pages }}
+                                        </span>
+                                    </li>
+                                    
+                                    {% if ratings.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ ratings.next_page_number }}">Next</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ ratings.paginator.num_pages }}">Last</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
@@ -400,6 +570,187 @@ $(document).ready(function() {
     font-size: 14px;
     color: red;
     margin-top: 5px;
+}
+
+/* Ratings and Reviews Styles */
+.rating-summary {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.overall-rating {
+    padding: 20px;
+}
+
+.rating-number {
+    font-size: 48px;
+    font-weight: bold;
+    color: #ff4d6d;
+    margin-bottom: 10px;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 10px;
+}
+
+.rating-stars i {
+    font-size: 18px;
+}
+
+.rating-breakdown {
+    padding: 20px 0;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.rating-label {
+    width: 80px;
+    font-size: 14px;
+}
+
+.progress {
+    flex: 1;
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background-color: #ff4d6d;
+    border-radius: 4px;
+}
+
+.rating-form {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.rating-form .form-group {
+    margin-bottom: 20px;
+}
+
+.rating-form label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.user-rating {
+    background: #e8f5e8;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.user-rating-display {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-review {
+    font-style: italic;
+    margin: 10px 0;
+}
+
+.reviews-section {
+    margin-top: 30px;
+}
+
+.review-item {
+    border: 1px solid #e9ecef;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.reviewer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.review-content {
+    margin-top: 10px;
+}
+
+.review-content p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.login-prompt {
+    background: #fff3cd;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-prompt a {
+    color: #ff4d6d;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-prompt a:hover {
+    text-decoration: underline;
+}
+
+.rating-restriction {
+    margin-bottom: 30px;
+}
+
+.rating-restriction .alert {
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #bee5eb;
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+.rating-restriction h4 {
+    margin-bottom: 10px;
+    color: #0c5460;
+}
+
+.pagination {
+    margin-top: 30px;
+}
+
+.page-link {
+    color: #ff4d6d;
+    border-color: #ff4d6d;
+}
+
+.page-link:hover {
+    color: #fff;
+    background-color: #ff4d6d;
+    border-color: #ff4d6d;
+}
+
+.page-item.active .page-link {
+    background-color: #ff4d6d;
+    border-color: #ff4d6d;
 }
 
 </style>

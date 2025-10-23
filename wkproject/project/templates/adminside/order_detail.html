@@ -11,6 +11,134 @@
     gap: 5px;
     align-items: center;
 }
+.product-rating {
+    margin-top: 8px;
+    display: block;
+    width: 100%;
+}
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: nowrap;
+}
+.rating-stars i {
+    font-size: 14px;
+    display: inline-block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+.rating-text {
+    font-size: 12px;
+    color: #666;
+    margin-left: 5px;
+}
+.rating-count {
+    margin-top: 2px;
+    display: block;
+    clear: both;
+}
+.text-warning {
+    color: #ffc107;
+}
+.text-muted {
+    color: #e0e0e0;
+}
+
+/* Reviews & Ratings Section Styles */
+.product-reviews {
+    max-width: 100%;
+}
+
+.rating-summary {
+    margin-bottom: 8px;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex-wrap: nowrap;
+}
+
+.rating-stars i {
+    font-size: 12px;
+    display: inline-block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.rating-text {
+    font-size: 10px;
+    color: #666;
+    margin-left: 3px;
+}
+
+.rating-count {
+    margin-top: 2px;
+    display: block;
+    clear: both;
+}
+
+.individual-reviews {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.review-item-small {
+    border-bottom: 1px solid #eee;
+    padding: 5px 0;
+    margin-bottom: 5px;
+}
+
+.review-item-small:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 3px;
+}
+
+.reviewer-info strong {
+    font-size: 11px;
+    color: #333;
+}
+
+.rating-stars-small {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.rating-stars-small i {
+    font-size: 10px;
+    display: inline-block;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
+    vertical-align: middle;
+}
+
+.review-text-small {
+    font-size: 10px;
+    color: #666;
+    margin: 2px 0;
+    line-height: 1.3;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 10px;
+    color: #999;
+}
 </style>
 
 <section class="content-main">
@@ -108,25 +236,52 @@
                     </article>
                 </div> <!-- col// -->
             </div> <!-- row // -->
+            
+            <!-- Payment Info Section - Moved Above -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Customer:</strong> {{order.payment.user}}</p>
+                                    <p><strong>Payment ID:</strong> {{order.payment.payment_id}}</p>
+                                    <p><strong>Payment Method:</strong> {{order.payment.payment_method}}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Amount Paid:</strong> ₹{{order.payment.amount_paid}}</p>
+                                    <p><strong>Status:</strong> {{order.payment.status}}</p>
+                                    <p><strong>Order Note:</strong> {{order.order_note}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="row">
-                <div class="col-lg-7">
+                <div class="col-12">
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th width="30%">Product</th>
-                                    <th width="15%">Unit Price</th>
-                                    <th width="10%">Quantity</th>
-                                    <th width="15%" class="text-end">Total</th>
-                                    <th width="15%">Item Status</th>
-                                    <th width="15%">Actions</th>
+                                    <th width="25%">Product</th>
+                                    <th width="12%">Unit Price</th>
+                                    <th width="8%">Quantity</th>
+                                    <th width="12%" class="text-end">Total</th>
+                                    <th width="12%">Item Status</th>
+                                    <th width="20%">Reviews & Ratings</th>
+                                    <th width="11%">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in order_products %}
                                         <tr>
                                             <td class="image product-thumbnail"><img src="{{ item.product.image.url }}" alt="#">                                                    
-                                                <h5 class="product-name"><a href="{% url 'app:product_detail' item.product.pid %}">{{ item.product.title }}</a></h5>
+                                                <h5 class="product-name"><a href="{% url 'adminside:products_details' item.product.pid %}">{{ item.product.title }}</a></h5>
                                                 <p class="font-xs">
                                                     {% if item.variations.all %}
                                                         {% for iteme in item.variations.all %}
@@ -134,6 +289,8 @@
                                                         {% endfor %}
                                                    {% endif %}
                                              </p>
+                                             <!-- Rating Display - Only show if ratings exist -->
+                                          
                                             </td>
                                             
                                             <td class="price" data-title="Price"><span><span>₹</span>{{ item.product.price|floatformat:2 }}</span></td>
@@ -148,6 +305,46 @@
                                                     <span class="badge bg-danger">{{ item.item_status }}</span>
                                                 {% elif item.item_status == 'Returned' %}
                                                     <span class="badge bg-warning">{{ item.item_status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            
+                                            <!-- Reviews & Ratings Column -->
+                                            <td>
+                                                {% if item.ratings.count > 0 %}
+                                                    <div class="product-reviews">
+                                                       
+                                                        
+                                                        <!-- Individual Reviews -->
+                                                        <div class="individual-reviews mt-2">
+                                                            {% for rating in item.ratings|slice:":2" %}
+                                                                <div class="review-item-small">
+                                                                    <div class="reviewer-info">
+                                                                        <strong>{{ rating.user.username }}</strong>
+                                                                        <div class="rating-stars-small">
+                                                                            {% for i in "12345"|make_list %}
+                                                                                {% if forloop.counter <= rating.rating %}
+                                                                                    <i class="fi-rs-star text-warning"></i>
+                                                                                {% else %}
+                                                                                    <i class="fi-rs-star text-muted"></i>
+                                                                                {% endif %}
+                                                                            {% endfor %}
+                                                                        </div>
+                                                                    </div>
+                                                                    {% if rating.review %}
+                                                                        <p class="review-text-small">{{ rating.review|truncatechars:50 }}</p>
+                                                                    {% endif %}
+                                                                    <small class="text-muted">{{ rating.created_at|date:"M d" }}</small>
+                                                                </div>
+                                                            {% endfor %}
+                                                            {% if item.ratings.count > 2 %}
+                                                                <small class="text-muted">+{{ item.ratings.count|add:"-2" }} more review{{ item.ratings.count|add:"-2"|pluralize }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <div class="no-reviews">
+                                                        <small class="text-muted">No reviews yet</small>
+                                                    </div>
                                                 {% endif %}
                                             </td>
                                             
@@ -182,7 +379,7 @@
                                         </tr>
                                         {% endfor %}
                                 <tr>
-                                    <td colspan="6">
+                                    <td colspan="7">
                                         <article class="float-end">
                                             <dl class="dlist">
                                                 <dt>Subtotal:</dt>
@@ -231,25 +428,6 @@
                             </tbody>
                         </table>
                     </div> <!-- table-responsive// -->
-                </div> <!-- col// -->
-                <div class="col-lg-1"></div>
-                <div class="col-lg-4">
-                    <div class="box shadow-sm bg-light">
-                        <h6 class="mb-15">Payment info</h6>
-                        <p>
-                            {{order.payment.user}}<br>
-                           payement ID: {{order.payment.payment_id}}<br>
-                           payment method:{{order.payment.payment_method}}<br>
-                           amount paid:{{order.payment.amount_paid}}<br>
-                           status:{{order.payment.status}}<br>
-                        </p>
-                    </div>
-                    <div class="h-25 pt-4">
-                        <div class="mb-3">
-                            <label>Notes</label>
-                           <p>{{order.order_note}}</p>
-                        </div>
-                    </div>
                 </div> <!-- col// -->
             </div>
         </div> <!-- card-body end// -->
