@@ -147,7 +147,9 @@ def calculate_revenue(request):
     for order in orders:
         products = OrderProduct.objects.filter(order = order)
         for item in products:
-            revenue += item.product_price * item.quantity
+            # Only count revenue for items that haven't been refunded
+            if not item.refunded:
+                revenue += item.product_price * item.quantity
     return revenue
 
 
@@ -157,7 +159,9 @@ def calculate_monthly_revenue(year, month):
     for order in orders:
         order_products = OrderProduct.objects.filter(order = order)
         for item in order_products:
-            total_earnings += item.product_price * item.quantity
+            # Only count revenue for items that haven't been refunded
+            if not item.refunded:
+                total_earnings += item.product_price * item.quantity
     return total_earnings
 
 def calculate_average_earnings_per_month(request):
@@ -1218,15 +1222,20 @@ def admin_cancel_order(request, order_id):
                 or order.payment.payment_method == "wallet payment"
             ):
                 if not order.payment.status == "Payment pending":
-                    amount = order.order_total
-                    user = order.user
-
-                    Transaction.objects.create(
-                        user=user,
-                        description="Cancelled Order " + str(order_id),
-                        amount=amount,
-                        transaction_type="Credit",
-                    )
+                    # Get all order products that haven't been refunded yet
+                    non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
+                    
+                    if non_refunded_items.exists():
+                        # Import the refund function from orders views
+                        from orders.views import process_refund_for_items
+                        refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Cancelled")
+                        
+                        if refunded_amount > 0:
+                            messages.success(request, f'Order has been cancelled successfully. Refund of ₹{refunded_amount:.2f} has been credited to user wallet.')
+                        else:
+                            messages.success(request, 'Order has been cancelled successfully.')
+                    else:
+                        messages.success(request, 'Order has been cancelled successfully.')
                 else:
                     messages.error(request,"payment was not done")
     except ObjectDoesNotExist:

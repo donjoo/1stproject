@@ -22,6 +22,62 @@ import logging
 # Set up logging
 logger = logging.getLogger(__name__)
 
+def calculate_proportional_refund(order, order_products_to_refund):
+    """
+    Calculate proportional refund amount considering coupons and discounts.
+    Returns the refund amount excluding shipping charges.
+    """
+    # Get all order products
+    all_order_products = OrderProduct.objects.filter(order=order)
+    total_products_price = sum(item.product_price * item.quantity for item in all_order_products)
+    
+    # Calculate items to refund
+    items_to_refund_price = sum(item.product_price * item.quantity for item in order_products_to_refund)
+    
+    # Calculate proportional discount
+    if order.coupon and total_products_price > 0:
+        # Calculate the discount percentage applied to products
+        discount_percentage = order.coupon.discount / 100
+        proportional_discount = (items_to_refund_price / total_products_price) * (total_products_price * discount_percentage)
+    else:
+        proportional_discount = 0
+    
+    # Calculate final refund amount (excluding shipping)
+    refund_amount = items_to_refund_price - proportional_discount
+    
+    return max(0, refund_amount)  # Ensure non-negative refund
+
+def process_refund_for_items(order, order_products, refund_type="Cancelled"):
+    """
+    Process refund for specific order products, preventing duplicate refunds.
+    """
+    refunded_amount = 0
+    
+    for order_product in order_products:
+        # Skip if already refunded
+        if order_product.refunded:
+            continue
+            
+        # Calculate proportional refund for this item
+        item_refund_amount = calculate_proportional_refund(order, [order_product])
+        
+        if item_refund_amount > 0:
+            # Create transaction
+            Transaction.objects.create(
+                user=order.user,
+                description=f"{refund_type} Item: {order_product.product.title} from Order {order.order_number}",
+                amount=item_refund_amount,
+                transaction_type="Credit",
+            )
+            
+            # Mark as refunded
+            order_product.refunded = True
+            order_product.save()
+            
+            refunded_amount += item_refund_amount
+    
+    return refunded_amount
+
 # Create your views here.
 
 def generate_transaction_id():
@@ -540,19 +596,25 @@ def cancel_order_item(request, order_product_id):
         # Add stock back for this specific item
         canceladd_stock_for_item(request, order_product)
         
-        # Process refund for this specific item
-        if order_product.order.payment:
+        # Process refund for this specific item (only if not already refunded)
+        if order_product.order.payment and not order_product.refunded:
             if (order_product.order.payment.payment_method == "Paypal" or 
                 order_product.order.payment.payment_method == "Wallet"):
                 
-                item_total = order_product.product_price * order_product.quantity
-                user = request.user
-                Transaction.objects.create(
-                    user=user,
-                    description=f"Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
-                    amount=item_total,
-                    transaction_type="Credit",
-                )
+                # Use the new proportional refund calculation
+                refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+                
+                if refund_amount > 0:
+                    Transaction.objects.create(
+                        user=request.user,
+                        description=f"Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                        amount=refund_amount,
+                        transaction_type="Credit",
+                    )
+                    
+                    # Mark as refunded to prevent duplicate refunds
+                    order_product.refunded = True
+                    order_product.save()
         
         # Check if all items are cancelled, then cancel the entire order
         remaining_items = OrderProduct.objects.filter(
@@ -596,16 +658,22 @@ def return_order_item(request, order_product_id):
         # Add stock back for this specific item
         canceladd_stock_for_item(request, order_product)
         
-        # Process refund for this specific item
-        if order_product.order.payment:
-            item_total = order_product.product_price * order_product.quantity
-            user = request.user
-            Transaction.objects.create(
-                user=user,
-                description=f"Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
-                amount=item_total,
-                transaction_type="Credit",
-            )
+        # Process refund for this specific item (only if not already refunded)
+        if order_product.order.payment and not order_product.refunded:
+            # Use the new proportional refund calculation
+            refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+            
+            if refund_amount > 0:
+                Transaction.objects.create(
+                    user=request.user,
+                    description=f"Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                    amount=refund_amount,
+                    transaction_type="Credit",
+                )
+                
+                # Mark as refunded to prevent duplicate refunds
+                order_product.refunded = True
+                order_product.save()
         
         # Check if all items are returned, then mark the entire order as returned
         remaining_items = OrderProduct.objects.filter(

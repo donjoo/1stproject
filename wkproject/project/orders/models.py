@@ -71,6 +71,7 @@ class OrderProduct(models.Model):
     product_price = models.FloatField()
     ordered = models.BooleanField(default=False)
     item_status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default='Ordered')
+    refunded = models.BooleanField(default=False)  # Track if this item has been refunded
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
