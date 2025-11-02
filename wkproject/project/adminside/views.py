@@ -578,7 +578,7 @@ def products_details(request, pid):
     try:
         product = Product.objects.get(pid=pid)
         product_images = ProductImage.objects.filter(product=product)
-        sizes = Variants.objects.filter(product=product)
+        sizes = Variants.objects.filter(product=product, delete=False)
         p_image = product.p_images.all()
         # Passing pid to is_size_out_of_stock function
         sizes_out_of_stock = {size.size: is_size_out_of_stock(pid, size.size) for size in sizes}
@@ -607,6 +607,31 @@ def products_details(request, pid):
             else:
                 star_percentages[i] = 0
         
+        # Get variants with stock information for management section
+        variants_with_stock = []
+        total_stock = 0
+        low_stock_count = 0
+        existing_sizes_list = []
+        for variant in sizes:
+            stock_obj, created = Stock.objects.get_or_create(variant=variant, defaults={'stock': 0})
+            is_low_stock = stock_obj.stock < 5 and variant.is_active and stock_obj.stock > 0
+            if is_low_stock:
+                low_stock_count += 1
+            variants_with_stock.append({
+                'variant': variant,
+                'stock': stock_obj.stock,
+                'stock_id': stock_obj.id,
+                'is_active': variant.is_active,
+                'is_out_of_stock': stock_obj.stock <= 0
+            })
+            existing_sizes_list.append(variant.size)
+            total_stock += stock_obj.stock
+        
+        # Calculate available sizes (not yet added)
+        AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+        existing_sizes_normalized = [s.upper() if s else s for s in existing_sizes_list]
+        available_sizes = [size for size in AVAILABLE_SIZES if size.upper() not in existing_sizes_normalized]
+        
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
     context = {
@@ -621,8 +646,51 @@ def products_details(request, pid):
         "ratings": ratings_page,
         "star_counts": star_counts,
         "star_percentages": star_percentages,
+        'variants_with_stock': variants_with_stock,
+        'total_stock': total_stock,
+        'low_stock_count': low_stock_count,
+        'existing_sizes': existing_sizes_list,
+        'available_sizes': available_sizes,
+        'all_available_sizes': AVAILABLE_SIZES,
     }
     return render(request, 'adminside/products_details.html', context)
+
+@login_required(login_url='adminside:admin_login')
+def update_stock_ajax(request):
+    """AJAX endpoint for quick stock updates"""
+    if not request.user.is_superadmin:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        try:
+            stock_id = request.POST.get('stock_id')
+            quantity = request.POST.get('quantity')
+            
+            if not stock_id or not quantity:
+                return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
+            
+            try:
+                quantity = int(quantity)
+                if quantity < 0:
+                    return JsonResponse({'success': False, 'message': 'Stock cannot be negative'}, status=400)
+            except ValueError:
+                return JsonResponse({'success': False, 'message': 'Invalid quantity'}, status=400)
+            
+            stock = get_object_or_404(Stock, id=stock_id)
+            stock.stock = quantity
+            stock.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Stock updated successfully',
+                'stock': stock.stock
+            })
+        except Exception as e:
+            logger.error(f"Error updating stock: {e}")
+            return JsonResponse({'success': False, 'message': 'Error updating stock'}, status=500)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
 
 @login_required(login_url='adminside:admin_login')
 def delete_rating(request, rating_id):
@@ -1024,28 +1092,114 @@ def available_characters(request,lid):
 
 
 @login_required(login_url='adminside:admin_login')
-def add_newvariant(request):
+def get_available_sizes_ajax(request):
+    """AJAX endpoint to get available sizes for a product"""
+    if not request.user.is_superadmin:
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+    
+    if request.method == 'GET':
+        product_id = request.GET.get('product_id')
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+        
+        try:
+            product = get_object_or_404(Product, pid=product_id, delete='False')
+            existing_sizes_raw = list(Variants.objects.filter(product=product, delete='False').values_list('size', flat=True))
+            existing_sizes = [size.upper() if size else size for size in existing_sizes_raw]
+            
+            AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+            available_sizes_list = [size for size in AVAILABLE_SIZES if size.upper() not in [s.upper() if s else s for s in existing_sizes]]
+            
+            return JsonResponse({
+                'success': True,
+                'available_sizes': available_sizes_list,
+                'existing_sizes': existing_sizes,
+                'product_title': product.title,
+                'product_image': product.image.url if product.image else None,
+                'product_price': str(product.price),
+                'product_sku': product.sku
+            })
+        except Exception as e:
+            logger.error(f"Error getting available sizes: {e}")
+            return JsonResponse({'success': False, 'message': 'Error fetching sizes'}, status=500)
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+
+@login_required(login_url='adminside:admin_login')
+def add_newvariant(request, pid=None):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
 
     products = Product.objects.filter(delete='False')
+    selected_product = None
+    existing_sizes = []
+    
+    # Get product from pid parameter, GET parameter, or POST
+    if pid:
+        selected_product = get_object_or_404(Product, pid=pid, delete='False')
+    elif request.method == 'GET' and 'product' in request.GET:
+        product_pid = request.GET.get('product')
+        if product_pid:
+            selected_product = get_object_or_404(Product, pid=product_pid, delete='False')
+    elif request.method == 'POST' and 'product' in request.POST:
+        product_id = request.POST.get('product')
+        if product_id:
+            selected_product = get_object_or_404(Product, pid=product_id, delete='False')
+    
+    # Get existing sizes for the selected product (case-insensitive comparison)
+    if selected_product:
+        existing_sizes_raw = list(Variants.objects.filter(product=selected_product, delete='False').values_list('size', flat=True))
+        # Normalize existing sizes to uppercase for comparison
+        existing_sizes = [size.upper() if size else size for size in existing_sizes_raw]
+    else:
+        existing_sizes = []
+    
+    # Define available sizes - only show sizes that haven't been added yet (case-insensitive)
+    AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+    # Filter out sizes that already exist (case-insensitive)
+    available_sizes_list = [size for size in AVAILABLE_SIZES if size.upper() not in [s.upper() if s else s for s in existing_sizes]]
     
     if request.method == 'POST':
         product_id = request.POST.get('product')  
-        size = request.POST.get('size')
+        size = request.POST.get('size', '').strip()  # Strip whitespace
 
-        # Retrieve product by title
-        product = get_object_or_404(Product, pid = product_id)
-
-        if Variants.objects.filter(product=product, size=size).exists():
-            messages.error(request, 'Size already exists.')
+        # Validation
+        if not size:
+            messages.error(request, 'Size is required and cannot be empty or whitespace.')
+        elif size not in AVAILABLE_SIZES:
+            messages.error(request, f'Invalid size. Please select from: {", ".join(AVAILABLE_SIZES)}')
+        elif not product_id:
+            messages.error(request, 'Please select a product.')
         else:
-            variant = Variants(size=size, product=product)
-            variant.save()
-            messages.success(request, 'Size added successfully.')
+            product = get_object_or_404(Product, pid=product_id, delete='False')
+            
+            # Check if size already exists (case-insensitive comparison)
+            existing_variants = Variants.objects.filter(product=product, delete='False')
+            size_exists = any(existing.size.upper() == size.upper() for existing in existing_variants)
+            if size_exists:
+                messages.error(request, f'Size {size} already exists for this product.')
+            else:
+                variant = Variants(size=size, product=product)
+                variant.save()
+                # Create stock entry for the new variant
+                Stock.objects.get_or_create(variant=variant, defaults={'stock': 0})
+                messages.success(request, f'Variant {size} added successfully to {product.title}.')
+                
+                # Stay on the same page - reload the form with updated data
+                # Re-fetch the selected product and update available sizes
+                selected_product = get_object_or_404(Product, pid=product_id, delete='False')
+                existing_sizes_raw = list(Variants.objects.filter(product=selected_product, delete='False').values_list('size', flat=True))
+                existing_sizes = [size.upper() if size else size for size in existing_sizes_raw]
+                available_sizes_list = [size for size in AVAILABLE_SIZES if size.upper() not in [s.upper() if s else s for s in existing_sizes]]
 
     context = {
         'products': products,
+        'selected_product': selected_product,
+        'existing_sizes': existing_sizes,
+        'available_sizes': available_sizes_list,  # Only sizes that haven't been added
+        'all_available_sizes': AVAILABLE_SIZES,  # All sizes for display
+        'pid': pid,
     }
     return render(request, 'adminside/add_newvariant.html', context)
 
@@ -1055,24 +1209,65 @@ def newvariant_list(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
         
-    products = Product.objects.filter(delete='False')
-    selected_product = None
+    all_products = Product.objects.filter(delete='False').order_by('title')
+    selected_product_id = None
+    search_query = request.GET.get('search', '').strip()
     
+    # Filter by product if provided
     if request.method == 'POST':
         product_id = request.POST.get('product')
-        selected_product = Product.objects.get(title=product_id)
-        variants = Variants.objects.filter(product=selected_product,delete='False')
-    else:
-        variants = Variants.objects.filter(delete='False')
+        if product_id:
+            try:
+                selected_product_id = int(product_id)
+            except (ValueError, TypeError):
+                pass
+    
+    # Start with all products or filter by selected product
+    products = all_products
+    if selected_product_id:
+        products = products.filter(id=selected_product_id)
+    
+    # Apply search filter
+    if search_query:
+        products = products.filter(Q(title__icontains=search_query) | Q(sku__icontains=search_query))
+    
+    # Group variants by product
+    products_with_variants = []
+    for product in products:
+        variants = Variants.objects.filter(product=product, delete='False').order_by('size')
+        variants_list = []
+        total_variants = 0
+        active_variants = 0
         
-    paginator = Paginator(variants, 10)
+        for variant in variants:
+            variants_list.append({
+                'variant': variant,
+                'size': variant.size,
+                'is_active': variant.is_active,
+            })
+            total_variants += 1
+            if variant.is_active:
+                active_variants += 1
+        
+        if variants_list:  # Only include products with variants
+            products_with_variants.append({
+                'product': product,
+                'variants': variants_list,
+                'total_variants': total_variants,
+                'active_variants': active_variants,
+                'inactive_variants': total_variants - active_variants
+            })
+    
+    # Pagination
+    paginator = Paginator(products_with_variants, 10)
     page_number = request.GET.get('page')
-    page_variants = paginator.get_page(page_number)
+    page_products = paginator.get_page(page_number)
 
     context = {
-        "products": products,
-        "selected_product": selected_product,
-        "page_variants": page_variants
+        "products": all_products,  # All products for filter
+        "selected_product_id": selected_product_id,
+        "page_products": page_products,
+        "search_query": search_query,
     }
 
     return render(request, 'adminside/variant_list.html', context)
@@ -1082,30 +1277,68 @@ def newvariant_list(request):
 @cache_control(no_cache=True,must_revalidaate=True,no_store=True)
 def delete_size(request,id):
     if not request.user.is_superadmin:
-        return redirect('adminside:admin_login')      
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
+        return redirect('adminside:admin_login')
+    
     try:  
-        size = Variants.objects.get(id=id)
-    except ValueError:
-        return redirect('adminside:newvariant_list')       
-    size.delete = True                                      
-    size.save()  
+        variant = Variants.objects.get(id=id, delete=False)
+        product_pid = variant.product.pid
+        variant_size = variant.size
+        variant.delete = True                                      
+        variant.save()  
 
-    return redirect('adminside:newvariant_list')
+        # If AJAX request, return JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': f'Variant {variant_size} deleted successfully'
+            })
+        
+        # If from product detail page, redirect back with message
+        if request.GET.get('from_detail'):
+            messages.success(request, f'Variant {variant_size} deleted successfully.')
+            return redirect('adminside:products_details', pid=product_pid)
+        
+        messages.success(request, f'Variant {variant_size} deleted successfully.')
+        return redirect('adminside:newvariant_list')
+    except Variants.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Variant not found'}, status=404)
+        messages.error(request, 'Variant not found.')
+        return redirect('adminside:newvariant_list')
+    except Exception as e:
+        logger.error(f"Error deleting variant: {e}")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Error deleting variant'}, status=500)
+        messages.error(request, 'Error deleting variant.')
+        return redirect('adminside:newvariant_list')
         
 
 def block_size(request,id):
     if not request.user.is_superadmin:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=403)
         return redirect('adminside:admin_login')
     
-    size=get_object_or_404(Variants,id=id)
+    size = get_object_or_404(Variants, id=id)
 
     if size.is_active:
-        size.is_active=False
-
+        size.is_active = False
+        action = 'blocked'
     else:
-        size.is_active=True
+        size.is_active = True
+        action = 'activated'
     size.save()
 
+    # If AJAX request, return JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': f'Variant {action} successfully',
+            'is_active': size.is_active
+        })
+    
     return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
 
  
@@ -1144,27 +1377,63 @@ def stock_list(request):
     if not request.user.is_authenticated or not request.user.is_superadmin:
         return redirect("adminside:admin_login")
 
-    products = Product.objects.filter(delete = 'False')
-    variants = Variants.objects.filter(delete='False')
-  
-    selected_product = None
+    all_products = Product.objects.filter(delete='False').order_by('title')
+    selected_product_id = None
+    search_query = request.GET.get('search', '').strip()
     
+    # Filter by product if provided
     if request.method == 'POST':
         product_id = request.POST.get('product')
-        selected_product = Product.objects.get(title=product_id)
-        variants = Variants.objects.filter(product=selected_product)
-    else:
+        if product_id:
+            try:
+                selected_product_id = int(product_id)
+            except (ValueError, TypeError):
+                pass
+    
+    # Start with all products or filter by selected product
+    products = all_products
+    if selected_product_id:
+        products = products.filter(id=selected_product_id)
+    
+    # Apply search filter
+    if search_query:
+        products = products.filter(Q(title__icontains=search_query) | Q(sku__icontains=search_query))
+    
+    # Group stock by product
+    products_with_stock = []
+    for product in products:
+        variants = Variants.objects.filter(product=product, delete='False')
+        variants_with_stock = []
+        total_stock = 0
         
-        stocks = Stock.objects.all()
+        for variant in variants:
+            stock_obj, created = Stock.objects.get_or_create(variant=variant, defaults={'stock': 0})
+            variants_with_stock.append({
+                'variant': variant,
+                'stock': stock_obj.stock,
+                'stock_id': stock_obj.id,
+                'is_active': variant.is_active
+            })
+            total_stock += stock_obj.stock
         
-    paginator = Paginator(stocks, 10)
+        if variants_with_stock:  # Only include products with variants
+            products_with_stock.append({
+                'product': product,
+                'variants': variants_with_stock,
+                'total_stock': total_stock,
+                'variant_count': len(variants_with_stock)
+            })
+    
+    # Pagination
+    paginator = Paginator(products_with_stock, 10)
     page_number = request.GET.get('page')
-    page_stocks = paginator.get_page(page_number)
+    page_products = paginator.get_page(page_number)
 
     context = {
-        "products": products,
-        "selected_product": selected_product,
-        "page_stocks": page_stocks
+        "products": all_products,  # All products for filter dropdown
+        "selected_product_id": selected_product_id,
+        "page_products": page_products,
+        "search_query": search_query,
     }
 
     return render(request, 'adminside/stock_list.html', context)

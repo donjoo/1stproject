@@ -28,7 +28,7 @@ def out_of_stock_products():
     products = Product.objects.filter(delete='False')
 
     for product in products:
-        variants = Variants.objects.filter(product=product,delete='False')
+        variants = Variants.objects.filter(product=product, delete='False', is_active=True)
         out_of_stock = True
 
         for variant in variants:
@@ -203,7 +203,7 @@ def product_detail(request, pid):
         return redirect("app:index")
     
     p_image = product.p_images.all()
-    sizes = Variants.objects.filter(product=product,delete='False')
+    sizes = Variants.objects.filter(product=product, delete='False', is_active=True)
 
     # Check if product is already in wishlist
     in_wishlist = False
@@ -322,7 +322,7 @@ def get_highest_discount_offer(product):
 def is_size_out_of_stock(pid, size):
     try:
         product = Product.objects.get(pid=pid)
-        variant = Variants.objects.get(product=product, size=size,delete='False')
+        variant = Variants.objects.get(product=product, size=size, delete='False', is_active=True)
         stock = Stock.objects.get(variant=variant)
         return stock.stock <= 0
     except (Product.DoesNotExist, Variants.DoesNotExist, Stock.DoesNotExist):

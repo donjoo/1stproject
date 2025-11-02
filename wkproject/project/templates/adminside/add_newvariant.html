@@ -2,49 +2,268 @@
 {% load static %}
 {% block body %}
 <section class="content-main">
-    <div class="row">
-        <div class="col-9">
-            <div class="content-header">
-                <h2 class="content-title">Add New Size</h2>
-                <div>
-                </div>
-            </div>
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Add New Variant</h2>
         </div>
-        <div class="col-lg-6">
+        {% if pid %}
+        <div>
+            <a href="{% url 'adminside:products_details' pid %}" class="btn btn-sm btn-outline-secondary">
+                <i class="material-icons md-arrow_back"></i> Back to Product
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4>Variant Details</h4>                                 
-                    <!-- {% for message in messages  %}
-                    <div class="alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
-                      <strong></strong> {{message}}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>       
-                    {% endfor %} -->
-          
+                    <h4>Variant Details</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <strong>{{ message }}</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" id="variantForm">
                         {% csrf_token %}
+                        
+                        {% if pid %}
+                            <input type="hidden" name="from_product_detail" value="1">
+                        {% endif %}
+                        
                         <div class="mb-4">
-                            <label for="product" class="form-label">Product</label>
+                            <label for="product" class="form-label">Product <span class="text-danger">*</span></label>
                             <select class="form-select" id="product" name="product" required>
+                                {% if selected_product %}
+                                    <option value="{{ selected_product.pid }}" selected>{{ selected_product.title }}</option>
+                                {% else %}
+                                    <option value="">Select a product</option>
+                                {% endif %}
                                 {% for product in products %}
-                                    <option value="{{ product.pid }}">{{ product.title }}</option>
+                                    {% if not selected_product or product.pid != selected_product.pid %}
+                                        <option value="{{ product.pid }}">{{ product.title }}</option>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
+                            <small class="form-text text-muted">Select the product for which you want to add a variant.</small>
                         </div>
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <label for="size" class="form-label">New size</label>
-                                <input type="text" placeholder="size" class="form-control" id="size" name="size">
+                        
+                        <div class="mb-4">
+                            <label for="size" class="form-label">Size <span class="text-danger">*</span></label>
+                            <select class="form-select" id="size" name="size" required>
+                                <option value="">Select a size</option>
+                                {% for size in available_sizes %}
+                                    <option value="{{ size }}">{{ size }}</option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-text text-muted">Available sizes: {% for size in all_available_sizes %}{{ size }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>
+                            <div id="size-status" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="mb-4" id="existing-sizes-container" {% if not existing_sizes %}style="display: none;"{% endif %}>
+                            <label class="form-label"><strong>Current Sizes for this Product:</strong></label>
+                            <div class="alert alert-info p-3">
+                                <div class="d-flex flex-wrap gap-2" id="existing-sizes-badges">
+                                    {% for size in existing_sizes %}
+                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ size }}</span>
+                                    {% endfor %}
+                                </div>
+                                <p class="mb-0 mt-2" id="all-sizes-added-message" {% if available_sizes %}style="display: none;"{% endif %}>
+                                    <small>All sizes have been added. No more variants can be added to this product.</small>
+                                </p>
                             </div>
-                           
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Variant</button>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="material-icons md-add"></i> Add Variant
+                        </button>
+                        
+                        {% if pid %}
+                            <a href="{% url 'adminside:products_details' pid %}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        {% endif %}
                     </form>
                 </div>
             </div> <!-- card end// -->
         </div>
+        
+        <div class="col-lg-4" id="product-info-column" {% if not selected_product %}style="display: none;"{% endif %}>
+            <div class="card mb-4" id="product-info-card">
+                {% if selected_product %}
+                <div class="card-header">
+                    <h5>Product Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if selected_product.image %}
+                        <img src="{{ selected_product.image.url }}" class="img-fluid mb-3" alt="{{ selected_product.title }}">
+                    {% endif %}
+                    <h6>{{ selected_product.title }}</h6>
+                    <p class="text-muted mb-2">SKU: {{ selected_product.sku }}</p>
+                    <p class="text-muted mb-0">Price: ₹{{ selected_product.price }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </section> <!-- content-main end// -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const productSelect = document.getElementById('product');
+    const sizeSelect = document.getElementById('size');
+    const variantForm = document.getElementById('variantForm');
+    const sizeStatus = document.getElementById('size-status');
+    const existingSizesContainer = document.getElementById('existing-sizes-container');
+    const existingSizesBadges = document.getElementById('existing-sizes-badges');
+    const allSizesAddedMessage = document.getElementById('all-sizes-added-message');
+    const productInfoColumn = document.getElementById('product-info-column');
+    const productInfoCard = document.getElementById('product-info-card');
+    
+    // Function to update product info card
+    function updateProductInfo(data) {
+        if (productInfoCard && productInfoColumn) {
+            let cardHTML = `
+                <div class="card-header">
+                    <h5>Product Information</h5>
+                </div>
+                <div class="card-body">
+            `;
+            if (data.product_image) {
+                cardHTML += `<img src="${data.product_image}" class="img-fluid mb-3" alt="${data.product_title}">`;
+            }
+            cardHTML += `
+                        <h6>${data.product_title}</h6>
+                        <p class="text-muted mb-2">SKU: ${data.product_sku}</p>
+                        <p class="text-muted mb-0">Price: ₹${data.product_price}</p>
+                    </div>
+            `;
+            productInfoCard.innerHTML = cardHTML;
+            productInfoColumn.style.display = 'block';
+        }
+    }
+    
+    // Function to update sizes dropdown and existing sizes display
+    function updateSizes(data) {
+        // Clear current size options
+        sizeSelect.innerHTML = '<option value="">Select a size</option>';
+        
+        // Add available sizes
+        if (data.available_sizes && data.available_sizes.length > 0) {
+            data.available_sizes.forEach(function(size) {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                sizeSelect.appendChild(option);
+            });
+            
+            // Hide warning if sizes are available
+            sizeStatus.innerHTML = '';
+            allSizesAddedMessage.style.display = 'none';
+        } else {
+            sizeStatus.innerHTML = '<div class="alert alert-warning"><i class="material-icons md-warning"></i> All available sizes have been added to this product.</div>';
+            allSizesAddedMessage.style.display = 'block';
+        }
+        
+        // Update existing sizes display
+        if (data.existing_sizes && data.existing_sizes.length > 0) {
+            existingSizesBadges.innerHTML = '';
+            data.existing_sizes.forEach(function(size) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary fs-6 px-3 py-2';
+                badge.textContent = size;
+                existingSizesBadges.appendChild(badge);
+            });
+            existingSizesContainer.style.display = 'block';
+        } else {
+            existingSizesContainer.style.display = 'none';
+        }
+    }
+    
+    // Update available sizes when product changes using AJAX
+    productSelect.addEventListener('change', function() {
+        const productId = this.value;
+        if (productId) {
+            // Show loading state
+            sizeSelect.disabled = true;
+            sizeSelect.innerHTML = '<option value="">Loading sizes...</option>';
+            sizeStatus.innerHTML = '<div class="alert alert-info">Loading sizes...</div>';
+            
+            // Make AJAX request
+            const url = '{% url "adminside:get_available_sizes_ajax" %}?product_id=' + encodeURIComponent(productId);
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSizes(data);
+                    updateProductInfo(data);
+                    // Clear any previous selections
+                    sizeSelect.value = '';
+                } else {
+                    sizeStatus.innerHTML = '<div class="alert alert-danger">Error: ' + (data.message || 'Failed to load sizes') + '</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                sizeStatus.innerHTML = '<div class="alert alert-danger">Error loading sizes. Please try again.</div>';
+            })
+            .finally(() => {
+                sizeSelect.disabled = false;
+            });
+        } else {
+            // Clear sizes if no product selected
+            sizeSelect.innerHTML = '<option value="">Select a size</option>';
+            sizeStatus.innerHTML = '';
+            existingSizesContainer.style.display = 'none';
+            if (productInfoColumn) {
+                productInfoColumn.style.display = 'none';
+            }
+        }
+    });
+    
+    // Form submission - handle success message and clear form
+    variantForm.addEventListener('submit', function(e) {
+        const size = sizeSelect.value.trim();
+        if (!size || size === '') {
+            e.preventDefault();
+            alert('Please select a valid size from the dropdown.');
+            sizeSelect.focus();
+            return false;
+        }
+        
+        // Additional validation: ensure selected size is in available sizes list
+        const availableSizes = Array.from(sizeSelect.options).map(opt => opt.value).filter(val => val !== '');
+        if (!availableSizes.includes(size)) {
+            e.preventDefault();
+            alert('This size is not available or already exists for this product. Please select a different size.');
+            sizeSelect.focus();
+            return false;
+        }
+    });
+    
+    // After successful form submission (page reload), clear the size dropdown if message is success
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                // Clear size selection after successful submission
+                setTimeout(function() {
+                    sizeSelect.value = '';
+                }, 100);
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+});
+</script>
 {% endblock body %}

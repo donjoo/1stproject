@@ -38,7 +38,7 @@ def add_cart(request,pid):
                 key = item
                 value = request.POST[key]
             try:
-                sizess = Variants.objects.get(product=product,size__iexact=value)
+                sizess = Variants.objects.get(product=product, size__iexact=value, delete='False', is_active=True)
                 # Check if the selected size is in stock
                 try:
                     stock = Stock.objects.get(variant=sizess)
@@ -131,7 +131,7 @@ def add_cart(request,pid):
                 value = request.POST[key]
         
             try:
-                sizess = Variants.objects.get(product=product,size__iexact=value)
+                sizess = Variants.objects.get(product=product, size__iexact=value, delete='False', is_active=True)
                 # Check if the selected size is in stock
                 try:
                     stock = Stock.objects.get(variant=sizess)

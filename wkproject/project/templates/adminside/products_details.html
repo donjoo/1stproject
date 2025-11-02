@@ -100,6 +100,117 @@
             </div>
         </div> 
                     </div>
+                    
+                    <!-- Stock & Variants Management Section -->
+                    <div class="row">
+                        <div class="col-lg-12 m-auto entry-main-content">
+                            <div class="card mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h2 class="section-title style-1 mb-0">Stock & Variants Management</h2>
+                                    <a href="{% url 'adminside:add_newvariant_product' product.pid %}" class="btn btn-sm btn-primary">
+                                        <i class="material-icons md-add"></i> Add New Variant
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <div class="info-box">
+                                                <h5>Total Stock</h5>
+                                                <span class="badge {% if total_stock == 0 %}bg-danger{% elif total_stock < 10 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-4">
+                                                    {{ total_stock }} units
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-box">
+                                                <h5>Total Variants</h5>
+                                                <span class="badge bg-info fs-4">{{ variants_with_stock|length }} variant{{ variants_with_stock|length|pluralize }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-box">
+                                                <h5>Low Stock Variants</h5>
+                                                <span class="badge {% if low_stock_count == 0 %}bg-success{% else %}bg-warning text-dark{% endif %} fs-4">
+                                                    {{ low_stock_count }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if variants_with_stock %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Size</th>
+                                                    <th>Current Stock</th>
+                                                    <th>Status</th>
+                                                    <th>Update Stock</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for variant_data in variants_with_stock %}
+                                                <tr id="variant-row-{{ variant_data.variant.id }}">
+                                                    <td>
+                                                        <strong>{{ variant_data.variant.size }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge {% if variant_data.stock == 0 %}bg-danger{% elif variant_data.stock < 5 %}bg-warning text-dark{% else %}bg-success{% endif %} fs-6" id="stock-badge-{{ variant_data.variant.id }}">
+                                                            {{ variant_data.stock }} units
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge {% if variant_data.is_active %}bg-success{% else %}bg-secondary{% endif %}" id="status-badge-{{ variant_data.variant.id }}">
+                                                            {% if variant_data.is_active %}Active{% else %}Inactive{% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="input-group" style="max-width: 200px;">
+                                                            <input type="number" 
+                                                                   class="form-control form-control-sm stock-input" 
+                                                                   id="stock-input-{{ variant_data.variant.id }}"
+                                                                   value="{{ variant_data.stock }}" 
+                                                                   min="0" 
+                                                                   data-variant-id="{{ variant_data.variant.id }}"
+                                                                   data-stock-id="{{ variant_data.stock_id }}">
+                                                            <button class="btn btn-sm btn-primary update-stock-btn" 
+                                                                    data-variant-id="{{ variant_data.variant.id }}"
+                                                                    data-stock-id="{{ variant_data.stock_id }}">
+                                                                <i class="material-icons md-check"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" 
+                                                                    class="btn btn-sm {% if variant_data.is_active %}btn-warning{% else %}btn-success{% endif %} toggle-variant-btn"
+                                                                    data-variant-id="{{ variant_data.variant.id }}"
+                                                                    data-is-active="{{ variant_data.is_active|lower }}">
+                                                                    {% if variant_data.is_active %}<i class="material-icons md-block"></i> Block{% else %}<i class="material-icons md-check"></i> Activate{% endif %}
+                                                            </button>
+                                                            <a href="{% url 'adminside:delete_size' variant_data.variant.id %}?from_detail=1" 
+                                                               class="btn btn-sm btn-danger" 
+                                                               onclick="return confirm('Are you sure you want to delete this variant?');">
+                                                                <i class="material-icons md-delete"></i> Delete
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <p class="mb-0">No variants found for this product. <a href="{% url 'adminside:add_newvariant' %}">Add a variant</a> to manage stock.</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-lg-10 m-auto entry-main-content">
                             <h2 class="section-title style-1 mb-30">Description</h2>
@@ -315,6 +426,113 @@
                 arrows: false
             });
         }
+    });
+    
+    // Stock Management AJAX
+    $(document).ready(function() {
+        // Quick stock update
+        $('.update-stock-btn').on('click', function(e) {
+            e.preventDefault();
+            const btn = $(this);
+            const variantId = btn.data('variant-id');
+            const stockId = btn.data('stock-id');
+            const input = $('#stock-input-' + variantId);
+            const newStock = parseInt(input.val());
+            const badge = $('#stock-badge-' + variantId);
+            
+            if (isNaN(newStock) || newStock < 0) {
+                alert('Please enter a valid stock quantity');
+                return;
+            }
+            
+            btn.prop('disabled', true).html('<i class="material-icons md-hourglass_empty"></i>');
+            
+            $.ajax({
+                url: '{% url "adminside:update_stock_ajax" %}',
+                method: 'POST',
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    'stock_id': stockId,
+                    'quantity': newStock
+                },
+                success: function(response) {
+                    if (response.success) {
+                        badge.text(newStock + ' units').removeClass('bg-danger bg-warning bg-success')
+                            .addClass(newStock == 0 ? 'bg-danger' : (newStock < 5 ? 'bg-warning text-dark' : 'bg-success'));
+                        input.val(newStock);
+                        
+                        // Update total stock display if exists
+                        if ($('#total-stock-display').length) {
+                            location.reload(); // Reload to update total
+                        }
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to update stock'));
+                    }
+                },
+                error: function() {
+                    alert('Error updating stock. Please try again.');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="material-icons md-check"></i>');
+                }
+            });
+        });
+        
+        // Allow Enter key to trigger update
+        $('.stock-input').on('keypress', function(e) {
+            if (e.which === 13) {
+                $(this).siblings('.update-stock-btn').click();
+            }
+        });
+        
+        // Toggle variant active status
+        $('.toggle-variant-btn').on('click', function(e) {
+            e.preventDefault();
+            const btn = $(this);
+            const variantId = btn.data('variant-id');
+            const isActive = btn.data('is-active') === 'true';
+            const badge = $('#status-badge-' + variantId);
+            
+            btn.prop('disabled', true);
+            
+            // Build the URL - URL pattern is: block_size/<str:id>/
+            // Since adminside URLs are included at root level in main urls.py, construct URL directly
+            const blockSizeUrl = '/block_size/' + variantId + '/';
+            
+            $.ajax({
+                url: blockSizeUrl,
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data: {
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const newIsActive = response.is_active;
+                        badge.text(newIsActive ? 'Active' : 'Inactive')
+                            .removeClass('bg-success bg-secondary')
+                            .addClass(newIsActive ? 'bg-success' : 'bg-secondary');
+                        
+                        btn.removeClass('btn-warning btn-success')
+                            .addClass(newIsActive ? 'btn-warning' : 'btn-success')
+                            .html(newIsActive ? 
+                                '<i class="material-icons md-block"></i> Block' : 
+                                '<i class="material-icons md-check"></i> Activate');
+                        btn.data('is-active', newIsActive);
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to update variant status'));
+                    }
+                },
+                error: function() {
+                    alert('Error updating variant status. Please try again.');
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                }
+            });
+        });
     });
     </script>
 

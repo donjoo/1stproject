@@ -26,12 +26,15 @@ urlpatterns = [
     path('delete_category/<str:cid>/',views.delete_category,name='delete_category'),
 
     path('add_newvariant/',views.add_newvariant,name='add_newvariant'),
+    path('add_newvariant/<str:pid>/',views.add_newvariant,name='add_newvariant_product'),
+    path('get_available_sizes_ajax/', views.get_available_sizes_ajax, name='get_available_sizes_ajax'),
     path('newvariant_list/',views.newvariant_list,name='newvariant_list'),
     path('get_variants/', views.get_variants, name='get_variants'),
     path('block_size/<str:id>/',views.block_size,name='block_size'),
     path('delete_size/<str:id>/',views.delete_size,name='delete_size'),
     path('add_stock/', views.add_stock, name='add_stock'),
     path('stock_list/', views.stock_list, name='stock_list'),
+    path('update_stock_ajax/', views.update_stock_ajax, name='update_stock_ajax'),
 
     path('add_animecat/',views.add_animecat,name='add_animecat'),
     path('animecat_list/',views.animecat_list,name='animecat_list'),

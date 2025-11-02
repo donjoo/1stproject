@@ -6,46 +6,141 @@
     <div class="content-header">
         <div>
             <h2 class="content-title card-title">Stock List</h2>
-        </div>     
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <input type="text" name="search" class="form-control" placeholder="Search by product name or SKU..." value="{{ search_query }}" style="width: 250px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="material-icons md-search"></i> Search
+                </button>
+                {% if search_query %}
+                    <a href="{% url 'adminside:stock_list' %}" class="btn btn-secondary">Clear</a>
+                {% endif %}
+            </form>
+            <form method="POST" class="d-inline-flex align-items-center">
+                {% csrf_token %}
+                <select name="product" id="productFilter" class="form-select me-2" style="width: auto;" onchange="this.form.submit()">
+                    <option value="">All Products</option>
+                    {% for product in products %}
+                        <option value="{{ product.id }}" {% if selected_product_id == product.id %}selected{% endif %}>
+                            {{ product.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
     </div>
     <div class="card mb-4">
         <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Size</th>
-                        <th>Stock</th>
-                        <th>Status</th>                       
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stock in page_stocks %}
-                    <tr>
-                        <td>{{ stock.variant.product.title }}</td>
-                        <td>{{ stock.variant.size }}</td>
-                        <td>{{ stock.stock }}</td>
-                        <td>{{ stock.variant.is_active }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if page_products %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Product</th>
+                                <th style="width: 10%;">Image</th>
+                                <th style="width: 15%;">Total Stock</th>
+                                <th style="width: 10%;">Variants</th>
+                                <th style="width: 40%;">Variant Details</th>
+                                <th style="width: 10%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_products %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.product.title }}</strong><br>
+                                    <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                </td>
+                                <td>
+                                    {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" class="img-sm img-thumbnail" alt="{{ item.product.title }}" style="max-width: 60px; max-height: 60px;">
+                                    {% else %}
+                                        <span class="text-muted">No image</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.total_stock == 0 %}bg-danger{% elif item.total_stock < 10 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                        {{ item.total_stock }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ item.variant_count }} variant{{ item.variant_count|pluralize }}</span>
+                                </td>
+                                <td>
+                                    <div class="variant-stock-list">
+                                        {% for variant_data in item.variants %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                                <span>
+                                                    <strong>Size:</strong> {{ variant_data.variant.size }}
+                                                </span>
+                                                <span class="badge {% if variant_data.stock == 0 %}bg-danger{% elif variant_data.stock < 5 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                                    {{ variant_data.stock }} units
+                                                </span>
+                                                <span class="badge {% if variant_data.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                                    {% if variant_data.is_active %}Active{% else %}Inactive{% endif %}
+                                                </span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'adminside:products_details' item.product.pid %}" class="btn btn-sm btn-primary" title="Manage Stock & Variants">
+                                        <i class="material-icons md-edit"></i> Manage
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p class="mb-0">No products with stock information found.</p>
+                </div>
+            {% endif %}
         </div> <!-- card-body end// -->
     </div> <!-- card end// -->
+    
+    {% if page_products.has_other_pages %}
     <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start">
-                {% if page_stocks.has_previous %}
-                <a href="?page=1">&laquo First</a>
-                <a href="?page={{page_stocks.previous_page_number}}">Previous</a>
+                {% if page_products.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_products.previous_page_number }}">Previous</a>
+                </li>
                 {% endif %}
-                Page{{page_stocks.number}}of{{page_stocks.paginator.num_pages}}
-                {% if page_stocks.has_next %}
-                <a href="?page={{page_stocks.next_page_number}}">Next</a>
-                <a href="?page{{page_stocks.paginator.num_pages}}">Last &raquo</a>
+                <li class="page-item active">
+                    <span class="page-link">Page {{ page_products.number }} of {{ page_products.paginator.num_pages }}</span>
+                </li>
+                {% if page_products.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_products.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_products.paginator.num_pages }}">Last &raquo;</a>
+                </li>
                 {% endif %}
             </ul>
         </nav>
     </div>
+    {% endif %}
 </section> <!-- content-main end// -->
+
+<style>
+.variant-stock-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+.variant-stock-list .border {
+    background-color: #f8f9fa;
+}
+.img-thumbnail {
+    object-fit: contain;
+}
+</style>
 {% endblock body %}
