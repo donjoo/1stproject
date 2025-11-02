@@ -1492,35 +1492,174 @@ def order_detail(request, order_id):
         except Coupon.DoesNotExist:
             coupon = None
             coupon_discount = Decimal('0.00')
+    # Get valid next statuses for the dropdown
+    valid_next_statuses = get_valid_next_statuses(order.status, force=False)
+    all_statuses = [status[0] for status in Order.STATUS]
+    
+    # Prepare JSON data for JavaScript (to avoid template syntax errors in JS)
+    import json
+    all_statuses_json = json.dumps([{"value": status[0], "label": status[1]} for status in Order.STATUS])
+    valid_statuses_json = json.dumps(valid_next_statuses)
+    
     context = {
         'order': order,
         'order_products': order_products,
         'subtotal':subtotal,
         'coupon':coupon,
         'coupon_discount': coupon_discount,
+        'valid_next_statuses': valid_next_statuses,
+        'all_statuses': all_statuses,
+        'all_statuses_json': all_statuses_json,
+        'valid_statuses_json': valid_statuses_json,
     }
 
     return render(request, 'adminside/order_detail.html',context)
+
+
+def get_status_priority():
+    """Return a dictionary mapping order statuses to their priority levels"""
+    return {
+        'New': 1,
+        'Order placed': 2,
+        'Order confirmed': 3,
+        'Order processing': 4,
+        'Shipped': 5,
+        'Delivered': 6,
+        'Cancelled': 7
+    }
+
+def get_valid_next_statuses(current_status, force=False):
+    """Get valid next statuses based on current status and force flag"""
+    status_priority = get_status_priority()
+    all_statuses = [status[0] for status in Order.STATUS]
+    
+    if force:
+        # If force is enabled, return all statuses
+        return all_statuses
+    
+    # If force is False, return only forward-flow statuses
+    current_priority = status_priority.get(current_status, 0)
+    
+    # Allow forward transitions (higher priority) and Cancelled (always allowed)
+    # Also allow current status to remain selected (for UI purposes)
+    valid_statuses = []
+    for status in all_statuses:
+        status_prior = status_priority.get(status, 0)
+        if status_prior > current_priority or status == 'Cancelled' or status == current_status:
+            valid_statuses.append(status)
+    
+    return valid_statuses
+
+def update_order_status_logic(order, new_status, admin_user, force=False):
+    """
+    Update order status with logical flow control.
+    
+    Args:
+        order: Order instance
+        new_status: String - new status to set
+        admin_user: User instance - admin performing the update
+        force: Boolean - if True, allow backward transitions
+    
+    Returns:
+        tuple: (success: bool, message: str)
+    """
+    status_priority = get_status_priority()
+    
+    current_status = order.status
+    current_level = status_priority.get(current_status, 0)
+    new_level = status_priority.get(new_status, 0)
+    
+    # Always allow transition to Cancelled
+    if new_status == 'Cancelled':
+        old_status = order.status
+        order.status = new_status
+        order.save()
+        
+        # Log the status change
+        logger.info(f"Order {order.order_number} status changed from {old_status} to {new_status} by admin {admin_user.username}")
+        
+        # Handle cancellation (stock, refunds, etc.)
+        # Call the cancellation logic directly without going through the view
+        try:
+            # Restore stock
+            canceladd_stock(None, order)
+            
+            # Process refunds for prepaid orders (only if payment was completed)
+            if order.payment and order.payment.payment_method in ["Paypal", "Wallet"]:
+                # Import the payment check function
+                from orders.views import is_payment_completed, process_refund_for_items
+                
+                if is_payment_completed(order.payment):
+                    # Get all order products that haven't been refunded yet
+                    non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
+                    
+                    if non_refunded_items.exists():
+                        process_refund_for_items(order, non_refunded_items, "Admin Cancelled", single_transaction=True)
+        except Exception as e:
+            logger.error(f"Error processing cancellation during status update: {e}")
+        
+        return True, "Order status updated to Cancelled successfully."
+    
+    # Check if moving backward (lower priority)
+    if new_level < current_level:
+        if not force:
+            return False, f"Cannot move order from '{current_status}' to '{new_status}'. Use Force Update to allow backward transitions."
+        else:
+            # Log force update
+            logger.warning(f"Force update used by admin {admin_user.username}: Order {order.order_number} status changed from {current_status} to {new_status}")
+    
+    # Check if status is unchanged
+    if current_status == new_status:
+        return True, f"Order status is already '{current_status}'. No update needed."
+    
+    # Update the status
+    old_status = order.status
+    order.status = new_status
+    order.save()
+    
+    # Log the status change
+    logger.info(f"Order {order.order_number} status changed from {old_status} to {new_status} by admin {admin_user.username}")
+    
+    # Handle stock adjustments if needed (for returns/cancellations)
+    # This is already handled in admin_cancel_order for cancellations
+    # Additional logic for other statuses can be added here if needed
+    
+    return True, f"Order status updated from '{old_status}' to '{new_status}' successfully."
 
 
 def update_order_status(request, order_id):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
     order = get_object_or_404(Order, id=order_id)
+    
     if request.method == 'POST':
-        if not order.status == "Cancelled":
-            if not order.status == "Returned":
-                new_status = request.POST.get('status')
-                order.status = new_status
-                order.save()
-                if new_status == "Cancelled":
-                    admin_cancel_order(request,order_id)
-                return redirect('adminside:order_detail', order_id=order_id)
-            else:
-                 messages.error(request,"Order is already Returned")
+        if order.status == "Cancelled":
+            messages.error(request, "Order is already cancelled")
+            return redirect('adminside:order_detail', order_id=order_id)
+        
+        if order.status == "Returned":
+            messages.error(request, "Order is already Returned")
+            return redirect('adminside:order_detail', order_id=order_id)
+        
+        new_status = request.POST.get('status')
+        if not new_status:
+            messages.error(request, "Please select a status")
+            return redirect('adminside:order_detail', order_id=order_id)
+        
+        # Check if force update is requested
+        force = request.POST.get('force_update') == 'on'
+        
+        # Use the new status update logic
+        success, message = update_order_status_logic(order, new_status, request.user, force=force)
+        
+        if success:
+            messages.success(request, message)
         else:
-            messages.error(request,"Order is already cancelled")
-    return render(request, 'adminside/order_detail.html', {'order': order})
+            messages.error(request, message)
+        
+        return redirect('adminside:order_detail', order_id=order_id)
+    
+    return redirect('adminside:order_detail', order_id=order_id)
 
 
 def admin_cancel_order(request, order_id):
@@ -1537,16 +1676,17 @@ def admin_cancel_order(request, order_id):
         # Restore stock
         canceladd_stock(request, order)
         
-        # Process refunds for prepaid orders
+        # Process refunds for prepaid orders (only if payment was completed)
         refund_message = ""
         if order.payment and order.payment.payment_method in ["Paypal", "Wallet"]:
-            if order.payment.status != "Payment pending":
+            # Import the payment check function
+            from orders.views import is_payment_completed, process_refund_for_items
+            
+            if is_payment_completed(order.payment):
                 # Get all order products that haven't been refunded yet
                 non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
                 
                 if non_refunded_items.exists():
-                    # Import the refund function from orders views
-                    from orders.views import process_refund_for_items
                     refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Cancelled", single_transaction=True)
                     
                     if refunded_amount > 0:
@@ -1556,7 +1696,7 @@ def admin_cancel_order(request, order_id):
                 else:
                     refund_message = " All items were already refunded."
             else:
-                refund_message = " No refund processed as payment was pending."
+                refund_message = " No refund processed as payment was not completed."
         else:
             # For COD orders, no refund needed
             refund_message = " No refund needed for COD orders."
@@ -1597,26 +1737,28 @@ def admin_cancel_order_item(request, order_product_id):
             # Add stock back for this specific item
             canceladd_stock_for_item(request, order_product)
             
-            # Process refund for this specific item (only if not already refunded)
+            # Process refund for this specific item (only if payment was completed and not already refunded)
             if order_product.order.payment and not order_product.refunded:
                 if (order_product.order.payment.payment_method == "Paypal" or 
                     order_product.order.payment.payment_method == "Wallet"):
                     
-                    # Import the refund function from orders views
-                    from orders.views import calculate_proportional_refund
-                    refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+                    # Import the payment check and refund functions
+                    from orders.views import is_payment_completed, calculate_proportional_refund
                     
-                    if refund_amount > 0:
-                        Transaction.objects.create(
-                            user=order_product.order.user,
-                            description=f"Admin Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
-                            amount=refund_amount,
-                            transaction_type="Credit",
-                        )
+                    if is_payment_completed(order_product.order.payment):
+                        refund_amount = calculate_proportional_refund(order_product.order, [order_product])
                         
-                        # Mark as refunded to prevent duplicate refunds
-                        order_product.refunded = True
-                        order_product.save()
+                        if refund_amount > 0:
+                            Transaction.objects.create(
+                                user=order_product.order.user,
+                                description=f"Admin Cancelled Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                                amount=refund_amount,
+                                transaction_type="Credit",
+                            )
+                            
+                            # Mark as refunded to prevent duplicate refunds
+                            order_product.refunded = True
+                            order_product.save()
             
             # Check if all items are cancelled, then cancel the entire order
             remaining_items = OrderProduct.objects.filter(
@@ -1651,19 +1793,20 @@ def admin_return_order(request, order_id):
         order.save()
         canceladd_stock(request, order)
         
-        # Process refund for all non-refunded items only
+        # Process refund for all non-refunded items only (only if payment was completed)
         if order.payment:
             if (
                 order.payment.payment_method == "Paypal"
                 or order.payment.payment_method == "Wallet"
             ):
-                if not order.payment.status == "Payment pending":
+                # Import the payment check function
+                from orders.views import is_payment_completed, process_refund_for_items
+                
+                if is_payment_completed(order.payment):
                     # Get all order products that haven't been refunded yet
                     non_refunded_items = OrderProduct.objects.filter(order=order, refunded=False)
                     
                     if non_refunded_items.exists():
-                        # Import the refund function from orders views
-                        from orders.views import process_refund_for_items
                         refunded_amount = process_refund_for_items(order, non_refunded_items, "Admin Returned", single_transaction=True)
                         
                         if refunded_amount > 0:
@@ -1673,7 +1816,7 @@ def admin_return_order(request, order_id):
                     else:
                         messages.success(request, 'Order has been returned successfully.')
                 else:
-                    messages.error(request, "Payment was not done")
+                    messages.success(request, 'Order has been returned successfully. No refund processed as payment was not completed.')
         else:
             messages.success(request, 'Order has been returned successfully.')
             
@@ -1712,23 +1855,25 @@ def admin_return_order_item(request, order_product_id):
             # Add stock back for this specific item
             canceladd_stock_for_item(request, order_product)
             
-            # Process refund for this specific item (only if not already refunded)
+            # Process refund for this specific item (only if payment was completed and not already refunded)
             if order_product.order.payment and not order_product.refunded:
-                # Import the refund function from orders views
-                from orders.views import calculate_proportional_refund
-                refund_amount = calculate_proportional_refund(order_product.order, [order_product])
+                # Import the payment check and refund functions
+                from orders.views import is_payment_completed, calculate_proportional_refund
                 
-                if refund_amount > 0:
-                    Transaction.objects.create(
-                        user=order_product.order.user,
-                        description=f"Admin Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
-                        amount=refund_amount,
-                        transaction_type="Credit",
-                    )
+                if is_payment_completed(order_product.order.payment):
+                    refund_amount = calculate_proportional_refund(order_product.order, [order_product])
                     
-                    # Mark as refunded to prevent duplicate refunds
-                    order_product.refunded = True
-                    order_product.save()
+                    if refund_amount > 0:
+                        Transaction.objects.create(
+                            user=order_product.order.user,
+                            description=f"Admin Returned Item: {order_product.product.title} from Order {order_product.order.order_number}",
+                            amount=refund_amount,
+                            transaction_type="Credit",
+                        )
+                        
+                        # Mark as refunded to prevent duplicate refunds
+                        order_product.refunded = True
+                        order_product.save()
             
             # Check if all items are returned, then mark the entire order as returned
             remaining_items = OrderProduct.objects.filter(

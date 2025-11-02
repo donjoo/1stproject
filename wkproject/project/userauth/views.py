@@ -741,26 +741,30 @@ def cancel_order(request, order_id,):
         data.save()
         canceladd_stock(request,data)
         
-        # Process refund for all non-refunded items only
+        # Process refund for all non-refunded items only (only if payment was completed)
         if data.payment:
             if (
                 data.payment.payment_method == "Paypal"
                 or data.payment.payment_method == "Wallet"
             ):
-                # Get all order products that haven't been refunded yet
-                non_refunded_items = OrderProduct.objects.filter(order=data, refunded=False)
+                # Import the payment check and refund functions
+                from orders.views import is_payment_completed, process_refund_for_items
                 
-                if non_refunded_items.exists():
-                    # Import the refund function from orders views
-                    from orders.views import process_refund_for_items
-                    refunded_amount = process_refund_for_items(data, non_refunded_items, "Cancelled", single_transaction=True)
+                if is_payment_completed(data.payment):
+                    # Get all order products that haven't been refunded yet
+                    non_refunded_items = OrderProduct.objects.filter(order=data, refunded=False)
                     
-                    if refunded_amount > 0:
-                        messages.success(request, f'Order has been cancelled successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
+                    if non_refunded_items.exists():
+                        refunded_amount = process_refund_for_items(data, non_refunded_items, "Cancelled", single_transaction=True)
+                        
+                        if refunded_amount > 0:
+                            messages.success(request, f'Order has been cancelled successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
+                        else:
+                            messages.success(request, 'Order has been cancelled successfully.')
                     else:
                         messages.success(request, 'Order has been cancelled successfully.')
                 else:
-                    messages.success(request, 'Order has been cancelled successfully.')
+                    messages.success(request, 'Order has been cancelled successfully. No refund processed as payment was not completed.')
         else:
             messages.success(request, 'Order has been cancelled successfully.')
 
@@ -792,26 +796,30 @@ def return_order(request, order_id):
             data.save()
             canceladd_stock(request,data)
             
-            # Process refund for all non-refunded items only
+            # Process refund for all non-refunded items only (only if payment was completed)
             if data.payment:
                 if (
                     data.payment.payment_method == "Paypal"
                     or data.payment.payment_method == "Wallet"
                 ):
-                    # Get all order products that haven't been refunded yet
-                    non_refunded_items = OrderProduct.objects.filter(order=data, refunded=False)
+                    # Import the payment check and refund functions
+                    from orders.views import is_payment_completed, process_refund_for_items
                     
-                    if non_refunded_items.exists():
-                        # Import the refund function from orders views
-                        from orders.views import process_refund_for_items
-                        refunded_amount = process_refund_for_items(data, non_refunded_items, "Returned", single_transaction=True)
+                    if is_payment_completed(data.payment):
+                        # Get all order products that haven't been refunded yet
+                        non_refunded_items = OrderProduct.objects.filter(order=data, refunded=False)
                         
-                        if refunded_amount > 0:
-                            messages.success(request, f'Order has been returned successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
+                        if non_refunded_items.exists():
+                            refunded_amount = process_refund_for_items(data, non_refunded_items, "Returned", single_transaction=True)
+                            
+                            if refunded_amount > 0:
+                                messages.success(request, f'Order has been returned successfully. Refund of ₹{refunded_amount:.2f} has been credited to your wallet.')
+                            else:
+                                messages.success(request, 'Order has been returned successfully.')
                         else:
                             messages.success(request, 'Order has been returned successfully.')
                     else:
-                        messages.success(request, 'Order has been returned successfully.')
+                        messages.success(request, 'Order has been returned successfully. No refund processed as payment was not completed.')
             else:
                 messages.success(request, 'Order has been returned successfully.')
 

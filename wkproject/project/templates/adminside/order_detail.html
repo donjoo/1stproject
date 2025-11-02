@@ -175,16 +175,80 @@
 
                 </div>
                 <div class="col-lg-6 col-md-6 ms-auto text-md-end">
-                    <form action="{% url 'adminside:update_order_status' order.id %}" method="POST">
+                    <form action="{% url 'adminside:update_order_status' order.id %}" method="POST" id="statusUpdateForm">
                         {% csrf_token %}
-                        <select name="status" class="form-select d-inline-block mb-lg-0 mb-15 mw-200">
-                            <option value="" disabled selected>Change status</option>
-                            {% for status_choice in order.STATUS %}
-                            <option value="{{ status_choice.0 }}" {% if order.status == status_choice.0 %} selected {% endif %}>{{ status_choice.1 }}</option>                            {% endfor %}
-                        </select>
-                        <button type="submit" class="btn btn-primary">Update Status</button>
+                        <div class="d-flex flex-column align-items-end">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <select name="status" id="statusSelect" class="form-select mw-200" style="min-width: 200px;">
+                                    <option value="" disabled selected>Change status</option>
+                                    {% for status_choice in order.STATUS %}
+                                        {% if status_choice.0 in valid_next_statuses %}
+                                            <option value="{{ status_choice.0 }}" {% if order.status == status_choice.0 %} selected {% endif %}>{{ status_choice.1 }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary">Update Status</button>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="force_update" id="forceUpdateCheckbox" onchange="updateStatusOptions()">
+                                <label class="form-check-label" for="forceUpdateCheckbox">
+                                    Force Update (allow backward transitions)
+                                </label>
+                            </div>
+                        </div>
                     </form>
                 </div>
+                
+                {{ all_statuses_json|json_script:"all-statuses-data" }}
+                {{ valid_statuses_json|json_script:"valid-statuses-data" }}
+                <script id="current-status-data" type="application/json">{{ order.status|escapejs }}</script>
+                
+                <script>
+                // Store status data for JavaScript manipulation
+                (function() {
+                    var allStatusesScript = document.getElementById('all-statuses-data');
+                    var validStatusesScript = document.getElementById('valid-statuses-data');
+                    var currentStatusScript = document.getElementById('current-status-data');
+                    
+                    if (!allStatusesScript || !validStatusesScript || !currentStatusScript) return;
+                    
+                    var allStatusesData = JSON.parse(allStatusesScript.textContent);
+                    var validStatusesData = JSON.parse(validStatusesScript.textContent);
+                    var currentStatusValue = JSON.parse(currentStatusScript.textContent);
+                    
+                    window.updateStatusOptions = function() {
+                        var forceCheckbox = document.getElementById('forceUpdateCheckbox');
+                        var statusSelectEl = document.getElementById('statusSelect');
+                        var forceEnabled = forceCheckbox ? forceCheckbox.checked : false;
+                        
+                        if (!statusSelectEl) return;
+                        
+                        // Clear existing options
+                        statusSelectEl.innerHTML = '';
+                        
+                        // Add the default option
+                        var defaultOption = document.createElement('option');
+                        defaultOption.value = "";
+                        defaultOption.textContent = "Change status";
+                        defaultOption.disabled = true;
+                        defaultOption.selected = true;
+                        statusSelectEl.appendChild(defaultOption);
+                        
+                        // Add options based on force checkbox
+                        allStatusesData.forEach(function(status) {
+                            if (forceEnabled || validStatusesData.indexOf(status.value) !== -1) {
+                                var option = document.createElement('option');
+                                option.value = status.value;
+                                option.textContent = status.label;
+                                if (status.value === currentStatusValue) {
+                                    option.selected = true;
+                                }
+                                statusSelectEl.appendChild(option);
+                            }
+                        });
+                    };
+                })();
+                </script>
                 
         </header> <!-- card-header end// -->
         <div class="card-body">
