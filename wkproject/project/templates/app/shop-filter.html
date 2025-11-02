@@ -239,7 +239,8 @@
 
                                     <div class="product-img-action-wrap">
                <div class="product-img product-img-zoom" 
-                             style="width: 200px; height: 200px; overflow: hidden; display: flex; justify-content: center; align-items: center; margin: 0 auto; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">                                            <a href="{% url 'app:product_detail' p.pid %}">
+                             style="width: 200px; height: 200px; overflow: hidden; display: flex; justify-content: center; align-items: center; margin: 0 auto; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">                                           
+                              <a href="{% url 'app:product_detail' p.pid %}">
                                                 {% if p.image %}
                                                     <img class="default-img" src="{{ p.image.url }}" alt="" style="width: 100%; height: auto;">
                                                 {% else %}
@@ -263,14 +264,14 @@
                                     </div>
                                     <div class="product-content-wrap" style="min-height: 150px;">
                                         <div class="product-category">
-                                            <a href="shop-grid-right.html">{{p.category}}</a>
+                                            <p>{{p.category}}</p>
                                         </div>
                                         {% if p.character %}
                                         <div class="product-category">
-                                            <a href="shop-grid-right.html">Character: {{p.character}}</a>
+                                            <p>Character: {{p.character}}</p>
                                         </div>
                                         {% endif %}
-                                        <h2><a href="shop-product-right.html">{{p.title}}</a></h2>
+                                        <h2><a href="{% url 'app:product_detail' p.pid %}">{{p.title}}</a></h2>
                                         <!-- <div class="rating-result" title="90%">
                                             <span>
                                                 <span>90%</span>

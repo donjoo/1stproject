@@ -43,14 +43,14 @@
                     </div>
                     <div class="product-content-wrap" style="min-height: 150px;">
                         <div class="product-category">
-                            <a href="shop-grid-right.html">{{p.category}}</a>
+                            <p>{{p.category}}</p>
                         </div>
                         {% if p.character %}
                         <div class="product-category">
-                            <a href="shop-grid-right.html">Character: {{p.character}}</a>
+                            <p>Character: {{p.character}}</p>
                         </div>
                         {% endif %}
-                        <h2><a href="shop-product-right.html">{{p.title}}</a></h2>
+                        <h2><a href="{% url 'app:product_detail' p.pid %}">{{p.title}}</a></h2>
                         <div>
                              
                         </div>
